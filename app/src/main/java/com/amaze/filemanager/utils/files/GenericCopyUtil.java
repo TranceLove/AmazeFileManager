@@ -8,6 +8,7 @@ import android.util.Log;
 import com.amaze.filemanager.R;
 import com.amaze.filemanager.filesystem.HybridFileParcelable;
 import com.amaze.filemanager.filesystem.FileUtil;
+import com.amaze.filemanager.ui.icons.MimeTypes;
 import com.amaze.filemanager.utils.application.AppConfig;
 import com.amaze.filemanager.filesystem.HybridFile;
 import com.amaze.filemanager.utils.DataUtils;
@@ -214,23 +215,10 @@ public class GenericCopyUtil {
                 }
             } else {
                 // copying normal file, target not in OTG
-                File file = new File(mTargetFile.getPath());
-                if (FileUtil.isWritable(file)) {
-
-                    if (lowOnMemory) {
-                        bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(file));
-                    } else {
-
-                        outChannel = new RandomAccessFile(file, "rw").getChannel();
-                    }
-                } else {
-                    ContentResolver contentResolver = mContext.getContentResolver();
-                    DocumentFile documentTargetFile = FileUtil.getDocumentFile(file,
-                            mTargetFile.isDirectory(), mContext);
-
-                    bufferedOutputStream = new BufferedOutputStream(contentResolver
-                            .openOutputStream(documentTargetFile.getUri()), DEFAULT_BUFFER_SIZE);
-                }
+                DocumentFile file = FileUtil.getDocumentFile(mTargetFile.getFile().getParentFile(), true, mContext);
+                ContentResolver contentResolver = mContext.getContentResolver();
+                DocumentFile targetFile = file.createFile(MimeTypes.getMimeType(mTargetFile.getPath(), false), mTargetFile.getName(mContext));
+                bufferedOutputStream = new BufferedOutputStream(contentResolver.openOutputStream(targetFile.getUri()), DEFAULT_BUFFER_SIZE);
             }
 
             if (bufferedInputStream!=null) {

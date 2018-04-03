@@ -45,7 +45,6 @@ import android.os.HandlerThread;
 import android.service.quicksettings.TileService;
 import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback;
 import android.support.v4.app.Fragment;
@@ -64,7 +63,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
@@ -434,6 +432,13 @@ public class MainActivity extends ThemedActivity implements OnRequestPermissions
                 return null;
             }
         });
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT &&
+                getPrefs().getString(PreferencesConstants.PREFERENCE_URI, null) != null) {
+            String uri = getPrefs().getString(PreferencesConstants.PREFERENCE_URI, null);
+            getContentResolver().takePersistableUriPermission(Uri.parse(uri),
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        }
     }
 
     /**
