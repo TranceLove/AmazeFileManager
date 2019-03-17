@@ -28,6 +28,7 @@ import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.text.Editable;
@@ -142,8 +143,9 @@ public class SftpConnectDialog extends DialogFragment {
         //If MaterialDialog.Builder can be upgraded we may use their file selection dialog too
         selectPemBTN.setOnClickListener(v -> {
         Intent intent = new Intent()
-                .setType("text/plain")
-                .setAction(Intent.ACTION_GET_CONTENT);
+                .setType("application/x-pem-file")
+                .setAction(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT ?
+                        Intent.ACTION_OPEN_DOCUMENT : Intent.ACTION_GET_CONTENT);
 
         startActivityForResult(Intent.createChooser(intent, getString(R.string.select_pem_file)), SELECT_PEM_INTENT);
         });
