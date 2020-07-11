@@ -755,6 +755,8 @@ public abstract class FileUtil {
     }
 
     // This should have created the file - otherwise something is wrong with access URL.
+    boolean a = document.canWrite();
+    boolean b = file.exists();
     boolean result = document.canWrite() && file.exists();
 
     // Ensure that the dummy file is not remaining.
