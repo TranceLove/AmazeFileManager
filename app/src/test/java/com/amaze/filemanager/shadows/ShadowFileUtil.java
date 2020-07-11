@@ -48,7 +48,8 @@ public class ShadowFileUtil extends FileUtil {
 
   @Implementation
   public static boolean isWritable(final File file) {
-    return file.getParentFile() != null
+    return file != null
+        && file.getParentFile() != null
         && file.getAbsolutePath()
             .startsWith(Environment.getExternalStorageDirectory().getAbsolutePath());
   }

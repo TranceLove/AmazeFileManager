@@ -37,7 +37,9 @@ import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
@@ -47,6 +49,7 @@ import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.ftplet.Authority;
 import org.apache.ftpserver.ftplet.FtpException;
+import org.apache.ftpserver.ftplet.Ftplet;
 import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.ftpserver.ssl.ClientAuth;
 import org.apache.ftpserver.ssl.impl.DefaultSslConfiguration;
@@ -56,6 +59,8 @@ import org.greenrobot.eventbus.EventBus;
 
 import com.amaze.filemanager.R;
 import com.amaze.filemanager.filesystem.files.CryptUtil;
+import com.amaze.filemanager.filesystem.ftpserver.AndroidFileSystemFactory;
+import com.amaze.filemanager.filesystem.ftpserver.AndroidFtplet;
 import com.amaze.filemanager.ui.notifications.FtpNotification;
 import com.amaze.filemanager.ui.notifications.NotificationConstants;
 
@@ -84,7 +89,7 @@ public class FtpService extends Service implements Runnable {
   public static final String DEFAULT_USERNAME = "";
   public static final int DEFAULT_TIMEOUT = 600; // default timeout, in sec
   public static final boolean DEFAULT_SECURE = true;
-  public static final String PORT_PREFERENCE_KEY = "ftpPort";
+  public static final String KEY_PREFERENCE_PORT = "ftpPort";
   public static final String KEY_PREFERENCE_PATH = "ftp_path";
   public static final String KEY_PREFERENCE_USERNAME = "ftp_username";
   public static final String KEY_PREFERENCE_PASSWORD = "ftp_password_encrypted";
@@ -159,9 +164,16 @@ public class FtpService extends Service implements Runnable {
   public void run() {
     SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
+    String fileSystemRoot = preferences.getString(KEY_PREFERENCE_PATH, DEFAULT_PATH);
+    Map<String, Ftplet> ftplets = new HashMap<>();
+    ftplets.put("default", new AndroidFtplet(getApplicationContext(), fileSystemRoot));
+
     FtpServerFactory serverFactory = new FtpServerFactory();
     ConnectionConfigFactory connectionConfigFactory = new ConnectionConfigFactory();
     connectionConfigFactory.setAnonymousLoginEnabled(true);
+    serverFactory.setFileSystem(
+        new AndroidFileSystemFactory(getApplicationContext(), fileSystemRoot));
+    serverFactory.setFtplets(ftplets);
 
     serverFactory.setConnectionConfig(connectionConfigFactory.createConnectionConfig());
 
@@ -380,7 +392,7 @@ public class FtpService extends Service implements Runnable {
   }
 
   public static int getPort(SharedPreferences preferences) {
-    return preferences.getInt(PORT_PREFERENCE_KEY, DEFAULT_PORT);
+    return preferences.getInt(KEY_PREFERENCE_PORT, DEFAULT_PORT);
   }
 
   @Nullable
