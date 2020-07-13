@@ -20,6 +20,8 @@
 
 package com.amaze.filemanager.fragments;
 
+import static android.os.Build.VERSION.SDK_INT;
+import static android.provider.Settings.ACTION_WIFI_SETTINGS;
 import static com.amaze.filemanager.asynchronous.services.ftp.FtpService.FtpReceiverActions.STARTED_FROM_TILE;
 
 import java.io.IOException;
@@ -38,10 +40,13 @@ import com.amaze.filemanager.asynchronous.services.ftp.FtpService;
 import com.amaze.filemanager.ui.notifications.FtpNotification;
 import com.amaze.filemanager.utils.OneCharacterCharSequence;
 import com.amaze.filemanager.utils.Utils;
+import com.amaze.filemanager.utils.application.AppConfig;
 import com.amaze.filemanager.utils.files.CryptUtil;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -49,8 +54,10 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.text.Html;
 import android.text.InputType;
 import android.text.Spanned;
@@ -66,7 +73,9 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 import androidx.appcompat.widget.AppCompatCheckBox;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.fragment.app.Fragment;
@@ -90,6 +99,7 @@ public class FtpServerFragment extends Fragment {
   private Spanned spannedStatusNoConnection, spannedStatusConnected, spannedStatusUrl;
   private Spanned spannedStatusSecure, spannedStatusNotRunning;
   private ImageButton ftpPasswordVisibleButton;
+  private Snackbar snackbar;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -401,6 +411,7 @@ public class FtpServerFragment extends Fragment {
           && !FtpService.isEnabledWifiHotspot(getContext())) {
         statusText.setText(spannedStatusNoConnection);
         ftpBtn.setEnabled(false);
+        promptUserToEnableWireless();
       } else {
         statusText.setText(spannedStatusNotRunning);
         ftpBtn.setEnabled(true);
@@ -655,5 +666,47 @@ public class FtpServerFragment extends Fragment {
         .edit()
         .putBoolean(FtpService.KEY_PREFERENCE_SECURE, isSecureEnabled)
         .apply();
+  }
+
+  private void promptUserToEnableWireless() {
+    ConnectivityManager cm =
+            (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+    NetworkInfo ni = cm.getActiveNetworkInfo();
+    //No wifi, no data, no connection at all
+    if(!ni.isConnected()) {
+      showSnackbar(new Intent(ACTION_WIFI_SETTINGS));
+    } else {
+      //Data connection available, but no AP enabled
+      if(ni.getType() == ConnectivityManager.TYPE_MOBILE) {
+
+        //Attempt to open AP settings directly.
+        //Dirty hack used here. Reference: https://stackoverflow.com/a/51961818
+        String hotspotSettingsClass = "com.android.settings.Settings$TetherWifiSettingsActivity";
+        try {
+          Class.forName(hotspotSettingsClass);
+        } catch (ClassNotFoundException ifClassNotFound) {
+          //It can be more, and may need to more Class.forName(). Feedback welcome
+          hotspotSettingsClass = "com.android.settings.Settings$WifiApSettingsActivity";
+        }
+
+        Intent intent = new Intent(Intent.ACTION_MAIN, null);
+        ComponentName componentName = new ComponentName("com.android.settings", hotspotSettingsClass);
+        intent.setComponent(componentName);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+      }
+    }
+  }
+
+  private void showSnackbar(@StringRes int message, @NonNull Intent networkSettingIntent) {
+
+  }
+
+  private void dismissSnackbar() {
+    if (snackbar != null) {
+      snackbar.dismiss();
+      snackbar = null;
+    }
   }
 }
