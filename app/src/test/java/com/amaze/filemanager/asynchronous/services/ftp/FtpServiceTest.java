@@ -59,8 +59,8 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadow.api.Shadow;
+import org.robolectric.shadows.ShadowAsyncTask;
 import org.robolectric.shadows.ShadowConnectivityManager;
-import org.robolectric.shadows.ShadowLog;
 import org.robolectric.shadows.ShadowNetworkInfo;
 import org.robolectric.shadows.ShadowWifiManager;
 import org.robolectric.util.ReflectionHelpers;
@@ -82,7 +82,11 @@ import android.util.Base64;
 @RunWith(RobolectricTestRunner.class)
 @Config(
     constants = BuildConfig.class,
-    shadows = {ShadowMultiDex.class, ShadowContentResolverWithLocalOutputStreamSupport.class},
+    shadows = {
+      ShadowMultiDex.class,
+      ShadowContentResolverWithLocalOutputStreamSupport.class,
+      ShadowAsyncTask.class
+    },
     maxSdk = 27)
 public class FtpServiceTest {
 
@@ -132,8 +136,6 @@ public class FtpServiceTest {
 
     assertTrue(FtpService.isRunning());
     waitForServer();
-
-    ShadowLog.stream = System.out;
   }
 
   @After

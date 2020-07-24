@@ -80,6 +80,7 @@ android {
     testOptions {
         unitTests {
             includeAndroidResources = true
+            returnDefaultValues = true
         }
     }
 }
@@ -93,6 +94,9 @@ ext {
     roomVersion = '2.2.5'
     bouncyCastleVersion = '1.65'
     awaitilityVersion = "3.1.6"
+    minaSshdVersion = '1.7.0'
+    googleBillingVersion = '2.1.0'
+    slf4jVersion = '1.7.25'
 }
 
 dependencies {
@@ -107,7 +111,7 @@ dependencies {
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation "androidx.room:room-runtime:$roomVersion"
     annotationProcessor "androidx.room:room-compiler:$roomVersion"
-    implementation 'com.android.billingclient:billing:2.1.0'
+    implementation "com.android.billingclient:billing:$googleBillingVersion"
     annotationProcessor 'androidx.annotation:annotation:1.1.0'
 
     //For tests
@@ -117,7 +121,7 @@ dependencies {
     testImplementation "org.robolectric:shadows-httpclient:$robolectricVersion"//tests android interaction
     testImplementation 'org.mockito:mockito-core:1.10.19'
     testImplementation 'commons-net:commons-net:3.6'
-    testImplementation "org.apache.sshd:sshd-core:1.7.0"
+    testImplementation "org.apache.sshd:sshd-core:$minaSshdVersion"
     testImplementation "org.awaitility:awaitility:$awaitilityVersion"
 
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
@@ -155,11 +159,11 @@ dependencies {
 
     implementation group: 'org.apache.mina', name: 'mina-core', version: '2.0.16'
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
-    implementation group: 'org.slf4j', name: 'slf4j-android', version: '1.7.25'
+    implementation group: 'org.slf4j', name: 'slf4j-android', version: slf4jVersion
     // https://mvnrepository.com/artifact/org.slf4j/jcl-over-slf4j
-    implementation group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
+    implementation group: 'org.slf4j', name: 'jcl-over-slf4j', version: slf4jVersion
 
     //implementation files('libs/ftplet-api-1.1.0-SNAPSHOT.jar')
     // https://mvnrepository.com/artifact/org.apache.ftpserver/ftplet-api

@@ -207,7 +207,7 @@ public class FileUtils {
    * @param context
    */
   public static void scanFile(@NonNull Context context, @NonNull HybridFile[] hybridFiles) {
-    AsyncTask.execute(
+    AppConfig.runInBackground(
         () -> {
           if (hybridFiles[0].exists(context) && hybridFiles[0].isLocal()) {
             String[] paths = new String[hybridFiles.length];

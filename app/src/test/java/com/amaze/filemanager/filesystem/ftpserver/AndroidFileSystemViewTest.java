@@ -39,15 +39,9 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
-import com.amaze.filemanager.BuildConfig;
-import com.amaze.filemanager.shadows.ShadowMultiDex;
-
 import android.os.Environment;
 
-@Config(
-    minSdk = 14,
-    constants = BuildConfig.class,
-    shadows = {ShadowMultiDex.class})
+@Config(minSdk = 14)
 @RunWith(RobolectricTestRunner.class)
 public class AndroidFileSystemViewTest {
   private static final String SHARED_PATH_ROOT =
