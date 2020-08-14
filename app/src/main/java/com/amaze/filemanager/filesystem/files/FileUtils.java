@@ -78,6 +78,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 import androidx.documentfile.provider.DocumentFile;
 
@@ -107,6 +108,19 @@ public class FileUtils {
       }
     } catch (Exception e) {
       e.printStackTrace();
+    }
+    return length;
+  }
+
+  public static long folderSize(@NonNull DocumentFile directory, @Nullable OnProgressUpdate<Long> updateState) {
+    long length = 0l;
+    if(directory.isDirectory()) {
+      for(DocumentFile f : directory.listFiles()) {
+        if(f.isFile()) length += f.length();
+        else length += folderSize(directory, updateState);
+
+        if(updateState != null) updateState.onUpdate(length);
+      }
     }
     return length;
   }
@@ -800,7 +814,9 @@ public class FileUtils {
 
   public static boolean isRoot(
       String dir) { // TODO: 5/5/2017 hardcoding root might lead to problems down the line
-    return !dir.contains(OTGUtil.PREFIX_OTG) && !dir.startsWith("/storage");
+    return !dir.contains(OTGUtil.PREFIX_OTG)
+            && !dir.startsWith(OTGUtil.PREFIX_REMOVABLE)
+            && !dir.startsWith("/storage");
   }
 
   /** Converts ArrayList of HybridFileParcelable to ArrayList of File */

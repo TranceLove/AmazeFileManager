@@ -51,6 +51,12 @@ public class OTGUtil {
 
   public static final String PREFIX_OTG = "otg:/";
 
+  public static final String PREFIX_REMOVABLE = "/mnt/media_rw";
+
+  public static boolean isRemovable(@NonNull String path) {
+    return path.startsWith(PREFIX_REMOVABLE);
+  }
+
   /**
    * Returns an array of list of files at a specific path in OTG
    *
@@ -108,6 +114,28 @@ public class OTGUtil {
       }
     }
   }
+  public static void getDocumentFilesSaf(@NonNull String path, @NonNull Context context, @NonNull OnFileFound fileFound) {
+    DocumentFile rootUri = DocumentFile.fromTreeUri(context, Uri.parse(path));
+
+    // we have the end point DocumentFile, list the files inside it and return
+    for (DocumentFile file : rootUri.listFiles()) {
+      if (file.exists()) {
+        long size = 0;
+        if (!file.isDirectory()) size = file.length();
+        Log.d(context.getClass().getSimpleName(), "Found file: " + file.getUri().toString());
+        HybridFileParcelable baseFile =
+                new HybridFileParcelable(
+                        file.getUri().toString(),
+                        RootHelper.parseDocumentFilePermission(file),
+                        file.lastModified(),
+                        size,
+                        file.isDirectory());
+        baseFile.setName(file.getName());
+        baseFile.setMode(OpenMode.DOCUMENT_FILE);
+        fileFound.onFileFound(baseFile);
+      }
+    }
+  }
 
   /**
    * Traverse to a specified path in OTG
@@ -136,6 +164,12 @@ public class OTGUtil {
       rootUri = nextDocument;
     }
 
+    return rootUri;
+  }
+
+  public static DocumentFile getDocumentFileSaf(String path, Context context, boolean createRecursive) {
+    // start with root of SD card and then parse through document tree.
+    DocumentFile rootUri = DocumentFile.fromTreeUri(context, Uri.parse(path));
     return rootUri;
   }
 

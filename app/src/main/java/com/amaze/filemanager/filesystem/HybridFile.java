@@ -52,11 +52,13 @@ import com.cloudrail.si.types.SpaceAllocation;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.documentfile.provider.DocumentFile;
 
 import jcifs.smb.SmbException;
@@ -111,6 +113,8 @@ public class HybridFile {
       mode = OpenMode.SFTP;
     } else if (path.startsWith(OTGUtil.PREFIX_OTG)) {
       mode = OpenMode.OTG;
+    } else if (path.startsWith("content://")){
+      mode = OpenMode.DOCUMENT_FILE;
     } else if (isCustomPath()) {
       mode = OpenMode.CUSTOM;
     } else if (path.startsWith(CloudHandler.CLOUD_PREFIX_BOX)) {
@@ -194,8 +198,16 @@ public class HybridFile {
     return mode == OpenMode.GDRIVE;
   }
 
-  public File getFile() {
+  public boolean isDocumentFile() {
+    return mode == OpenMode.DOCUMENT_FILE;
+  }
+
+  @Nullable public File getFile() {
     return new File(path);
+  }
+
+  @Nullable public DocumentFile getDocumentFile(){
+    return DocumentFile.fromTreeUri(AppConfig.getInstance(), Uri.parse(path));
   }
 
   HybridFileParcelable generateBaseFileFromParent() {
@@ -210,21 +222,22 @@ public class HybridFile {
   public long lastModified() throws SmbException {
     switch (mode) {
       case SFTP:
-        SshClientUtils.execute(
+        return SshClientUtils.<Long>execute(
             new SFtpClientTemplate(path) {
               @Override
-              public Long execute(SFTPClient client) throws IOException {
+              public Long execute(@NonNull SFTPClient client) throws IOException {
                 return client.mtime(SshClientUtils.extractRemotePathFrom(path));
               }
             });
-        break;
       case SMB:
         SmbFile smbFile = getSmbFile();
         if (smbFile != null) return smbFile.lastModified();
         break;
       case FILE:
-        new File(path).lastModified();
-        break;
+        return getFile().lastModified();
+      case DOCUMENT_FILE:
+        DocumentFile documentFile = DocumentFile.fromTreeUri(AppConfig.getInstance(), Uri.parse(path));
+        return documentFile != null ? documentFile.lastModified() : 0;
       case ROOT:
         HybridFileParcelable baseFile = generateBaseFileFromParent();
         if (baseFile != null) return baseFile.getDate();
@@ -232,40 +245,8 @@ public class HybridFile {
     return new File("/").lastModified();
   }
 
-  /** @deprecated use {@link #length(Context)} to handle content resolvers */
-  public long length() {
-    long s = 0L;
-    switch (mode) {
-      case SFTP:
-        return SshClientUtils.execute(
-            new SFtpClientTemplate(path) {
-              @Override
-              public Long execute(SFTPClient client) throws IOException {
-                return client.size(SshClientUtils.extractRemotePathFrom(path));
-              }
-            });
-      case SMB:
-        SmbFile smbFile = getSmbFile();
-        if (smbFile != null)
-          try {
-            s = smbFile.length();
-          } catch (SmbException e) {
-          }
-        return s;
-      case FILE:
-        s = new File(path).length();
-        return s;
-      case ROOT:
-        HybridFileParcelable baseFile = generateBaseFileFromParent();
-        if (baseFile != null) return baseFile.getSize();
-        break;
-    }
-    return s;
-  }
-
   /** Helper method to find length */
   public long length(Context context) {
-
     long s = 0l;
     switch (mode) {
       case SFTP:
@@ -279,7 +260,7 @@ public class HybridFile {
           }
         return s;
       case FILE:
-        s = new File(path).length();
+        s = getFile().length();
         return s;
       case ROOT:
         HybridFileParcelable baseFile = generateBaseFileFromParent();
@@ -316,6 +297,9 @@ public class HybridFile {
                 .getMetadata(CloudUtil.stripPath(OpenMode.GDRIVE, path))
                 .getSize();
         break;
+      case DOCUMENT_FILE:
+        DocumentFile documentFile = getDocumentFile();
+        if(documentFile != null) return documentFile.length();
       default:
         break;
     }
@@ -335,9 +319,9 @@ public class HybridFile {
         if (smbFile != null) return smbFile.getName();
         break;
       case FILE:
-        return new File(path).getName();
+        return getFile().getName();
       case ROOT:
-        return new File(path).getName();
+        return getFile().getName();
       default:
         StringBuilder builder = new StringBuilder(path);
         name = builder.substring(builder.lastIndexOf("/") + 1, builder.length());
@@ -353,14 +337,14 @@ public class HybridFile {
         if (smbFile != null) return smbFile.getName();
         break;
       case FILE:
-        return new File(path).getName();
       case ROOT:
-        return new File(path).getName();
+        return getFile().getName();
       case OTG:
         return OTGUtil.getDocumentFile(path, context, false).getName();
+      case DOCUMENT_FILE:
+        return getDocumentFile().getName();
       default:
-        StringBuilder builder = new StringBuilder(path);
-        name = builder.substring(builder.lastIndexOf("/") + 1, builder.length());
+        name = path.substring(path.lastIndexOf('/'));
     }
     return name;
   }
@@ -393,33 +377,6 @@ public class HybridFile {
         || path.equals("6");
   }
 
-  /**
-   * Returns a path to parent for various {@link #mode}
-   *
-   * @deprecated use {@link #getParent(Context)} to handle content resolvers
-   */
-  public String getParent() {
-    String parentPath = "";
-    switch (mode) {
-      case SMB:
-        try {
-          parentPath = new SmbFile(path).getParent();
-        } catch (MalformedURLException e) {
-          parentPath = "";
-          e.printStackTrace();
-        }
-        break;
-      case FILE:
-      case ROOT:
-        parentPath = new File(path).getParent();
-        break;
-      default:
-        StringBuilder builder = new StringBuilder(path);
-        return builder.substring(0, builder.length() - (getName().length() + 1));
-    }
-    return parentPath;
-  }
-
   /** Helper method to get parent path */
   public String getParent(Context context) {
 
@@ -435,8 +392,10 @@ public class HybridFile {
         break;
       case FILE:
       case ROOT:
-        parentPath = new File(path).getParent();
+        parentPath = getFile().getParent();
         break;
+      case DOCUMENT_FILE:
+        parentPath = getDocumentFile().getParentFile().getUri().toString();
       case OTG:
       default:
         StringBuilder builder = new StringBuilder(path);
@@ -465,6 +424,7 @@ public class HybridFile {
     boolean isDirectory;
     switch (mode) {
       case SFTP:
+      case DOCUMENT_FILE:
         return isDirectory(AppConfig.getInstance());
       case SMB:
         try {
@@ -478,7 +438,7 @@ public class HybridFile {
         }
         break;
       case FILE:
-        isDirectory = new File(path).isDirectory();
+        isDirectory = getFile().isDirectory();
         break;
       case ROOT:
         try {
@@ -494,7 +454,7 @@ public class HybridFile {
         isDirectory = false;
         break;
       default:
-        isDirectory = new File(path).isDirectory();
+        isDirectory = getFile().isDirectory();
         break;
     }
     return isDirectory;
@@ -531,7 +491,7 @@ public class HybridFile {
         }
         break;
       case FILE:
-        isDirectory = new File(path).isDirectory();
+        isDirectory = getFile().isDirectory();
         break;
       case ROOT:
         try {
@@ -572,8 +532,10 @@ public class HybridFile {
                 .getMetadata(CloudUtil.stripPath(OpenMode.ONEDRIVE, path))
                 .getFolder();
         break;
+      case DOCUMENT_FILE:
+        isDirectory = getDocumentFile().isDirectory();
       default:
-        isDirectory = new File(path).isDirectory();
+        isDirectory = getFile().isDirectory();
         break;
     }
     return isDirectory;
@@ -595,7 +557,7 @@ public class HybridFile {
         }
         break;
       case FILE:
-        size = FileUtils.folderSize(new File(path), null);
+        size = FileUtils.folderSize(getFile(), null);
         break;
       case ROOT:
         HybridFileParcelable baseFile = generateBaseFileFromParent();
@@ -630,7 +592,7 @@ public class HybridFile {
         }
         break;
       case FILE:
-        size = FileUtils.folderSize(new File(path), null);
+        size = FileUtils.folderSize(getFile(), null);
         break;
       case ROOT:
         HybridFileParcelable baseFile = generateBaseFileFromParent();
@@ -647,6 +609,8 @@ public class HybridFile {
             FileUtils.folderSizeCloud(
                 mode, dataUtils.getAccount(mode).getMetadata(CloudUtil.stripPath(mode, path)));
         break;
+      case DOCUMENT_FILE:
+        size = FileUtils.folderSize(getDocumentFile(), null);
       default:
         return 0l;
     }
@@ -670,7 +634,7 @@ public class HybridFile {
         break;
       case FILE:
       case ROOT:
-        size = new File(path).getUsableSpace();
+        size = getFile().getUsableSpace();
         break;
       case DROPBOX:
       case BOX:
@@ -706,6 +670,8 @@ public class HybridFile {
                   }
                 });
         break;
+      case DOCUMENT_FILE:
+        // TODO: StorageManager
       case OTG:
         // TODO: Get free space from OTG when {@link DocumentFile} API adds support
         break;
@@ -729,7 +695,7 @@ public class HybridFile {
         break;
       case FILE:
       case ROOT:
-        size = new File(path).getTotalSpace();
+        size = getFile().getTotalSpace();
         break;
       case DROPBOX:
       case BOX:
@@ -765,6 +731,9 @@ public class HybridFile {
                   }
                 });
         break;
+      case DOCUMENT_FILE:
+        // TODO: StorageManager
+        return getDocumentFile().length();
       case OTG:
         // TODO: Find total storage space of OTG when {@link DocumentFile} API adds support
         DocumentFile documentFile = OTGUtil.getDocumentFile(path, context, false);
@@ -786,29 +755,8 @@ public class HybridFile {
                   try {
                     for (RemoteResourceInfo info :
                         client.ls(SshClientUtils.extractRemotePathFrom(path))) {
-                      boolean isDirectory = info.isDirectory();
-                      if (info.getAttributes().getType().equals(FileMode.Type.SYMLINK)) {
-                        try {
-                          FileAttributes symlinkAttrs = client.stat(info.getPath());
-                          isDirectory = symlinkAttrs.getType().equals(FileMode.Type.DIRECTORY);
-                        } catch (IOException ifSymlinkIsBroken) {
-                          Log.w(
-                              TAG,
-                              String.format(
-                                  "Symbolic link %s is broken, skipping", info.getPath()));
-                          continue;
-                        }
-                      }
-                      HybridFileParcelable f =
-                          new HybridFileParcelable(String.format("%s/%s", path, info.getName()));
-                      f.setName(info.getName());
-                      f.setMode(OpenMode.SFTP);
-                      f.setDirectory(isDirectory);
-                      f.setDate(info.getAttributes().getMtime() * 1000);
-                      f.setSize(isDirectory ? 0 : info.getAttributes().getSize());
-                      f.setPermission(
-                          Integer.toString(
-                              FilePermission.toMask(info.getAttributes().getPermissions()), 8));
+                      boolean isDirectory = SshClientUtils.isDirectory(client, info);
+                      HybridFileParcelable f = new HybridFileParcelable(path, isDirectory, info);
                       onFileFound.onFileFound(f);
                     }
                   } catch (IOException e) {
@@ -825,16 +773,17 @@ public class HybridFile {
         try {
           SmbFile smbFile = new SmbFile(path);
           for (SmbFile smbFile1 : smbFile.listFiles()) {
-            HybridFileParcelable baseFile = new HybridFileParcelable(smbFile1.getPath());
-            baseFile.setName(smbFile1.getName());
-            baseFile.setMode(OpenMode.SMB);
-            baseFile.setDirectory(smbFile1.isDirectory());
-            baseFile.setDate(smbFile1.lastModified());
-            baseFile.setSize(baseFile.isDirectory() ? 0 : smbFile1.length());
+            HybridFileParcelable baseFile = new HybridFileParcelable(smbFile1);
             onFileFound.onFileFound(baseFile);
           }
         } catch (MalformedURLException | SmbException e) {
           e.printStackTrace();
+        }
+        break;
+      case DOCUMENT_FILE:
+        for(DocumentFile f : getDocumentFile().listFiles()) {
+          HybridFileParcelable baseFile = new HybridFileParcelable(f);
+          onFileFound.onFileFound(baseFile);
         }
         break;
       case OTG:
@@ -875,17 +824,8 @@ public class HybridFile {
                       try {
                         for (RemoteResourceInfo info :
                             client.ls(SshClientUtils.extractRemotePathFrom(path))) {
-                          HybridFileParcelable f =
-                              new HybridFileParcelable(
-                                  String.format("%s/%s", path, info.getName()));
-                          f.setName(info.getName());
-                          f.setMode(OpenMode.SFTP);
-                          f.setDirectory(info.isDirectory());
-                          f.setDate(info.getAttributes().getMtime() * 1000);
-                          f.setSize(f.isDirectory() ? 0 : info.getAttributes().getSize());
-                          f.setPermission(
-                              Integer.toString(
-                                  FilePermission.toMask(info.getAttributes().getPermissions()), 8));
+                          boolean isDirectory = SshClientUtils.isDirectory(client, info);
+                          HybridFileParcelable f = new HybridFileParcelable(path, isDirectory, info);
                           retval.add(f);
                         }
                       } catch (IOException e) {
@@ -912,10 +852,10 @@ public class HybridFile {
             arrayList.add(baseFile);
           }
         } catch (MalformedURLException e) {
-          if (arrayList != null) arrayList.clear();
+          arrayList.clear();
           e.printStackTrace();
         } catch (SmbException e) {
-          if (arrayList != null) arrayList.clear();
+          arrayList.clear();
           e.printStackTrace();
         }
         break;
@@ -1032,8 +972,17 @@ public class HybridFile {
           e.printStackTrace();
         }
         break;
-      case OTG:
+      case DOCUMENT_FILE:
         ContentResolver contentResolver = context.getContentResolver();
+        try {
+          inputStream = contentResolver.openInputStream(Uri.parse(path));
+        } catch (FileNotFoundException e) {
+          e.printStackTrace();
+          inputStream = null;
+        }
+        break;
+      case OTG:
+        contentResolver = context.getContentResolver();
         DocumentFile documentSourceFile = OTGUtil.getDocumentFile(path, context, false);
         try {
           inputStream = contentResolver.openInputStream(documentSourceFile.getUri());
@@ -1117,9 +1066,18 @@ public class HybridFile {
           outputStream = null;
         }
         break;
+      case DOCUMENT_FILE:
+        contentResolver = context.getContentResolver();
+        try {
+          outputStream = contentResolver.openOutputStream(Uri.parse(path));
+        } catch (FileNotFoundException e) {
+          e.printStackTrace();
+          outputStream = null;
+        }
+        break;
       default:
         try {
-          outputStream = FileUtil.getOutputStream(new File(path), context);
+          outputStream = FileUtil.getOutputStream(getFile(), context);
         } catch (Exception e) {
           outputStream = null;
           e.printStackTrace();
@@ -1163,7 +1121,9 @@ public class HybridFile {
       CloudStorage cloudStorageOneDrive = dataUtils.getAccount(OpenMode.ONEDRIVE);
       exists = cloudStorageOneDrive.exists(CloudUtil.stripPath(OpenMode.ONEDRIVE, path));
     } else if (isLocal()) {
-      exists = new File(path).exists();
+      exists = getFile().exists();
+    } else if (isDocumentFile()) {
+      exists = getDocumentFile().exists();
     } else if (isRoot()) {
       return RootHelper.fileExists(path);
     }
@@ -1189,7 +1149,7 @@ public class HybridFile {
         && !isOtgFile()
         && !isCustomPath()
         && !android.util.Patterns.EMAIL_ADDRESS.matcher(path).matches()
-        && !new File(path).isDirectory()
+        && !getFile().isDirectory()
         && !isOneDriveFile()
         && !isGoogleDriveFile()
         && !isDropBoxFile()
@@ -1208,7 +1168,7 @@ public class HybridFile {
         return false;
       }
     }
-    File f = new File(path);
+    File f = getFile();
     return f.setLastModified(date);
   }
 
@@ -1239,6 +1199,11 @@ public class HybridFile {
           parentDirectory.createDirectory(getName(context));
         }
       }
+    } else if (isDocumentFile()) {
+        DocumentFile parentDirectory = getDocumentFile().getParentFile();
+        if(parentDirectory != null && parentDirectory.isDirectory()) {
+          parentDirectory.createDirectory(getName(context));
+        }
     } else if (isDropBoxFile()) {
       CloudStorage cloudStorageDropbox = dataUtils.getAccount(OpenMode.DROPBOX);
       try {
@@ -1267,7 +1232,7 @@ public class HybridFile {
       } catch (Exception e) {
         e.printStackTrace();
       }
-    } else FileUtil.mkdir(new File(path), context);
+    } else FileUtil.mkdir(getFile(), context);
   }
 
   public boolean delete(Context context, boolean rootmode) throws ShellNotRunningException {
@@ -1289,12 +1254,14 @@ public class HybridFile {
       } catch (SmbException | MalformedURLException e) {
         e.printStackTrace();
       }
+    } else if (isDocumentFile()) {
+      getDocumentFile().delete();
     } else {
       if (isRoot() && rootmode) {
         setMode(OpenMode.ROOT);
         RootUtils.delete(getPath());
       } else {
-        FileUtil.deleteFile(new File(path), context);
+        FileUtil.deleteFile(getFile(), context);
       }
     }
     return !exists();
@@ -1320,7 +1287,7 @@ public class HybridFile {
     switch (mode) {
       case FILE:
       case ROOT:
-        File file = new File(path);
+        File file = getFile();
         LayoutElementParcelable layoutElement;
         if (isDirectory()) {
 

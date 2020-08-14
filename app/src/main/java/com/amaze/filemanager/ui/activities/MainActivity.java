@@ -1484,10 +1484,13 @@ public class MainActivity extends PermissionsActivity
     } else if (requestCode == REQUEST_CODE_SAF) {
       if (responseCode == Activity.RESULT_OK && intent.getData() != null) {
         // otg access
-        Uri usbOtgRoot = Uri.parse(intent.getData().toString());
-        SingletonUsbOtg.getInstance().setUsbOtgRoot(usbOtgRoot);
-        getCurrentMainFragment().loadlist(OTGUtil.PREFIX_OTG, false, OpenMode.OTG);
-
+        Uri usbOtgRoot = intent.getData();
+        if("content".equals(usbOtgRoot.getScheme())) {
+          getCurrentMainFragment().loadlist(usbOtgRoot.toString(), false, OpenMode.DOCUMENT_FILE);
+        } else {
+          SingletonUsbOtg.getInstance().setUsbOtgRoot(usbOtgRoot);
+          getCurrentMainFragment().loadlist(OTGUtil.PREFIX_OTG, false, OpenMode.OTG);
+        }
         drawer.closeIfNotLocked();
         if (drawer.isLocked()) drawer.onDrawerClosed();
       } else {
