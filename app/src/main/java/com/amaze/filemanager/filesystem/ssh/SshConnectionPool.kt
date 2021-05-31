@@ -174,7 +174,7 @@ object SshConnectionPool {
         val utilsHandler = AppConfig.getInstance().utilsHandler
         val pem = utilsHandler.getSshAuthPrivateKey(url)
         val keyPair = AtomicReference<KeyPair?>(null)
-        if (pem != null && !pem.isEmpty()) {
+        if (pem != null && pem.isNotEmpty()) {
             try {
                 val latch = CountDownLatch(1)
                 PemToKeyPairTask(

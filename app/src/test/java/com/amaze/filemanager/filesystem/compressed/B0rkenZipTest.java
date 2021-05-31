@@ -35,6 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowLooper;
 import org.robolectric.shadows.ShadowToast;
 
 import com.amaze.filemanager.R;
@@ -146,6 +147,7 @@ public class B0rkenZipTest {
     List<CompressedObjectParcelable> result = task.execute().get().result;
     assertEquals(1, result.size());
     assertEquals("good.txt", result.get(0).path);
+    ShadowLooper.idleMainLooper();
     assertEquals(
         ApplicationProvider.getApplicationContext()
             .getString(R.string.multiple_invalid_archive_entries),
@@ -162,6 +164,7 @@ public class B0rkenZipTest {
             false,
             (data) -> {});
     List<CompressedObjectParcelable> result = task.execute().get().result;
+    ShadowLooper.idleMainLooper();
     assertEquals(1, result.size());
     assertEquals("good.txt", result.get(0).path);
     assertEquals(

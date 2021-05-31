@@ -46,12 +46,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowPausedAsyncTask;
 import org.robolectric.shadows.ShadowSQLiteConnection;
 
 import com.amaze.filemanager.filesystem.ssh.test.TestUtils;
 import com.amaze.filemanager.shadows.ShadowMultiDex;
 import com.amaze.filemanager.test.ShadowCryptUtil;
 import com.amaze.filemanager.utils.Utils;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -202,6 +204,7 @@ public class SshConnectionPoolTest {
 
   @Test
   public void testGetConnectionWithUrlAndKeyAuth() throws IOException {
+    ShadowPausedAsyncTask.overrideExecutor(MoreExecutors.directExecutor());
     SSHClient mock = createSshServer("testuser", null);
     saveSshConnectionSettings(hostKeyPair, "testuser", null, userKeyPair.getPrivate());
     assertNotNull(SshConnectionPool.INSTANCE.getConnection("ssh://testuser@127.0.0.1:22222"));
