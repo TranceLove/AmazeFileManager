@@ -85,6 +85,8 @@ public class HybridFile {
 
   private static final String TAG = "HFile";
 
+  private static final String DOCUMENT_FILE_PREFIX = "content://com.android.externalstorage.documents";
+
   String path;
   // public static final int ROOT_MODE=3,LOCAL_MODE=0,SMB_MODE=1,UNKNOWN=-1;
   OpenMode mode = OpenMode.FILE;
@@ -119,6 +121,8 @@ public class HybridFile {
       mode = OpenMode.SFTP;
     } else if (path.startsWith(OTGUtil.PREFIX_OTG)) {
       mode = OpenMode.OTG;
+    } else if (path.startsWith(DOCUMENT_FILE_PREFIX)) {
+      mode = OpenMode.DOCUMENT_FILE;
     } else if (isCustomPath()) {
       mode = OpenMode.CUSTOM;
     } else if (path.startsWith(CloudHandler.CLOUD_PREFIX_BOX)) {
@@ -188,6 +192,10 @@ public class HybridFile {
     return mode == OpenMode.OTG;
   }
 
+  public boolean isDocumentFile() {
+    return mode == OpenMode.DOCUMENT_FILE;
+  }
+
   public boolean isBoxFile() {
     return mode == OpenMode.BOX;
   }
@@ -241,6 +249,8 @@ public class HybridFile {
         break;
       case FILE:
         return getFile().lastModified();
+      case DOCUMENT_FILE:
+
       case ROOT:
         HybridFileParcelable baseFile = generateBaseFileFromParent();
         if (baseFile != null) return baseFile.getDate();

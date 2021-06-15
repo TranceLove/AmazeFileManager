@@ -23,6 +23,7 @@ package com.amaze.filemanager.utils
 import android.content.Context
 import android.hardware.usb.UsbConstants
 import android.hardware.usb.UsbManager
+import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.KITKAT
 import android.os.Build.VERSION_CODES.LOLLIPOP
@@ -118,27 +119,37 @@ object OTGUtil {
     @JvmStatic
     fun getDocumentFile(
         path: String,
-        context: Context?,
+        context: Context,
         createRecursive: Boolean
     ): DocumentFile? {
         val rootUriString = SingletonUsbOtg.getInstance().usbOtgRoot
             ?: throw NullPointerException("USB OTG root not set!")
 
+        return getDocumentFile(path, rootUriString, context, createRecursive)
+    }
+
+    @JvmStatic
+    fun getDocumentFile(
+        path: String,
+        rootUri: Uri,
+        context: Context,
+        createRecursive: Boolean
+    ): DocumentFile? {
         // start with root of SD card and then parse through document tree.
-        var rootUri = DocumentFile.fromTreeUri(context!!, rootUriString)
+        var retval = DocumentFile.fromTreeUri(context, rootUri)
         val parts = path.split("/").toTypedArray()
         for (part in parts) {
             if (path == "otg:/") break
             if (part == "otg:" || part == "") continue
 
             // iterating through the required path to find the end point
-            var nextDocument = rootUri!!.findFile(part)
+            var nextDocument = retval!!.findFile(part)
             if (createRecursive && (nextDocument == null || !nextDocument.exists())) {
-                nextDocument = rootUri.createFile(part.substring(part.lastIndexOf(".")), part)
+                nextDocument = retval.createFile(part.substring(part.lastIndexOf(".")), part)
             }
-            rootUri = nextDocument
+            retval = nextDocument
         }
-        return rootUri
+        return retval
     }
 
     /** Check if the usb uri is still accessible  */

@@ -22,6 +22,8 @@ package com.amaze.filemanager.filesystem
 
 import android.content.Context
 import android.os.Build
+import android.os.Environment
+import android.provider.DocumentsContract
 import com.amaze.filemanager.database.CloudHandler
 import com.amaze.filemanager.filesystem.DeleteOperation.deleteFile
 import com.amaze.filemanager.filesystem.ExternalSdCardOperation.isOnExtSdCard
@@ -37,6 +39,12 @@ import java.util.regex.Pattern
 // TODO check if these can be done with just File methods
 // TODO make all of these methods File extensions
 object FileProperties {
+
+    val EXCLUDED_DIRS = arrayOf(
+        File(Environment.getExternalStorageDirectory(), "Android/data").absolutePath,
+        File(Environment.getExternalStorageDirectory(), "Android/obb").absolutePath
+    )
+
     /**
      * Check if a file is readable.
      *
@@ -186,5 +194,15 @@ object FileProperties {
         // (filename.zip) behind...
         // So we simply use equality to check them
         return !filenameRegex.matcher(text).find() && "." != text && ".." != text
+    }
+
+    @JvmStatic
+    fun remapPathForApi30OrAbove(path: String): String {
+        return if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q && EXCLUDED_DIRS.contains(path)) {
+            val suffix = path.substringAfter(Environment.getExternalStorageDirectory().absolutePath)
+            DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", suffix).toString()
+        } else {
+            path
+        }
     }
 }
