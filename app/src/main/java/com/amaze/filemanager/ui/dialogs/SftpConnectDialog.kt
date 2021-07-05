@@ -50,7 +50,7 @@ import com.amaze.filemanager.database.models.OperationData
 import com.amaze.filemanager.databinding.SftpDialogBinding
 import com.amaze.filemanager.file_operations.filesystem.OpenMode
 import com.amaze.filemanager.filesystem.ssh.SshClientUtils
-import com.amaze.filemanager.filesystem.ssh.SshConnectionPool
+import com.amaze.filemanager.filesystem.ftp.FtpConnectionPool
 import com.amaze.filemanager.ui.activities.MainActivity
 import com.amaze.filemanager.ui.activities.superclasses.ThemedActivity
 import com.amaze.filemanager.ui.provider.UtilitiesProvider
@@ -167,7 +167,7 @@ class SftpConnectDialog : DialogFragment() {
         // Otherwise, use given Bundle instance for filling in the blanks
         if (!edit) {
             connectionET.setText(R.string.scp_connection)
-            portET.setText(SshConnectionPool.SSH_DEFAULT_PORT.toString())
+            portET.setText(FtpConnectionPool.SSH_DEFAULT_PORT.toString())
         } else {
             connectionET.setText(requireArguments().getString(ARG_NAME))
             ipET.setText(requireArguments().getString(ARG_ADDRESS))
@@ -276,7 +276,7 @@ class SftpConnectDialog : DialogFragment() {
                             selectedParsedKeyPair
                         )
                     )?.let { sshHostKey ->
-                        SshConnectionPool.removeConnection(
+                        FtpConnectionPool.removeConnection(
                             SshClientUtils.deriveSftpPathFrom(
                                 hostname,
                                 port,
@@ -307,7 +307,7 @@ class SftpConnectDialog : DialogFragment() {
             taskResult.result?.run {
                 val hostKeyFingerprint = SecurityUtils.getFingerprint(this)
                 val hostAndPort = StringBuilder(hostname).also {
-                    if (port != SshConnectionPool.SSH_DEFAULT_PORT && port > 0) {
+                    if (port != FtpConnectionPool.SSH_DEFAULT_PORT && port > 0) {
                         it.append(':').append(port)
                     }
                 }.toString()
@@ -452,7 +452,7 @@ class SftpConnectDialog : DialogFragment() {
     ): Boolean {
         connectionSettings.run {
             return runCatching {
-                SshConnectionPool.getConnection(
+                FtpConnectionPool.getConnection(
                     hostname,
                     port,
                     hostKeyFingerprint,

@@ -1,73 +1,39 @@
-/*
- * Copyright (C) 2014-2021 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
- * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
- *
- * This file is part of Amaze File Manager.
- *
- * Amaze File Manager is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-package com.amaze.filemanager.filesystem.ssh
+package com.amaze.filemanager.filesystem.ftp
 
 import android.os.AsyncTask
 import android.util.Log
 import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.asynchronous.asynctasks.ssh.PemToKeyPairTask
 import com.amaze.filemanager.asynchronous.asynctasks.ssh.SshAuthenticationTask
+import com.amaze.filemanager.filesystem.ssh.SshClientUtils
 import net.schmizz.sshj.Config
 import net.schmizz.sshj.SSHClient
+import org.apache.commons.net.ftp.FTPClient
+import org.apache.commons.net.ftp.FTPConnectionClosedException
+import org.apache.commons.net.ftp.FTPSClient
 import java.security.KeyPair
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.atomic.AtomicReference
 
-/**
- * Poor man's implementation of SSH connection pool.
- *
- *
- * It uses a [ConcurrentHashMap] to hold the opened SSH connections; all code that uses
- * [SSHClient] can ask for connection here with `getConnection(url)`.
- */
-object SshConnectionPool {
-
+object FtpConnectionPool {
+    const val FTP_DEFAULT_PORT = 21
     const val SSH_DEFAULT_PORT = 22
+    const val FTP_URI_PREFIX = "ftp://"
+    const val FTPS_URI_PREFIX = "ftps://"
     const val SSH_URI_PREFIX = "ssh://"
-    const val SSH_CONNECT_TIMEOUT = 30000
+    const val CONNECT_TIMEOUT = 30000
 
-    private val TAG = SshConnectionPool::class.java.simpleName
+    private val TAG = FtpConnectionPool::class.java.simpleName
 
-    private var connections: MutableMap<String, SSHClient> = ConcurrentHashMap()
+    private var connections: MutableMap<String, NetCopyClient> = ConcurrentHashMap()
 
     @JvmField
     var sshClientFactory: SSHClientFactory = DefaultSSHClientFactory()
 
-    /**
-     * Remove a SSH connection from connection pool. Disconnects from server before removing.
-     *
-     *
-     * For updating SSH connection settings.
-     *
-     *
-     * This method will silently end without feedback if the specified SSH connection URI does not
-     * exist in the connection pool.
-     *
-     * @param url SSH connection URI
-     */
-    fun removeConnection(url: String, callback: Runnable) {
-        AsyncRemoveConnection(url, callback).execute()
-    }
+    @JvmField
+    var ftpClientFactory: FTPClientFactory = DefaultFTPClientFactory()
 
     /**
      * Obtain a [SSHClient] connection from the underlying connection pool.
@@ -82,10 +48,10 @@ object SshConnectionPool {
      * @return [SSHClient] connection, already opened and authenticated
      * @throws IOException IOExceptions that occur during connection setup
      */
-    fun getConnection(url: String): SSHClient? {
+    fun getConnection(url: String): NetCopyClient? {
         var client = connections[url]
         if (client == null) {
-            client = create(url)
+            client = createNetCopyClient.invoke(url)
             if (client != null) {
                 connections[url] = client
             }
@@ -94,7 +60,7 @@ object SshConnectionPool {
                 Log.d(TAG, "Connection no longer usable. Reconnecting...")
                 expire(client)
                 connections.remove(url)
-                client = create(url)
+                client = createNetCopyClient.invoke(url)
                 if (client != null) {
                     connections[url] = client
                 }
@@ -130,46 +96,83 @@ object SshConnectionPool {
         username: String,
         password: String?,
         keyPair: KeyPair?
-    ): SSHClient? {
+    ): NetCopyClient? {
         val url = SshClientUtils.deriveSftpPathFrom(host, port, "", username, password, keyPair)
         var client = connections[url]
         if (client == null) {
-            client = create(host, port, hostFingerprint, username, password, keyPair)
+            client =
+                createSshClientInternal(host, port, hostFingerprint, username, password, keyPair)?.run {
+                    SSHClientImpl(this)
+                }
             if (client != null) connections[url] = client
         } else {
             if (!validate(client)) {
                 Log.d(TAG, "Connection no longer usable. Reconnecting...")
                 expire(client)
                 connections.remove(url)
-                client = create(host, port, hostFingerprint, username, password, keyPair)
+                client = createSshClientInternal(
+                    host,
+                    port,
+                    hostFingerprint,
+                    username,
+                    password,
+                    keyPair
+                )?.run {
+                    SSHClientImpl(this)
+                }
                 if (client != null) connections[url] = client
             }
         }
         return client
     }
 
+    private val createNetCopyClient: (String) -> NetCopyClient? = { url ->
+        if(url.startsWith(SSH_URI_PREFIX)) {
+            createSshClient(url)
+        } else {
+            createFtpClient(url)
+        }
+    }
+
     /**
-     * Kill any connection that is still in place. Used by [ ].
+     * Remove a SSH connection from connection pool. Disconnects from server before removing.
+     *
+     * For updating SSH connection settings.
+     *
+     * This method will silently end without feedback if the specified SSH connection URI does not
+     * exist in the connection pool.
+     *
+     * @param url SSH connection URI
+     */
+    fun removeConnection(url: String, callback: Runnable) {
+        AsyncRemoveConnection(url, callback).execute()
+    }
+
+    /**
+     * Kill any connection that is still in place. Used by MainActivity.
      *
      * @see MainActivity.onDestroy
      * @see MainActivity.exit
      */
     fun shutdown() {
-        AppConfig.getInstance()
-            .runInBackground {
-                if (!connections.isEmpty()) {
-                    for (connection in connections.values) {
-                        SshClientUtils.tryDisconnect(connection)
-                    }
-                    connections.clear()
+        AppConfig.getInstance().runInBackground {
+            if(connections.isNotEmpty()) {
+                connections.values.forEach {
+                    it.expire()
                 }
+                connections.clear()
             }
+        }
     }
+
+    private fun validate(client: NetCopyClient): Boolean = client.isConnectionValid()
+
+    private fun expire(client: NetCopyClient) = client.expire()
 
     // Logic for creating SSH connection. Depends on password existence in given Uri password or
     // key-based authentication
     @Suppress("TooGenericExceptionThrown")
-    private fun create(url: String): SSHClient? {
+    private fun createSshClient(url: String): NetCopyClient? {
         val connInfo = ConnectionInfo(url)
         val utilsHandler = AppConfig.getInstance().utilsHandler
         val pem = utilsHandler.getSshAuthPrivateKey(url)
@@ -190,18 +193,20 @@ object SshConnectionPool {
             }
         }
         val hostKey = utilsHandler.getSshHostKey(url) ?: return null
-        return create(
+        return createSshClientInternal(
             connInfo.host,
             connInfo.port,
             hostKey,
             connInfo.username,
             connInfo.password,
             keyPair.get()
-        )
+        )?.run {
+            SSHClientImpl(this)
+        }
     }
 
     @Suppress("LongParameterList")
-    private fun create(
+    private fun createSshClientInternal(
         host: String,
         port: Int,
         hostKey: String,
@@ -228,8 +233,20 @@ object SshConnectionPool {
         }
     }
 
-    private fun validate(client: SSHClient): Boolean {
-        return client.isConnected && client.isAuthenticated
+    private fun createFtpClient(url: String): NetCopyClient? {
+        return runCatching {
+            val ftpClient = ftpClientFactory.create(url)
+            val connInfo = ConnectionInfo(url)
+            ftpClient.login(connInfo.username, connInfo.password)
+            FTPClientImpl(ftpClient)
+        }.onFailure {
+            when {
+                it is FTPConnectionClosedException ->
+                    Log.e(TAG, "FTP login failed")
+                else ->
+                    Log.e(TAG, "IOException", it)
+            }
+        }.getOrNull()
     }
 
     /**
@@ -250,10 +267,14 @@ object SshConnectionPool {
 
         // FIXME: Crude assumption
         init {
-            require(url.startsWith(SSH_URI_PREFIX)) { "Argument is not a SSH URI: $url" }
+            require(url.startsWith(SSH_URI_PREFIX) or
+            url.startsWith(FTP_URI_PREFIX) or
+            url.startsWith(FTPS_URI_PREFIX)) {
+                "Argument is not a SSH URI: $url"
+            }
             host = url.substring(url.lastIndexOf('@') + 1, url.lastIndexOf(':'))
             val portAndPath = url.substring(url.lastIndexOf(':') + 1)
-            var port = SSH_DEFAULT_PORT
+            var port: Int
             if (portAndPath.contains("/")) {
                 port = portAndPath.substring(0, portAndPath.indexOf('/')).toInt()
                 defaultPath = portAndPath.substring(portAndPath.indexOf('/'))
@@ -262,17 +283,22 @@ object SshConnectionPool {
                 defaultPath = null
             }
             // If the uri is fetched from the app's database storage, we assume it will never be empty
-            val authString = url.substring(SSH_URI_PREFIX.length, url.lastIndexOf('@'))
+            val prefix = when {
+                url.startsWith(SSH_URI_PREFIX) -> SSH_URI_PREFIX
+                url.startsWith(FTPS_URI_PREFIX) -> FTPS_URI_PREFIX
+                else -> FTP_URI_PREFIX
+            }
+            val authString = url.substring(prefix.length, url.lastIndexOf('@'))
             val userInfo = authString.split(":").toTypedArray()
             username = userInfo[0]
             password = if (userInfo.size > 1) userInfo[1] else null
-            if (port < 0) port = SSH_DEFAULT_PORT
+            if (port < 0) port = if(url.startsWith(SSH_URI_PREFIX)) {
+                SSH_DEFAULT_PORT
+            } else {
+                FTP_DEFAULT_PORT
+            }
             this.port = port
         }
-    }
-
-    private fun expire(client: SSHClient) {
-        SshClientUtils.tryDisconnect(client)
     }
 
     class AsyncRemoveConnection internal constructor(
@@ -283,7 +309,8 @@ object SshConnectionPool {
         override fun doInBackground(vararg params: Unit) {
             url = SshClientUtils.extractBaseUriFrom(url)
             if (connections.containsKey(url)) {
-                SshClientUtils.tryDisconnect(connections.remove(url))
+                connections[url]?.expire()
+                connections.remove(url)
             }
         }
 
@@ -305,10 +332,23 @@ object SshConnectionPool {
         fun create(config: Config?): SSHClient
     }
 
+    interface FTPClientFactory {
+        fun create(uri: String): FTPClient
+    }
+
     /** Default [SSHClientFactory] implementation.  */
     internal class DefaultSSHClientFactory : SSHClientFactory {
         override fun create(config: Config?): SSHClient {
             return SSHClient(config)
+        }
+    }
+
+    internal class DefaultFTPClientFactory : FTPClientFactory {
+        override fun create(uri: String): FTPClient {
+            return if(uri.startsWith(FTPS_URI_PREFIX))
+                FTPSClient()
+            else
+                FTPClient()
         }
     }
 }

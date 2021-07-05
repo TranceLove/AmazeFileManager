@@ -27,8 +27,8 @@ import com.amaze.filemanager.R
 import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.asynchronous.asynctasks.AsyncTaskResult
 import com.amaze.filemanager.filesystem.ssh.CustomSshJConfig
-import com.amaze.filemanager.filesystem.ssh.SshConnectionPool
-import com.amaze.filemanager.filesystem.ssh.SshConnectionPool.SSH_CONNECT_TIMEOUT
+import com.amaze.filemanager.filesystem.ftp.FtpConnectionPool
+import com.amaze.filemanager.filesystem.ftp.FtpConnectionPool.CONNECT_TIMEOUT
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.DisconnectReason
 import net.schmizz.sshj.common.KeyType
@@ -51,7 +51,7 @@ import java.security.PublicKey
  * @see SSHClient.authPassword
  * @see SSHClient.authPublickey
  * @see com.amaze.filemanager.ui.dialogs.SftpConnectDialog.authenticateAndSaveSetup
- * @see com.amaze.filemanager.filesystem.ssh.SshConnectionPool.create
+ * @see com.amaze.filemanager.filesystem.ftp.FtpConnectionPool.create
  */
 class SshAuthenticationTask(
     /**
@@ -73,9 +73,9 @@ class SshAuthenticationTask(
 ) : AsyncTask<Void, Void, AsyncTaskResult<SSHClient>>() {
 
     override fun doInBackground(vararg params: Void): AsyncTaskResult<SSHClient> {
-        val sshClient = SshConnectionPool.sshClientFactory.create(CustomSshJConfig()).also {
+        val sshClient = FtpConnectionPool.sshClientFactory.create(CustomSshJConfig()).also {
             it.addHostKeyVerifier(hostKey)
-            it.connectTimeout = SSH_CONNECT_TIMEOUT
+            it.connectTimeout = CONNECT_TIMEOUT
         }
         return runCatching {
             sshClient.connect(hostname, port)

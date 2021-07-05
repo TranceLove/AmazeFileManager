@@ -20,8 +20,10 @@
 
 package com.amaze.filemanager.filesystem;
 
+import static com.amaze.filemanager.filesystem.ftp.FtpConnectionPool.FTPS_URI_PREFIX;
+import static com.amaze.filemanager.filesystem.ftp.FtpConnectionPool.FTP_URI_PREFIX;
 import static com.amaze.filemanager.filesystem.smb.CifsContexts.SMB_URI_PREFIX;
-import static com.amaze.filemanager.filesystem.ssh.SshConnectionPool.SSH_URI_PREFIX;
+import static com.amaze.filemanager.filesystem.ftp.FtpConnectionPool.SSH_URI_PREFIX;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -123,6 +125,8 @@ public class HybridFile {
       mode = OpenMode.OTG;
     } else if (path.startsWith(DOCUMENT_FILE_PREFIX)) {
       mode = OpenMode.DOCUMENT_FILE;
+    } else if (path.startsWith(FTP_URI_PREFIX) || path.startsWith(FTPS_URI_PREFIX)) {
+      mode = OpenMode.FTP;
     } else if (isCustomPath()) {
       mode = OpenMode.CUSTOM;
     } else if (path.startsWith(CloudHandler.CLOUD_PREFIX_BOX)) {
@@ -196,6 +200,14 @@ public class HybridFile {
     return mode == OpenMode.DOCUMENT_FILE;
   }
 
+  public boolean isFtp() {
+    return mode == OpenMode.FTP;
+  }
+
+  public boolean isNfs() {
+    return mode == OpenMode.NFS;
+  }
+
   public boolean isBoxFile() {
     return mode == OpenMode.BOX;
   }
@@ -247,6 +259,10 @@ public class HybridFile {
           }
         }
         break;
+      case FTP:
+        break;
+      case NFS:
+        break;
       case FILE:
         return getFile().lastModified();
       case DOCUMENT_FILE:
@@ -273,6 +289,8 @@ public class HybridFile {
             e.printStackTrace();
           }
         return s;
+      case FTP:
+      case NFS:
       case FILE:
         s = getFile().length();
         return s;
@@ -280,6 +298,8 @@ public class HybridFile {
         HybridFileParcelable baseFile = generateBaseFileFromParent();
         if (baseFile != null) return baseFile.getSize();
         break;
+      case DOCUMENT_FILE:
+
       case OTG:
         s = OTGUtil.getDocumentFile(path, context, false).length();
         break;
@@ -433,6 +453,8 @@ public class HybridFile {
     boolean isDirectory;
     switch (mode) {
       case SFTP:
+      case FTP:
+      case NFS:
         return isDirectory(AppConfig.getInstance());
       case SMB:
         SmbFile smbFile = getSmbFile();
@@ -500,6 +522,12 @@ public class HybridFile {
           else e.printStackTrace();
         }
         break;
+      case FTP:
+        isDirectory = false;
+        break;
+      case NFS:
+        isDirectory = false;
+        break;
       case FILE:
         isDirectory = getFile().isDirectory();
         break;
@@ -511,6 +539,7 @@ public class HybridFile {
           isDirectory = false;
         }
         break;
+      case DOCUMENT_FILE:
       case OTG:
         isDirectory = OTGUtil.getDocumentFile(path, context, false).isDirectory();
         break;
@@ -555,6 +584,8 @@ public class HybridFile {
 
     switch (mode) {
       case SFTP:
+      case FTP:
+      case NFS:
         return folderSize(AppConfig.getInstance());
       case SMB:
         SmbFile smbFile = getSmbFile();
@@ -666,6 +697,8 @@ public class HybridFile {
                   }
                 });
         break;
+      case FTP:
+      case NFS:
       case OTG:
         // TODO: Get free space from OTG when {@link DocumentFile} API adds support
         break;
@@ -729,6 +762,9 @@ public class HybridFile {
         DocumentFile documentFile = OTGUtil.getDocumentFile(path, context, false);
         documentFile.length();
         break;
+      case FTP:
+      case NFS:
+        break;
     }
     return size;
   }
@@ -790,6 +826,10 @@ public class HybridFile {
         } catch (SmbException e) {
           e.printStackTrace();
         }
+        break;
+      case FTP:
+        break;
+      case NFS:
         break;
       case OTG:
         OTGUtil.getDocumentFiles(path, context, onFileFound);
@@ -872,6 +912,10 @@ public class HybridFile {
           arrayList.clear();
           e.printStackTrace();
         }
+        break;
+      case FTP:
+        break;
+      case NFS:
         break;
       case OTG:
         arrayList = OTGUtil.getDocumentFilesList(path, context);
@@ -979,6 +1023,15 @@ public class HybridFile {
           inputStream = null;
           e.printStackTrace();
         }
+        break;
+      case FTP:
+        inputStream = null;
+        break;
+      case NFS:
+        inputStream = null;
+        break;
+      case DOCUMENT_FILE:
+        inputStream = null;
         break;
       case OTG:
         ContentResolver contentResolver = context.getContentResolver();

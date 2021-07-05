@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.amaze.filemanager.filesystem.ssh;
+package com.amaze.filemanager.filesystem.ftp;
 
 import static android.os.Build.VERSION_CODES.JELLY_BEAN;
 import static android.os.Build.VERSION_CODES.KITKAT;
@@ -121,7 +121,7 @@ public class SshConnectionPoolTest {
 
   @After
   public void tearDown() {
-    SshConnectionPool.INSTANCE.shutdown();
+    FtpConnectionPool.INSTANCE.shutdown();
     ShadowSQLiteConnection.reset();
   }
 
@@ -129,7 +129,7 @@ public class SshConnectionPoolTest {
   public void testGetConnectionWithUsernameAndPassword() throws IOException {
     SSHClient mock = createSshServer("testuser", "testpassword");
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "127.0.0.1",
             22222,
             SecurityUtils.getFingerprint(hostKeyPair.getPublic()),
@@ -137,7 +137,7 @@ public class SshConnectionPoolTest {
             "testpassword",
             null));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "127.0.0.1",
             22222,
             SecurityUtils.getFingerprint(hostKeyPair.getPublic()),
@@ -156,16 +156,16 @@ public class SshConnectionPoolTest {
   public void testGetConnectionWithUsernameAndKey() throws IOException {
     SSHClient mock = createSshServer("testuser", null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "127.0.0.1",
             22222,
             SecurityUtils.getFingerprint(hostKeyPair.getPublic()),
             "testuser",
             null,
             userKeyPair));
-    SshConnectionPool.INSTANCE.shutdown();
+    FtpConnectionPool.INSTANCE.shutdown();
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "127.0.0.1",
             22222,
             SecurityUtils.getFingerprint(hostKeyPair.getPublic()),
@@ -186,14 +186,14 @@ public class SshConnectionPoolTest {
     SSHClient mock = createSshServer("testuser", validPassword);
     saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection("ssh://testuser:testpassword@127.0.0.1:22222"));
+        FtpConnectionPool.INSTANCE.getConnection("ssh://testuser:testpassword@127.0.0.1:22222"));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://invaliduser:invalidpassword@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
     verify(mock).authPassword("testuser", "testpassword");
     // invalid username won't give host key. Should never called this
@@ -204,12 +204,12 @@ public class SshConnectionPoolTest {
   public void testGetConnectionWithUrlAndKeyAuth() throws IOException {
     SSHClient mock = createSshServer("testuser", null);
     saveSshConnectionSettings(hostKeyPair, "testuser", null, userKeyPair.getPrivate());
-    assertNotNull(SshConnectionPool.INSTANCE.getConnection("ssh://testuser@127.0.0.1:22222"));
-    assertNull(SshConnectionPool.INSTANCE.getConnection("ssh://invaliduser@127.0.0.1:22222"));
+    assertNotNull(FtpConnectionPool.INSTANCE.getConnection("ssh://testuser@127.0.0.1:22222"));
+    assertNull(FtpConnectionPool.INSTANCE.getConnection("ssh://invaliduser@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
 
     verify(mock).authPublickey("testuser", sshKeyProvider);
@@ -223,14 +223,14 @@ public class SshConnectionPoolTest {
     SSHClient mock = createSshServer("testuser", validPassword);
     saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection("ssh://testuser:testP@ssw0rd@127.0.0.1:22222"));
+        FtpConnectionPool.INSTANCE.getConnection("ssh://testuser:testP@ssw0rd@127.0.0.1:22222"));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://invaliduser:invalidpassword@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
 
     verify(mock).authPassword("testuser", validPassword);
@@ -244,14 +244,14 @@ public class SshConnectionPoolTest {
     SSHClient mock = createSshServer("testuser", validPassword);
     saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection("ssh://testuser:testP@##word@127.0.0.1:22222"));
+        FtpConnectionPool.INSTANCE.getConnection("ssh://testuser:testP@##word@127.0.0.1:22222"));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://invaliduser:invalidpassword@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
 
     verify(mock).authPassword("testuser", validPassword);
@@ -265,14 +265,14 @@ public class SshConnectionPoolTest {
     SSHClient mock = createSshServer("testuser", validPassword);
     saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection("ssh://testuser:testP@##word@127.0.0.1:22222"));
+        FtpConnectionPool.INSTANCE.getConnection("ssh://testuser:testP@##word@127.0.0.1:22222"));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://invaliduser:invalidpassword@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
 
     verify(mock).authPassword("testuser", validPassword);
@@ -286,14 +286,14 @@ public class SshConnectionPoolTest {
     SSHClient mock = createSshServer("testuser", validPassword);
     saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection("ssh://testuser:testP@##word@127.0.0.1:22222"));
+        FtpConnectionPool.INSTANCE.getConnection("ssh://testuser:testP@##word@127.0.0.1:22222"));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://invaliduser:invalidpassword@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
 
     verify(mock).authPassword("testuser", validPassword);
@@ -308,15 +308,15 @@ public class SshConnectionPoolTest {
     SSHClient mock = createSshServer(validUsername, validPassword);
     saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://test@example.com:testP@ssw0rd@127.0.0.1:22222"));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://invaliduser:invalidpassword@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
 
     verify(mock).authPassword(validUsername, validPassword);
@@ -331,15 +331,15 @@ public class SshConnectionPoolTest {
     SSHClient mock = createSshServer(validUsername, validPassword);
     saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://test@example.com:testP@ssw0##$@127.0.0.1:22222"));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://invaliduser:invalidpassword@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
 
     verify(mock).authPassword(validUsername, validPassword);
@@ -354,15 +354,15 @@ public class SshConnectionPoolTest {
     SSHClient mock = createSshServer(validUsername, validPassword);
     saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://test@example.com:abcd-efgh@127.0.0.1:22222"));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://invaliduser:invalidpassword@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
 
     verify(mock).authPassword(validUsername, validPassword);
@@ -377,15 +377,15 @@ public class SshConnectionPoolTest {
     SSHClient mock = createSshServer(validUsername, validPassword);
     saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://test@example.com:---------------@127.0.0.1:22222"));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://invaliduser:invalidpassword@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
 
     verify(mock).authPassword(validUsername, validPassword);
@@ -400,15 +400,15 @@ public class SshConnectionPoolTest {
     SSHClient mock = createSshServer(validUsername, validPassword);
     saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://test@example.com:--agdiuhdpost15@127.0.0.1:22222"));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://invaliduser:invalidpassword@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
 
     verify(mock).authPassword(validUsername, validPassword);
@@ -423,15 +423,15 @@ public class SshConnectionPoolTest {
     SSHClient mock = createSshServer(validUsername, validPassword);
     saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
     assertNotNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://test@example.com:t-h-i-s-i-s-p-a-s-s-w-o-r-d-@127.0.0.1:22222"));
     assertNull(
-        SshConnectionPool.INSTANCE.getConnection(
+        FtpConnectionPool.INSTANCE.getConnection(
             "ssh://invaliduser:invalidpassword@127.0.0.1:22222"));
 
     verify(mock, atLeastOnce())
         .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
-    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).setConnectTimeout(FtpConnectionPool.CONNECT_TIMEOUT);
     verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
 
     verify(mock).authPassword(validUsername, validPassword);
@@ -460,7 +460,7 @@ public class SshConnectionPoolTest {
           .authPublickey(not(eq(validUsername)), eq(sshKeyProvider));
     }
     // reset(mock);
-    SshConnectionPool.sshClientFactory = config -> mock;
+    FtpConnectionPool.sshClientFactory = config -> mock;
     return mock;
   }
 }

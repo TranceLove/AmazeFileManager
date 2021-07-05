@@ -22,7 +22,7 @@ package com.amaze.filemanager.filesystem.ssh;
 
 import static com.amaze.filemanager.file_operations.filesystem.FolderStateKt.DOESNT_EXIST;
 import static com.amaze.filemanager.file_operations.filesystem.FolderStateKt.WRITABLE_ON_REMOTE;
-import static com.amaze.filemanager.filesystem.ssh.SshConnectionPool.SSH_URI_PREFIX;
+import static com.amaze.filemanager.filesystem.ftp.FtpConnectionPool.SSH_URI_PREFIX;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +36,8 @@ import com.amaze.filemanager.application.AppConfig;
 import com.amaze.filemanager.file_operations.filesystem.FolderState;
 import com.amaze.filemanager.file_operations.filesystem.cloud.CloudStreamer;
 import com.amaze.filemanager.filesystem.HybridFileParcelable;
+import com.amaze.filemanager.filesystem.ftp.FtpConnectionPool;
+import com.amaze.filemanager.filesystem.ftp.NetCopyClient;
 import com.amaze.filemanager.ui.activities.MainActivity;
 import com.amaze.filemanager.ui.icons.MimeTypes;
 import com.amaze.filemanager.utils.SmbUtil;
@@ -76,13 +78,13 @@ public abstract class SshClientUtils {
    * @return Template execution results
    */
   public static final <T> T execute(@NonNull SshClientTemplate template) {
-    SSHClient client = SshConnectionPool.INSTANCE.getConnection(extractBaseUriFrom(template.url));
+    NetCopyClient client = FtpConnectionPool.INSTANCE.getConnection(extractBaseUriFrom(template.url));
     if (client == null) {
-      client = SshConnectionPool.INSTANCE.getConnection(template.url);
+      client = FtpConnectionPool.INSTANCE.getConnection(template.url);
     }
     T retval = null;
     if (client != null) {
-      final SSHClient _client = client;
+      final SSHClient _client = (SSHClient) client.getClientImpl();
       try {
         retval =
             Single.fromCallable((Callable<T>) () -> template.execute(_client))
@@ -92,7 +94,7 @@ public abstract class SshClientUtils {
         Log.e(TAG, "Error executing template method", e);
       } finally {
         if (template.closeClientOnFinish) {
-          tryDisconnect(client);
+          tryDisconnect((SSHClient) client.getClientImpl());
         }
       }
     }

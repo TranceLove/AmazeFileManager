@@ -26,7 +26,7 @@ import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.amaze.filemanager.R
-import com.amaze.filemanager.filesystem.ssh.SshConnectionPool
+import com.amaze.filemanager.filesystem.ftp.FtpConnectionPool
 import com.amaze.filemanager.filesystem.ssh.test.TestKeyProvider
 import com.amaze.filemanager.shadows.ShadowMultiDex
 import io.reactivex.android.plugins.RxAndroidPlugins
@@ -238,17 +238,17 @@ class SshAuthenticationTaskTest {
          * was not working in the case of Operations.rename() due to the threading model
          * Robolectric imposed. So we are injecting the SSHClient here by force.
          */
-        SshConnectionPool::class.java.getDeclaredField("connections").run {
+        FtpConnectionPool::class.java.getDeclaredField("connections").run {
             this.isAccessible = true
             this.set(
-                SshConnectionPool,
+                FtpConnectionPool,
                 mutableMapOf(
                     Pair("ssh://user:password@127.0.0.1:22222", sshClient)
                 )
             )
         }
 
-        SshConnectionPool.sshClientFactory = object : SshConnectionPool.SSHClientFactory {
+        FtpConnectionPool.sshClientFactory = object : FtpConnectionPool.SSHClientFactory {
             override fun create(config: net.schmizz.sshj.Config?): SSHClient = sshClient
         }
     }

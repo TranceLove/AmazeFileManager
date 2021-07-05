@@ -42,6 +42,7 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
 
+import com.amaze.filemanager.filesystem.ftp.FtpConnectionPool;
 import com.amaze.filemanager.filesystem.ssh.test.TestKeyProvider;
 import com.amaze.filemanager.shadows.ShadowMultiDex;
 
@@ -78,7 +79,7 @@ public abstract class AbstractSftpServerTest {
 
   @After
   public void tearDown() throws IOException {
-    SshConnectionPool.INSTANCE.shutdown();
+    FtpConnectionPool.INSTANCE.shutdown();
     if (server != null && server.isOpen()) {
       server.stop(true);
     }
@@ -86,7 +87,7 @@ public abstract class AbstractSftpServerTest {
 
   protected final void prepareSshConnection() {
     String hostFingerprint = KeyUtils.getFingerPrint(hostKeyProvider.getKeyPair().getPublic());
-    SshConnectionPool.INSTANCE.getConnection(
+    FtpConnectionPool.INSTANCE.getConnection(
         "127.0.0.1", serverPort, hostFingerprint, "testuser", "testpassword", null);
   }
 

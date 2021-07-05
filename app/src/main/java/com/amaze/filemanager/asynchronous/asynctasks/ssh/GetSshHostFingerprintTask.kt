@@ -29,8 +29,8 @@ import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.asynchronous.asynctasks.AsyncTaskResult
 import com.amaze.filemanager.filesystem.ssh.CustomSshJConfig
 import com.amaze.filemanager.filesystem.ssh.SshClientUtils
-import com.amaze.filemanager.filesystem.ssh.SshConnectionPool
-import com.amaze.filemanager.filesystem.ssh.SshConnectionPool.SSH_CONNECT_TIMEOUT
+import com.amaze.filemanager.filesystem.ftp.FtpConnectionPool
+import com.amaze.filemanager.filesystem.ftp.FtpConnectionPool.CONNECT_TIMEOUT
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.transport.verification.HostKeyVerifier
 import java.net.SocketException
@@ -70,8 +70,8 @@ class GetSshHostFingerprintTask(
     override fun doInBackground(vararg params: Void): AsyncTaskResult<PublicKey> {
         val holder = AtomicReference<AsyncTaskResult<PublicKey>>()
         val latch = CountDownLatch(1)
-        val sshClient = SshConnectionPool.sshClientFactory.create(CustomSshJConfig()).also {
-            it.connectTimeout = SSH_CONNECT_TIMEOUT
+        val sshClient = FtpConnectionPool.sshClientFactory.create(CustomSshJConfig()).also {
+            it.connectTimeout = CONNECT_TIMEOUT
             it.addHostKeyVerifier { _, _, key: PublicKey ->
                 holder.set(AsyncTaskResult(key))
                 latch.countDown()
