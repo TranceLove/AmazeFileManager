@@ -21,6 +21,7 @@
 package com.amaze.filemanager.filesystem
 
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.DocumentsContract
@@ -197,10 +198,28 @@ object FileProperties {
     }
 
     @JvmStatic
-    fun remapPathForApi30OrAbove(path: String): String {
+    fun unmapPathForApi30OrAbove(uriPath: String): String? {
+        val uri = Uri.parse(uriPath)
+        return uri.path?.let { p ->
+            File(Environment.getExternalStorageDirectory(), p.substringAfter("tree/primary:")).absolutePath
+        }
+    }
+
+    @JvmStatic
+    fun remapPathForApi30OrAbove(path: String, openDocumentTree: Boolean = false): String {
         return if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q && EXCLUDED_DIRS.contains(path)) {
             val suffix = path.substringAfter(Environment.getExternalStorageDirectory().absolutePath)
-            DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", suffix).toString()
+            if (openDocumentTree) {
+                DocumentsContract.buildDocumentUri(
+                    "com.android.externalstorage.documents",
+                    "primary:${suffix.substring(1)}"
+                ).toString()
+            } else {
+                DocumentsContract.buildTreeDocumentUri(
+                    "com.android.externalstorage.documents",
+                    "primary:${suffix.substring(1)}"
+                ).toString()
+            }
         } else {
             path
         }

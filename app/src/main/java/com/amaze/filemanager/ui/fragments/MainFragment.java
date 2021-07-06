@@ -20,7 +20,9 @@
 
 package com.amaze.filemanager.ui.fragments;
 
+import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.JELLY_BEAN;
+import static android.os.Build.VERSION_CODES.Q;
 import static com.amaze.filemanager.filesystem.ftp.FtpConnectionPool.SSH_URI_PREFIX;
 import static com.amaze.filemanager.ui.fragments.preference_fragments.PreferencesConstants.PREFERENCE_SHOW_DIVIDERS;
 import static com.amaze.filemanager.ui.fragments.preference_fragments.PreferencesConstants.PREFERENCE_SHOW_GOBACK_BUTTON;
@@ -32,8 +34,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-
-import org.jetbrains.annotations.NotNull;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.amaze.filemanager.R;
@@ -49,9 +49,11 @@ import com.amaze.filemanager.file_operations.filesystem.OpenMode;
 import com.amaze.filemanager.file_operations.filesystem.smbstreamer.Streamer;
 import com.amaze.filemanager.filesystem.CustomFileObserver;
 import com.amaze.filemanager.filesystem.FileProperties;
+import com.amaze.filemanager.filesystem.FileUtil;
 import com.amaze.filemanager.filesystem.HybridFile;
 import com.amaze.filemanager.filesystem.HybridFileParcelable;
 import com.amaze.filemanager.filesystem.PasteHelper;
+import com.amaze.filemanager.filesystem.SafRootHolder;
 import com.amaze.filemanager.filesystem.cloud.CloudUtil;
 import com.amaze.filemanager.filesystem.files.CryptUtil;
 import com.amaze.filemanager.filesystem.files.EncryptDecryptUtils;
@@ -86,6 +88,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.UriPermission;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
@@ -96,6 +99,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.text.TextUtils;
 import android.text.format.Formatter;
 import android.util.Log;
@@ -111,6 +115,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.view.ActionMode;
@@ -163,6 +169,16 @@ public class MainFragment extends Fragment
 
   private MainFragmentViewModel mainFragmentViewModel;
 
+  private ActivityResultLauncher<Intent> handleDocumentUriForRestrictedDirectories
+          = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+          result -> {
+            if(SDK_INT >= Q) {
+              getContext().getContentResolver().takePersistableUriPermission(result.getData().getData(),
+                Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+              loadlist(result.getData().getDataString(), false, OpenMode.DOCUMENT_FILE);
+            }
+          });
+
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -192,8 +208,8 @@ public class MainFragment extends Fragment
 
   @Override
   public void onViewCreated(
-      @NonNull @NotNull View view,
-      @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+      @NonNull View view,
+      @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
     mainFragmentViewModel = new ViewModelProvider(this).get(MainFragmentViewModel.class);
     listView = rootView.findViewById(R.id.listView);
@@ -913,7 +929,7 @@ public class MainFragment extends Fragment
    * @param back if we're coming back from any directory and want the scroll to be restored
    * @param openMode the mode in which the directory should be opened
    */
-  public void loadlist(final String path, final boolean back, final OpenMode openMode) {
+  public void loadlist(final String path, final boolean back, OpenMode openMode) {
     if (mainFragmentViewModel == null) {
       Log.w(getClass().getSimpleName(), "Viewmodel not available to load the data");
       return;
@@ -928,10 +944,38 @@ public class MainFragment extends Fragment
       loadFilesListTask.cancel(true);
     }
 
+    final String _path =
+            FileProperties.remapPathForApi30OrAbove(path, false);
+
+    if (!path.equals(_path) && SDK_INT >= Q) {
+      boolean hasAccessToSpecialFolder = false;
+      List<UriPermission> uriPermissions = getContext().getContentResolver().getPersistedUriPermissions();
+      if(uriPermissions != null && uriPermissions.size() > 0) {
+        for(UriPermission p : uriPermissions) {
+          if(p.isReadPermission() && _path.startsWith(p.getUri().toString())) {
+            hasAccessToSpecialFolder = true;
+            SafRootHolder.INSTANCE.setUriRoot(p.getUri());
+            break;
+          }
+        }
+      }
+      if(!hasAccessToSpecialFolder) {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                .putExtra(DocumentsContract.EXTRA_INITIAL_URI,
+                        Uri.parse(FileProperties.remapPathForApi30OrAbove(path, true)));
+        handleDocumentUriForRestrictedDirectories.launch(intent);
+        AppConfig.toast(
+                getMainActivity(),
+                getResources().getString(R.string.ok));
+      } else {
+        openMode = OpenMode.DOCUMENT_FILE;
+      }
+    }
+
     loadFilesListTask =
         new LoadFilesListTask(
             getActivity(),
-            path,
+            _path,
             this,
             openMode,
             getBoolean(PREFERENCE_SHOW_THUMB),

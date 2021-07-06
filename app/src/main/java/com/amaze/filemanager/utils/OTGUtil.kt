@@ -36,6 +36,7 @@ import com.amaze.filemanager.file_operations.filesystem.usb.SingletonUsbOtg
 import com.amaze.filemanager.file_operations.filesystem.usb.UsbOtgRepresentation
 import com.amaze.filemanager.filesystem.HybridFileParcelable
 import com.amaze.filemanager.filesystem.RootHelper
+import com.amaze.filemanager.filesystem.SafRootHolder
 import kotlin.collections.ArrayList
 
 /** Created by Vishal on 27-04-2017.  */
@@ -79,9 +80,14 @@ object OTGUtil {
     fun getDocumentFiles(path: String, context: Context, fileFound: OnFileFound) {
         val rootUriString = SingletonUsbOtg.getInstance().usbOtgRoot
             ?: throw NullPointerException("USB OTG root not set!")
+        return getDocumentFiles(rootUriString, path, context, OpenMode.OTG, fileFound)
+    }
+
+    @JvmStatic
+    fun getDocumentFiles(rootUriString: Uri, path: String, context: Context, openMode: OpenMode, fileFound: OnFileFound) {
         var rootUri = DocumentFile.fromTreeUri(context, rootUriString)
-        val parts = path.split("/").toTypedArray()
-        for (part in parts) {
+        val parts = path.substringAfter(rootUriString.toString()).split("/").toTypedArray()
+        for (part in parts.filterNot { it.isEmpty() or it.isBlank() }) {
             // first omit 'otg:/' before iterating through DocumentFile
             if (path == "$PREFIX_OTG/") break
             if (part == "otg:" || part == "") continue
@@ -104,7 +110,7 @@ object OTGUtil {
                     file.isDirectory
                 )
                 baseFile.name = file.name
-                baseFile.mode = OpenMode.OTG
+                baseFile.mode = openMode
                 fileFound.onFileFound(baseFile)
             }
         }
@@ -137,7 +143,7 @@ object OTGUtil {
     ): DocumentFile? {
         // start with root of SD card and then parse through document tree.
         var retval = DocumentFile.fromTreeUri(context, rootUri)
-        val parts = path.split("/").toTypedArray()
+        val parts = path.substringAfter(SafRootHolder.uriRoot.toString()).split("/").toTypedArray()
         for (part in parts) {
             if (path == "otg:/") break
             if (part == "otg:" || part == "") continue

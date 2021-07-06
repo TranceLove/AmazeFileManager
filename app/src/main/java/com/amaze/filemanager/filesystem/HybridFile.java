@@ -229,6 +229,11 @@ public class HybridFile {
     return new File(path);
   }
 
+  @Nullable
+  public DocumentFile getDocumentFile() {
+    return OTGUtil.getDocumentFile(path, SafRootHolder.INSTANCE.getUriRoot(), AppConfig.getInstance(), false);
+  }
+
   HybridFileParcelable generateBaseFileFromParent() {
     ArrayList<HybridFileParcelable> arrayList =
         RootHelper.getFilesList(getFile().getParent(), true, true);
@@ -266,7 +271,7 @@ public class HybridFile {
       case FILE:
         return getFile().lastModified();
       case DOCUMENT_FILE:
-
+        return getDocumentFile().lastModified();
       case ROOT:
         HybridFileParcelable baseFile = generateBaseFileFromParent();
         if (baseFile != null) return baseFile.getDate();
@@ -276,7 +281,7 @@ public class HybridFile {
 
   /** Helper method to find length */
   public long length(Context context) {
-    long s = 0l;
+    long s = 0L;
     switch (mode) {
       case SFTP:
         return ((HybridFileParcelable) this).getSize();
@@ -299,7 +304,8 @@ public class HybridFile {
         if (baseFile != null) return baseFile.getSize();
         break;
       case DOCUMENT_FILE:
-
+        s = getDocumentFile().length();
+        break;
       case OTG:
         s = OTGUtil.getDocumentFile(path, context, false).length();
         break;
@@ -365,6 +371,8 @@ public class HybridFile {
       case FILE:
       case ROOT:
         return getFile().getName();
+      case DOCUMENT_FILE:
+        return getDocumentFile().getName();
       case OTG:
         return OTGUtil.getDocumentFile(path, context, false).getName();
       default:
@@ -426,6 +434,12 @@ public class HybridFile {
             new StringBuilder(
                 builder.substring(0, builder.length() - (getName(context).length()) - 1));
         return parentPathBuilder.toString();
+      case DOCUMENT_FILE:
+        if(path.equals(SafRootHolder.INSTANCE.getUriRoot().toString())) {
+          mode = OpenMode.FILE;
+          path = FileProperties.unmapPathForApi30OrAbove(path);
+          return path;
+        }
       default:
         builder = new StringBuilder(path);
         parentPathBuilder =
@@ -476,6 +490,8 @@ public class HybridFile {
           isDirectory = false;
         }
         break;
+      case DOCUMENT_FILE:
+        return getDocumentFile().isDirectory();
       case OTG:
         // TODO: support for this method in OTG on-the-fly
         // you need to manually call {@link RootHelper#getDocumentFile() method
@@ -540,6 +556,8 @@ public class HybridFile {
         }
         break;
       case DOCUMENT_FILE:
+        isDirectory = getDocumentFile().isDirectory();
+        break;
       case OTG:
         isDirectory = OTGUtil.getDocumentFile(path, context, false).isDirectory();
         break;
@@ -1031,11 +1049,18 @@ public class HybridFile {
         inputStream = null;
         break;
       case DOCUMENT_FILE:
-        inputStream = null;
+        ContentResolver contentResolver = context.getContentResolver();
+        DocumentFile documentSourceFile = getDocumentFile();
+        try {
+          inputStream = contentResolver.openInputStream(documentSourceFile.getUri());
+        } catch (FileNotFoundException e) {
+          e.printStackTrace();
+          inputStream = null;
+        }
         break;
       case OTG:
-        ContentResolver contentResolver = context.getContentResolver();
-        DocumentFile documentSourceFile = OTGUtil.getDocumentFile(path, context, false);
+        contentResolver = context.getContentResolver();
+        documentSourceFile = OTGUtil.getDocumentFile(path, context, false);
         try {
           inputStream = contentResolver.openInputStream(documentSourceFile.getUri());
         } catch (FileNotFoundException e) {
@@ -1112,9 +1137,19 @@ public class HybridFile {
           e.printStackTrace();
         }
         break;
-      case OTG:
+      case DOCUMENT_FILE:
         ContentResolver contentResolver = context.getContentResolver();
-        DocumentFile documentSourceFile = OTGUtil.getDocumentFile(path, context, true);
+        DocumentFile documentSourceFile = getDocumentFile();
+        try {
+          outputStream = contentResolver.openOutputStream(documentSourceFile.getUri());
+        } catch (FileNotFoundException e) {
+          e.printStackTrace();
+          outputStream = null;
+        }
+        break;
+      case OTG:
+        contentResolver = context.getContentResolver();
+        documentSourceFile = OTGUtil.getDocumentFile(path, context, true);
         try {
           outputStream = contentResolver.openOutputStream(documentSourceFile.getUri());
         } catch (FileNotFoundException e) {
@@ -1182,6 +1217,9 @@ public class HybridFile {
     if (isOtgFile()) {
       DocumentFile fileToCheck = OTGUtil.getDocumentFile(path, context, false);
       return fileToCheck != null;
+    } else if (isDocumentFile()) {
+      DocumentFile fileToCheck = OTGUtil.getDocumentFile(path, SafRootHolder.INSTANCE.getUriRoot(), context, false);
+      return fileToCheck != null;
     } else return (exists());
   }
 
@@ -1193,6 +1231,7 @@ public class HybridFile {
   public boolean isSimpleFile() {
     return !isSmb()
         && !isOtgFile()
+        && !isDocumentFile()
         && !isCustomPath()
         && !android.util.Patterns.EMAIL_ADDRESS.matcher(path).matches()
         && (getFile() != null && !getFile().isDirectory())
@@ -1246,6 +1285,13 @@ public class HybridFile {
     } else if (isOtgFile()) {
       if (!exists(context)) {
         DocumentFile parentDirectory = OTGUtil.getDocumentFile(getParent(context), context, false);
+        if (parentDirectory.isDirectory()) {
+          parentDirectory.createDirectory(getName(context));
+        }
+      }
+    } else if (isDocumentFile()) {
+      if (!exists(context)) {
+        DocumentFile parentDirectory = OTGUtil.getDocumentFile(getParent(context), SafRootHolder.INSTANCE.getUriRoot(), context, false);
         if (parentDirectory.isDirectory()) {
           parentDirectory.createDirectory(getName(context));
         }

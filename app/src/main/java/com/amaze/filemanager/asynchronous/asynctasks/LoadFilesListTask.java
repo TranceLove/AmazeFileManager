@@ -38,6 +38,7 @@ import com.amaze.filemanager.file_operations.filesystem.OpenMode;
 import com.amaze.filemanager.filesystem.HybridFile;
 import com.amaze.filemanager.filesystem.HybridFileParcelable;
 import com.amaze.filemanager.filesystem.RootHelper;
+import com.amaze.filemanager.filesystem.SafRootHolder;
 import com.amaze.filemanager.filesystem.cloud.CloudUtil;
 import com.amaze.filemanager.filesystem.files.FileListSorter;
 import com.amaze.filemanager.filesystem.root.ListFilesCommand;
@@ -53,6 +54,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.text.format.Formatter;
 import android.util.Log;
@@ -60,10 +62,12 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
+import androidx.documentfile.provider.DocumentFile;
 
 import jcifs.smb.SmbAuthException;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
+import kotlin.text.StringsKt;
 
 public class LoadFilesListTask
     extends AsyncTask<Void, Void, Pair<OpenMode, ArrayList<LayoutElementParcelable>>> {
@@ -75,6 +79,7 @@ public class LoadFilesListTask
   private boolean showHiddenFiles, showThumbs;
   private DataUtils dataUtils = DataUtils.getInstance();
   private OnAsyncTaskFinished<Pair<OpenMode, ArrayList<LayoutElementParcelable>>> listener;
+  private Uri uriRoot;
 
   public LoadFilesListTask(
       Context context,
@@ -91,6 +96,12 @@ public class LoadFilesListTask
     this.showThumbs = showThumbs;
     this.showHiddenFiles = showHiddenFiles;
     this.listener = l;
+  }
+
+  public void setUriRoot(@NonNull Uri uriRoot) {
+    if(openmode.equals(OpenMode.DOCUMENT_FILE)) {
+      this.uriRoot = uriRoot;
+    }
   }
 
   @Override
@@ -202,6 +213,15 @@ public class LoadFilesListTask
               if (elem != null) list.add(elem);
             });
         openmode = OpenMode.OTG;
+        break;
+      case DOCUMENT_FILE:
+        list = new ArrayList<>();
+        listDocumentFiles(
+          file -> {
+            LayoutElementParcelable elem = createListParcelables(file);
+            if (elem != null) list.add(elem);
+          });
+        openmode = OpenMode.DOCUMENT_FILE;
         break;
       case DROPBOX:
       case BOX:
@@ -411,9 +431,7 @@ public class LoadFilesListTask
                 || path.endsWith(".pl")
                 || path.endsWith(".prop")
                 || path.endsWith(".properties")
-                || path.endsWith(".rc")
                 || path.endsWith(".msg")
-                || path.endsWith(".odt")
                 || path.endsWith(".pages")
                 || path.endsWith(".wpd")
                 || path.endsWith(".wps"))) {
@@ -549,6 +567,17 @@ public class LoadFilesListTask
     }
 
     OTGUtil.getDocumentFiles(path, context, fileFound);
+  }
+
+  private void listDocumentFiles(OnFileFound fileFound) {
+    final Context context = this.context.get();
+
+    if (context == null) {
+      cancel(true);
+      return;
+    }
+
+    OTGUtil.getDocumentFiles(SafRootHolder.INSTANCE.getUriRoot(), path, context, OpenMode.DOCUMENT_FILE, fileFound);
   }
 
   private void listCloud(
