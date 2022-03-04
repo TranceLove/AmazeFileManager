@@ -67,7 +67,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           sdcard-path-or-size: 100M
-          arch: x86_64
+          arch: x86
           ram-size: 2048M
           channel: stable
           script: echo "Generated AVD snapshot for caching." && adb devices
@@ -79,7 +79,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           sdcard-path-or-size: 100M
-          arch: x86_64
+          arch: x86
           ram-size: 2048M
           channel: stable
           script: |
