@@ -70,9 +70,7 @@ jobs:
           arch: x86_64
           ram-size: 2048M
           channel: stable
-          script: echo "Generated AVD snapshot for caching."
-      - name: list devices
-        run: /Users/runner/Library/Android/sdk/platform-tools/adb devices
+          script: echo "Generated AVD snapshot for caching." && adb devices
       - name: run tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
