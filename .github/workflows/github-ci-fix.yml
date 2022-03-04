@@ -69,7 +69,7 @@ jobs:
           sdcard-path-or-size: 100M
           arch: x86_64
           ram-size: 2048M
-          channel: canary
+          channel: stable
           script: echo "Generated AVD snapshot for caching."
       - name: list devices
         run: /Users/runner/Library/Android/sdk/platform-tools/adb devices
@@ -83,7 +83,7 @@ jobs:
           sdcard-path-or-size: 100M
           arch: x86_64
           ram-size: 2048M
-          channel: canary
+          channel: stable
           script: |
             adb logcat -c
             adb logcat *:E &
