@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         applicationId "com.amaze.filemanager"
-        minSdkVersion 14
+        minSdkVersion 18
         targetSdkVersion 30
         versionCode 107
         versionName "3.6.7"
@@ -153,11 +153,11 @@ dependencies {
 
     androidTestImplementation "junit:junit:$junitVersion"//tests the app logic
     androidTestImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
-    androidTestImplementation "androidx.test:core:$androidXTestVersion"
+    androidTestImplementation "androidx.test:core-ktx:$androidXTestVersion"
     androidTestImplementation "androidx.test:runner:$androidXTestVersion"
     androidTestImplementation "androidx.test:rules:$androidXTestVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidXTestExtVersion"
-    // androidTestImplementation "androidx.test.uiautomator:uiautomator:$uiAutomatorVersion"
+    androidTestImplementation "androidx.test.uiautomator:uiautomator:$uiAutomatorVersion"
     androidTestImplementation 'commons-net:commons-net:3.6'
     androidTestImplementation "org.awaitility:awaitility:$awaitilityVersion"
 

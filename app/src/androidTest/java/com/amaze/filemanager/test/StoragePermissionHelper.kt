@@ -1,17 +1,17 @@
 package com.amaze.filemanager.test
 
-// import android.content.Intent
-// import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-// import android.net.Uri
-// import android.os.Build
-// import android.os.Build.VERSION.SDK_INT
-// import android.os.Environment
-// import android.provider.Settings
-// import android.widget.Switch
-// import androidx.test.platform.app.InstrumentationRegistry
-// import androidx.test.uiautomator.UiDevice
-// import androidx.test.uiautomator.UiSelector
-// import org.junit.Assert.assertTrue
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.net.Uri
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
+import android.os.Environment
+import android.provider.Settings
+import android.widget.Switch
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
+import org.junit.Assert.assertTrue
 
 object StoragePermissionHelper {
 
@@ -24,27 +24,27 @@ object StoragePermissionHelper {
      */
     @JvmStatic
     fun obtainManageAppAllFileAccessPermissionAutomatically() {
-//        if (!Environment.isExternalStorageManager() && SDK_INT > Build.VERSION_CODES.R) {
-//            InstrumentationRegistry.getInstrumentation().run {
-//                val device = androidx.test.uiautomator.UiDevice.getInstance(this)
-//                val context = this.targetContext
-//                device.pressHome()
-//                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-//                    .setData(Uri.parse("package:${context.packageName}"))
-//                    .addFlags(FLAG_ACTIVITY_NEW_TASK)
-//                context.startActivity(intent)
-//                val switch = device.findObject(
-//                    androidx.test.uiautomator.UiSelector()
-//                        .packageName("com.android.settings")
-//                        .className(Switch::class.java.name)
-//                        .resourceId("android:id/switch_widget")
-//                )
-//                switch.click()
-//                assertTrue(switch.isChecked)
-//                device.pressHome()
-//            }
-//        }
-//        assertTrue(Environment.isExternalStorageManager())
+        if (!Environment.isExternalStorageManager() && SDK_INT >= Build.VERSION_CODES.R) {
+            InstrumentationRegistry.getInstrumentation().run {
+                val device = UiDevice.getInstance(this)
+                val context = this.targetContext
+                device.pressHome()
+                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    .setData(Uri.parse("package:${context.packageName}"))
+                    .addFlags(FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+                val switch = device.findObject(
+                    UiSelector()
+                        .packageName("com.android.settings")
+                        .className(Switch::class.java.name)
+                        .resourceId("android:id/switch_widget")
+                )
+                switch.click()
+                assertTrue(switch.isChecked)
+                device.pressHome()
+            }
+        }
+        assertTrue(Environment.isExternalStorageManager())
         return // Try to get codacy happy if they ever check me... pretend I am doing something
     }
 }
