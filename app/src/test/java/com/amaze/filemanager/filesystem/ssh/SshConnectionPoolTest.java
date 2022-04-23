@@ -35,6 +35,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.security.KeyPair;
@@ -184,7 +185,7 @@ public class SshConnectionPoolTest {
   public void testGetConnectionWithUrl() throws IOException {
     String validPassword = "testpassword";
     SSHClient mock = createSshServer("testuser", validPassword);
-    saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null);
+    saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null, null);
     assertNotNull(
         SshConnectionPool.INSTANCE.getConnection(
             SshClientUtils.encryptSshPathAsNecessary(
@@ -204,9 +205,32 @@ public class SshConnectionPoolTest {
   }
 
   @Test
+  public void testGetConnectionWithUrlHavingSubpath() throws IOException {
+    String validPassword = "testpassword";
+    SSHClient mock = createSshServer("testuser", validPassword);
+    saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null, "/home/testuser");
+    assertNotNull(
+            SshConnectionPool.INSTANCE.getConnection(
+                    SshClientUtils.encryptSshPathAsNecessary(
+                            "ssh://testuser:testpassword@127.0.0.1:22222/home/testuser")));
+    assertNull(
+            SshConnectionPool.INSTANCE.getConnection(
+                    SshClientUtils.encryptSshPathAsNecessary(
+                            "ssh://invaliduser:invalidpassword@127.0.0.1:22222/home/testuser")));
+
+    verify(mock, atLeastOnce())
+            .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
+    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
+    verify(mock).authPassword("testuser", "testpassword");
+    // invalid username won't give host key. Should never called this
+    verify(mock, never()).authPassword("invaliduser", "invalidpassword");
+  }
+
+  @Test
   public void testGetConnectionWithUrlAndKeyAuth() throws IOException {
     SSHClient mock = createSshServer("testuser", null);
-    saveSshConnectionSettings(hostKeyPair, "testuser", null, userKeyPair.getPrivate());
+    saveSshConnectionSettings(hostKeyPair, "testuser", null, userKeyPair.getPrivate(), null);
     assertNotNull(SshConnectionPool.INSTANCE.getConnection("ssh://testuser@127.0.0.1:22222"));
     assertNull(SshConnectionPool.INSTANCE.getConnection("ssh://invaliduser@127.0.0.1:22222"));
 
@@ -221,10 +245,29 @@ public class SshConnectionPoolTest {
   }
 
   @Test
+  public void testGetConnectionWithUrlAndKeyAuthHavingSubpath() throws IOException {
+    SSHClient mock = createSshServer("testuser", null);
+    saveSshConnectionSettings(hostKeyPair, "testuser", null, userKeyPair.getPrivate(), "/home/testuser");
+    assertNotNull(SshConnectionPool.INSTANCE.getConnection("ssh://testuser@127.0.0.1:22222/home/testuser"));
+    assertNotNull(SshConnectionPool.INSTANCE.getConnection("ssh://testuser@127.0.0.1:22222"));
+    assertNull(SshConnectionPool.INSTANCE.getConnection("ssh://invaliduser@127.0.0.1:22222/home/testuser"));
+    assertNull(SshConnectionPool.INSTANCE.getConnection("ssh://invaliduser@127.0.0.1:22222"));
+
+    verify(mock, atLeastOnce())
+            .addHostKeyVerifier(SecurityUtils.getFingerprint(hostKeyPair.getPublic()));
+    verify(mock, atLeastOnce()).setConnectTimeout(SshConnectionPool.SSH_CONNECT_TIMEOUT);
+    verify(mock, atLeastOnce()).connect("127.0.0.1", 22222);
+
+    verify(mock).authPublickey("testuser", sshKeyProvider);
+    // invalid username won't give host key. Should never called this
+    verify(mock, never()).authPublickey("invaliduser", sshKeyProvider);
+  }
+
+  @Test
   public void testGetConnectionWithUrlHavingComplexPassword1() throws IOException {
     String validPassword = "testP@ssw0rd";
     SSHClient mock = createSshServer("testuser", validPassword);
-    saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null);
+    saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null, null);
     assertNotNull(
         SshConnectionPool.INSTANCE.getConnection(
             SshClientUtils.encryptSshPathAsNecessary(
@@ -248,7 +291,7 @@ public class SshConnectionPoolTest {
   public void testGetConnectionWithUrlHavingComplexPassword2() throws IOException {
     String validPassword = "testP@##word";
     SSHClient mock = createSshServer("testuser", validPassword);
-    saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null);
+    saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null, null);
     assertNotNull(
         SshConnectionPool.INSTANCE.getConnection(
             SshClientUtils.encryptSshPathAsNecessary(
@@ -272,7 +315,7 @@ public class SshConnectionPoolTest {
   public void testGetConnectionWithUrlHavingComplexCredential1() throws IOException {
     String validPassword = "testP@##word";
     SSHClient mock = createSshServer("testuser", validPassword);
-    saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null);
+    saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null, null);
     assertNotNull(
         SshConnectionPool.INSTANCE.getConnection(
             SshClientUtils.encryptSshPathAsNecessary(
@@ -296,7 +339,7 @@ public class SshConnectionPoolTest {
   public void testGetConnectionWithUrlHavingComplexCredential2() throws IOException {
     String validPassword = "testP@##word";
     SSHClient mock = createSshServer("testuser", validPassword);
-    saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null);
+    saveSshConnectionSettings(hostKeyPair, "testuser", validPassword, null, null);
     assertNotNull(
         SshConnectionPool.INSTANCE.getConnection(
             SshClientUtils.encryptSshPathAsNecessary(
@@ -321,7 +364,7 @@ public class SshConnectionPoolTest {
     String validUsername = "test@example.com";
     String validPassword = "testP@ssw0rd";
     SSHClient mock = createSshServer(validUsername, validPassword);
-    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
+    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null, null);
     assertNotNull(
         SshConnectionPool.INSTANCE.getConnection(
             SshClientUtils.encryptSshPathAsNecessary(
@@ -346,7 +389,7 @@ public class SshConnectionPoolTest {
     String validUsername = "test@example.com";
     String validPassword = "testP@ssw0##$";
     SSHClient mock = createSshServer(validUsername, validPassword);
-    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
+    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null, null);
     assertNotNull(
         SshConnectionPool.INSTANCE.getConnection(
             SshClientUtils.encryptSshPathAsNecessary(
@@ -371,7 +414,7 @@ public class SshConnectionPoolTest {
     String validUsername = "test@example.com";
     String validPassword = "abcd-efgh";
     SSHClient mock = createSshServer(validUsername, validPassword);
-    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
+    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null, null);
     assertNotNull(
         SshConnectionPool.INSTANCE.getConnection(
             SshClientUtils.encryptSshPathAsNecessary(
@@ -396,7 +439,7 @@ public class SshConnectionPoolTest {
     String validUsername = "test@example.com";
     String validPassword = "---------------";
     SSHClient mock = createSshServer(validUsername, validPassword);
-    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
+    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null, null);
     assertNotNull(
         SshConnectionPool.INSTANCE.getConnection(
             SshClientUtils.encryptSshPathAsNecessary(
@@ -421,7 +464,7 @@ public class SshConnectionPoolTest {
     String validUsername = "test@example.com";
     String validPassword = "--agdiuhdpost15";
     SSHClient mock = createSshServer(validUsername, validPassword);
-    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
+    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null, null);
     assertNotNull(
         SshConnectionPool.INSTANCE.getConnection(
             SshClientUtils.encryptSshPathAsNecessary(
@@ -446,7 +489,7 @@ public class SshConnectionPoolTest {
     String validUsername = "test@example.com";
     String validPassword = "t-h-i-s-i-s-p-a-s-s-w-o-r-d-";
     SSHClient mock = createSshServer(validUsername, validPassword);
-    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null);
+    saveSshConnectionSettings(hostKeyPair, validUsername, validPassword, null, null);
     assertNotNull(
         SshConnectionPool.INSTANCE.getConnection(
             SshClientUtils.encryptSshPathAsNecessary(
@@ -470,6 +513,8 @@ public class SshConnectionPoolTest {
       throws IOException {
 
     SSHClient mock = mock(SSHClient.class);
+    when(mock.isConnected()).thenReturn(true);
+    when(mock.isAuthenticated()).thenReturn(true);
     doNothing().when(mock).connect("127.0.0.1", 22222);
     doNothing()
         .when(mock)
