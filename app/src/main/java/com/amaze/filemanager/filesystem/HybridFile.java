@@ -1306,7 +1306,8 @@ public class HybridFile {
     } else if (isFtp()) {
       if (getPath().equals("/")) exists = true;
       else {
-        exists = getFtpFile() != null;
+        FTPFile result = getFtpFile();
+        exists = result != null;
       }
     } else if (isDropBoxFile()) {
       CloudStorage cloudStorageDropbox = dataUtils.getAccount(OpenMode.DROPBOX);

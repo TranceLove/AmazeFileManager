@@ -20,12 +20,6 @@
 
 package com.amaze.filemanager.filesystem.ftp
 
-import android.os.Environment
-import com.amaze.filemanager.filesystem.ssh.test.TestUtils
-import org.apache.ftpserver.ConnectionConfigFactory
-import org.apache.ftpserver.FtpServerFactory
-import org.apache.ftpserver.usermanager.impl.BaseUser
-import org.apache.ftpserver.usermanager.impl.WritePermission
 import org.junit.Ignore
 
 /**
@@ -34,43 +28,43 @@ import org.junit.Ignore
 @Ignore
 class FtpHybridFileAnonymousLoginTest : FtpHybridFileTest() {
 
-    override val ftpPort: Int
-        get() = PORT
-    override val ftpUrl: String
-        get() = NetCopyClientUtils.encryptFtpPathAsNecessary(
-            "${ftpPrefix}127.0.0.1:$ftpPort"
-        )
-
-    override fun saveConnectionSettings() {
-        TestUtils.saveFtpConnectionSettings("", "")
-    }
-
-    companion object {
-
-        private const val PORT = 2223
-
-        /**
-         * Extracted [FtpServerFactory] with anonymous login support into separate factory method.
-         */
-        @JvmStatic
-        fun createAnonymousFtpServerFactory(): FtpServerFactory = FtpServerFactory().also {
-            val connectionConfigFactory = ConnectionConfigFactory()
-            connectionConfigFactory.isAnonymousLoginEnabled = true
-            val user = BaseUser()
-            user.name = FTPClientImpl.ANONYMOUS
-            user.homeDirectory = Environment.getExternalStorageDirectory().absolutePath
-            user.authorities = listOf(WritePermission())
-            it.userManager.save(user)
-            it.connectionConfig = connectionConfigFactory.createConnectionConfig()
-        }
-    }
-
-    override fun createFtpServerFactory(): FtpServerFactory {
-        return createAnonymousFtpServerFactory().also {
-            it.addListener(
-                "default",
-                createDefaultFtpServerListener()
-            )
-        }
-    }
+//    override val ftpPort: Int
+//        get() = PORT
+//    override val ftpUrl: String
+//        get() = NetCopyClientUtils.encryptFtpPathAsNecessary(
+//            "${ftpPrefix}127.0.0.1:$ftpPort"
+//        )
+//
+//    override fun saveConnectionSettings() {
+//        TestUtils.saveFtpConnectionSettings("", "")
+//    }
+//
+//    companion object {
+//
+//        private const val PORT = 2223
+//
+//        /**
+//         * Extracted [FtpServerFactory] with anonymous login support into separate factory method.
+//         */
+//        @JvmStatic
+//        fun createAnonymousFtpServerFactory(): FtpServerFactory = FtpServerFactory().also {
+//            val connectionConfigFactory = ConnectionConfigFactory()
+//            connectionConfigFactory.isAnonymousLoginEnabled = true
+//            val user = BaseUser()
+//            user.name = FTPClientImpl.ANONYMOUS
+//            user.homeDirectory = Environment.getExternalStorageDirectory().absolutePath
+//            user.authorities = listOf(WritePermission())
+//            it.userManager.save(user)
+//            it.connectionConfig = connectionConfigFactory.createConnectionConfig()
+//        }
+//    }
+//
+//    override fun createFtpServerFactory(): FtpServerFactory {
+//        return createAnonymousFtpServerFactory().also {
+//            it.addListener(
+//                "default",
+//                createDefaultFtpServerListener()
+//            )
+//        }
+//    }
 }

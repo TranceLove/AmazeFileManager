@@ -18,35 +18,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.amaze.filemanager.filesystem.ftp
+package com.amaze.filemanager.test.docker
 
-import org.junit.Ignore
+import java.lang.annotation.Inherited
 
 /**
- * Test [HybridFile] FTP protocol over secure connection handling with anonymous logins.
+ * Class or method annotated with this will be skipped if Docker is not found in environment.
  */
-@Ignore
-class FtpsHybridFileAnonymousLoginTest : FtpsHybridFileTest() {
-
-//    override val ftpPort: Int
-//        get() = PORT
-//    override val ftpUrl: String
-//        get() = NetCopyClientUtils.encryptFtpPathAsNecessary(
-//            "${ftpPrefix}127.0.0.1:$ftpPort"
-//        )
-//
-//    companion object {
-//        private const val PORT = 2224
-//    }
-//
-//    override fun saveConnectionSettings() =
-//        TestUtils.saveFtpConnectionSettings("", "", certInfo, PORT)
-//
-//    override fun createFtpServerFactory(): FtpServerFactory =
-//        FtpHybridFileAnonymousLoginTest.createAnonymousFtpServerFactory().also {
-//            it.addListener(
-//                "default",
-//                createDefaultFtpServerListener()
-//            )
-//        }
-}
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.TYPE, AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
+@Inherited
+annotation class IgnoreIfDockerNotPresent

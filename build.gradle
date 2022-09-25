@@ -37,6 +37,7 @@ buildscript {
         commonsNetVersion = "3.8.0"
         ftpserverVersion = "1.1.1"
         jsoupVersion = "1.13.1"
+        testContainersVersion = "1.17.3"
     }
     repositories {
         google()

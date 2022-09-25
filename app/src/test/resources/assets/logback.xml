@@ -11,4 +11,5 @@
     <root level="DEBUG">
         <appender-ref ref="logcat" />
     </root>
+    <logger name="com.github.dockerjava" level="OFF" />
 </configuration>

@@ -24,5 +24,6 @@
         <appender-ref ref="ASYNC" />
         <appender-ref ref="LOGCAT" />
     </root>
+    <logger name="com.github.dockerjava" level="OFF" />
     <shutdownHook/>
 </configuration>

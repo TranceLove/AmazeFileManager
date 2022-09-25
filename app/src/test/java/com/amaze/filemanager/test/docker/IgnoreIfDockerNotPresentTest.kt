@@ -18,35 +18,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.amaze.filemanager.filesystem.ftp
+package com.amaze.filemanager.test.docker
 
-import org.junit.Ignore
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
 
 /**
- * Test [HybridFile] FTP protocol over secure connection handling with anonymous logins.
+ * Little test on [IgnoreIfDockerNotPresent] annotation. Do nothing.
  */
-@Ignore
-class FtpsHybridFileAnonymousLoginTest : FtpsHybridFileTest() {
+class IgnoreIfDockerNotPresentTest {
 
-//    override val ftpPort: Int
-//        get() = PORT
-//    override val ftpUrl: String
-//        get() = NetCopyClientUtils.encryptFtpPathAsNecessary(
-//            "${ftpPrefix}127.0.0.1:$ftpPort"
-//        )
-//
-//    companion object {
-//        private const val PORT = 2224
-//    }
-//
-//    override fun saveConnectionSettings() =
-//        TestUtils.saveFtpConnectionSettings("", "", certInfo, PORT)
-//
-//    override fun createFtpServerFactory(): FtpServerFactory =
-//        FtpHybridFileAnonymousLoginTest.createAnonymousFtpServerFactory().also {
-//            it.addListener(
-//                "default",
-//                createDefaultFtpServerListener()
-//            )
-//        }
+    @Rule
+    @JvmField
+    val ignoreIfDockerNotPresent = IgnoreIfDockerNotPresentRule()
+
+    @Test
+    @IgnoreIfDockerNotPresent
+    fun testSunnyDay() {
+        assertTrue(true)
+    }
 }
