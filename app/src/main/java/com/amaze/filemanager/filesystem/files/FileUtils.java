@@ -899,7 +899,7 @@ public class FileUtils {
       }
     }
     int p = getColonPosition(array);
-    if (p != -1) {
+    if (p != -1 && (p + 1) != array.length) {
       date = array[p - 1] + " | " + array[p];
       size = array[p - 2];
     } else if (isStat) {

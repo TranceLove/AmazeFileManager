@@ -374,6 +374,8 @@ class FileUtilsTest {
         val a = "-rwxr-x---   1 root   shell    29431 2009-01-01 08:00 init.rc"
         val b = "lrw-r--r--   1 root   root        15 2009-01-01 08:00 product -> /system/product"
         val c = "drwxr-xr-x  17 root   root      4096 1970-05-19 08:40 system"
+        val d = "-r--r--r-- 1 root root 10 1970-01-13 07:32 cpu_variant:arm"
+        val e = "lrwxrwxrwx  1 root root 0 2022-10-05 15:39 ac -> ../../devices/platform/GFSH0001:00/power_supply/ac"
 
         // stat with old toybox or busybox
         // val a1 = "-rwxr-x--- 1 shell root 512 2009-01-01 08:00:00.000000000 `init.rc'"
@@ -384,6 +386,8 @@ class FileUtilsTest {
         val a2 = "-rwxr-x--- 1 shell root 512 1230796800 `init.rc'"
         val b2 = "lrw-r--r-- 1 root root 512 1230796800 `product' -> `/system/product'"
         val c2 = "drwxr-xr-x 17 root root 512 11922027 `system'"
+        val d2 = "-r--r--r-- 1 root root 512 1035141 `cpu_variant:arm'"
+        val e2 = "lrwxrwxrwx 1 root root 512 1664955558 /sys/class/power_supply/ac -> '../../devices/platform/GFSH0001:00/power_supply/ac'"
 
         var result1 = FileUtils.parseName(a, false)
         var result2 = FileUtils.parseName(a2.replace("('|`)".toRegex(), ""), true)
@@ -400,6 +404,20 @@ class FileUtilsTest {
 
         result1 = FileUtils.parseName(c, false)
         result2 = FileUtils.parseName(c2.replace("('|`)".toRegex(), ""), true)
+        // if using stat, seconds will also be available, so they won't be equal
+        assertNotEquals(result1.date, result2.date)
+        assertEquals(result1.name, result2.name)
+        assertEquals(result1.path, result2.path)
+
+        result1 = FileUtils.parseName(d, false)
+        result2 = FileUtils.parseName(d2.replace("('|`)".toRegex(), ""), true)
+        // if using stat, seconds will also be available, so they won't be equal
+        assertNotEquals(result1.date, result2.date)
+        assertEquals(result1.name, result2.name)
+        assertEquals(result1.path, result2.path)
+
+        result1 = FileUtils.parseName(e, false)
+        result2 = FileUtils.parseName(e2.replace("('|`)".toRegex(), ""), true)
         // if using stat, seconds will also be available, so they won't be equal
         assertNotEquals(result1.date, result2.date)
         assertEquals(result1.name, result2.name)
