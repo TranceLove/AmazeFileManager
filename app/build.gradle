@@ -13,7 +13,6 @@ android {
         }
     }
 
-
     defaultConfig {
         applicationId "com.amaze.filemanager"
         minSdkVersion 14

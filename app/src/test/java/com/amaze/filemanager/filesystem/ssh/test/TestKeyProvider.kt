@@ -18,52 +18,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.amaze.filemanager.filesystem.ssh.test;
+package com.amaze.filemanager.filesystem.ssh.test
 
-import java.io.IOException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.util.Collections;
+import net.schmizz.sshj.common.KeyType
+import net.schmizz.sshj.userauth.keyprovider.KeyProvider
+import org.apache.sshd.common.keyprovider.KeyPairProvider
+import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.security.PrivateKey
+import java.security.PublicKey
+import java.security.SecureRandom
 
-import org.apache.sshd.common.keyprovider.KeyPairProvider;
+class TestKeyProvider : KeyPairProvider, KeyProvider {
 
-import net.schmizz.sshj.common.KeyType;
-import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
+    val keyPair: KeyPair
 
-public class TestKeyProvider implements KeyPairProvider, KeyProvider {
+    init {
+        val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
+        keyPairGenerator.initialize(1024, SecureRandom())
+        keyPair = keyPairGenerator.generateKeyPair()
+    }
 
-  private KeyPair keyPair;
+    override fun loadKeys(): Iterable<KeyPair> = setOf(keyPair)
 
-  public TestKeyProvider() throws Exception {
-    KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-    keyPairGenerator.initialize(1024, new SecureRandom());
-    keyPair = keyPairGenerator.generateKeyPair();
-  }
+    override fun getPrivate(): PrivateKey = keyPair.private
 
-  @Override
-  public Iterable<KeyPair> loadKeys() {
-    return Collections.singleton(keyPair);
-  }
+    override fun getPublic(): PublicKey = keyPair.public
 
-  @Override
-  public PrivateKey getPrivate() throws IOException {
-    return getKeyPair().getPrivate();
-  }
-
-  @Override
-  public PublicKey getPublic() throws IOException {
-    return getKeyPair().getPublic();
-  }
-
-  @Override
-  public KeyType getType() throws IOException {
-    return KeyType.fromKey(getKeyPair().getPublic());
-  }
-
-  public KeyPair getKeyPair() {
-    return keyPair;
-  }
+    override fun getType(): KeyType = KeyType.fromKey(keyPair.public)
 }

@@ -39,6 +39,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -53,6 +54,7 @@ import kotlin.random.Random
     sdk = [P],
     shadows = [ShadowPasswordUtil::class, ShadowMultiDex::class]
 )
+@Ignore
 open class FtpHybridFileTest : AbstractFtpServerTestBase() {
 
     protected lateinit var tmpFile: File

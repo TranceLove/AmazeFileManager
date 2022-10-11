@@ -18,47 +18,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.amaze.filemanager.filesystem.ssh;
+package com.amaze.filemanager.filesystem.ssh
 
-import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.Paths;
-import java.util.Collections;
+import androidx.test.core.app.ApplicationProvider
+import com.amaze.filemanager.fileoperations.filesystem.OpenMode
+import com.amaze.filemanager.filesystem.HybridFile
+import com.amaze.filemanager.filesystem.Operations
+import com.amaze.filemanager.filesystem.OperationsTest.AbstractErrorCallback
+import org.junit.Test
+import java.util.concurrent.CountDownLatch
 
-import org.apache.sshd.common.file.virtualfs.VirtualFileSystemFactory;
-import org.apache.sshd.common.session.Session;
-import org.junit.Ignore;
-import org.junit.Test;
+class CreateFileOnSshdTest : AbstractSshServerTestBase() {
 
-import com.amaze.filemanager.filesystem.ssh.test.BlockFileCreationFileSystemProvider;
+    private lateinit var parent: HybridFile
 
-import android.os.Environment;
+    override fun setUp() {
+        super.setUp()
+        parent = HybridFile(OpenMode.SFTP, "ssh://$USERNAME:$PASSWORD@$host:$port/home/testuser")
+    }
 
-@Ignore("Skipped due to no solid test case given")
-public class CreateFileOnSshdTest extends AbstractSftpServerTest {
-
-  @Test
-  public void testCreateFileNormal() throws Exception {
-    tearDown();
-    createSshServer(
-        new VirtualFileSystemFactory(
-            Paths.get(Environment.getExternalStorageDirectory().getAbsolutePath())),
-        serverPort);
-  }
-
-  @Test
-  public void testCreateFilePermissionDenied() throws Exception {
-    tearDown();
-    createSshServer(
-        new VirtualFileSystemFactory() {
-          @Override
-          public FileSystem createFileSystem(Session session) throws IOException {
-            return new BlockFileCreationFileSystemProvider()
-                .newFileSystem(
-                    Paths.get(Environment.getExternalStorageDirectory().getAbsolutePath()),
-                    Collections.emptyMap());
-          }
-        },
-        serverPort);
-  }
+    @Test
+    fun testCreateFileNormal() {
+        val latch = CountDownLatch(1)
+        Operations.mkfile(
+            parent,
+            HybridFile(
+                OpenMode.SFTP,
+                "ssh://$USERNAME:$PASSWORD@$host:$port/home/testuser/newfile.txt"
+            ),
+            ApplicationProvider.getApplicationContext(),
+            false,
+            object : AbstractErrorCallback() {
+                override fun done(hFile: HybridFile?, b: Boolean) {
+                    latch.countDown()
+                }
+            }
+        )
+        latch.await()
+    }
 }

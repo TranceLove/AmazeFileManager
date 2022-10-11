@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.amaze.filemanager.test.docker
+package com.amaze.filemanager.docker
 
 import org.junit.Assert.assertTrue
 import org.junit.Rule
