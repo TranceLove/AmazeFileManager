@@ -207,7 +207,7 @@ object NetCopyClientUtils {
         } else {
             val hostAndPath = fullUri.substringAfter("://")
             return if (hostAndPath.contains(SLASH)) {
-                hostAndPath.substring(hostAndPath.indexOf(SLASH))
+                hostAndPath.substring(hostAndPath.indexOf(SLASH)).replace("//", "/")
             } else {
                 SLASH.toString()
             }
