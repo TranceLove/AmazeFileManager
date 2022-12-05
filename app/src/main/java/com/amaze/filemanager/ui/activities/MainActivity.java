@@ -101,6 +101,7 @@ import com.amaze.filemanager.filesystem.PasteHelper;
 import com.amaze.filemanager.filesystem.RootHelper;
 import com.amaze.filemanager.filesystem.files.FileUtils;
 import com.amaze.filemanager.filesystem.ftp.NetCopyClientConnectionPool;
+import com.amaze.filemanager.filesystem.ftp.NetCopyConnectionInfo;
 import com.amaze.filemanager.filesystem.ssh.SshClientUtils;
 import com.amaze.filemanager.ui.ExtensionsKt;
 import com.amaze.filemanager.ui.activities.superclasses.PermissionsActivity;
@@ -1973,7 +1974,7 @@ public class MainActivity extends PermissionsActivity
     }
     SftpConnectDialog sftpConnectDialog = new SftpConnectDialog();
     String finalName = name;
-    Flowable.fromCallable(() -> new NetCopyClientConnectionPool.ConnectionInfo(path))
+    Flowable.fromCallable(() -> new NetCopyConnectionInfo(path))
         .flatMap(
             connectionInfo -> {
               Bundle retval = new Bundle();
