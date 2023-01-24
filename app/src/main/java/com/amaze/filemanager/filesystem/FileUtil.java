@@ -20,6 +20,9 @@
 
 package com.amaze.filemanager.filesystem;
 
+import static android.os.Build.VERSION_CODES.Q;
+import static com.amaze.filemanager.ui.icons.MimeTypes.APPLICATION_OCTET_STREAM;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -47,10 +50,14 @@ import com.amaze.filemanager.utils.smb.SmbUtil;
 import com.cloudrail.si.interfaces.CloudStorage;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -308,5 +315,41 @@ public abstract class FileUtil {
               @Override
               public void onComplete() {}
             });
+  }
+
+  /**
+   * Opens an {@link OutputStream} in downloads folder, with quirks for pre-Q Androids.
+   *
+   * @param context {@link Context}. Required.
+   * @param filename Filename. Required.
+   * @param mimeType MIME type. Defaults to {@link
+   *     com.amaze.filemanager.ui.icons.MimeTypes.APPLICATION_OCTET_STREAM} if null.
+   * @return {@link OutputStream} or null if URI cannot be resolved.
+   * @throws IOException
+   */
+  public @Nullable OutputStream getOutputStreamInDownloadsFolder(
+      @NonNull Context context, @NonNull String filename, @Nullable String mimeType)
+      throws IOException {
+    if (Build.VERSION.SDK_INT < Q) {
+      return new FileOutputStream(
+          new File(
+              Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+              filename));
+    } else {
+      if (TextUtils.isEmpty(mimeType)) {
+        mimeType = APPLICATION_OCTET_STREAM;
+      }
+      ContentValues contentValues = new ContentValues();
+      contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, filename);
+      contentValues.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
+      contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+      ContentResolver resolver = context.getContentResolver();
+      Uri uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
+      if (uri != null) {
+        return resolver.openOutputStream(uri);
+      } else {
+        return null;
+      }
+    }
   }
 }

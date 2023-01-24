@@ -39,7 +39,6 @@ import android.os.Process
 import android.provider.DocumentsContract
 import android.provider.DocumentsContract.EXTRA_INITIAL_URI
 import android.provider.Settings
-import android.text.InputType
 import android.text.Spanned
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -56,16 +55,17 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.text.HtmlCompat
 import androidx.core.text.HtmlCompat.FROM_HTML_MODE_COMPACT
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.folderselector.FolderChooserDialog
 import com.amaze.filemanager.R
 import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.asynchronous.services.ftp.FtpService
+import com.amaze.filemanager.asynchronous.services.ftp.FtpService.Companion.DEFAULT_PORT
 import com.amaze.filemanager.asynchronous.services.ftp.FtpService.Companion.KEY_PREFERENCE_PATH
 import com.amaze.filemanager.asynchronous.services.ftp.FtpService.Companion.KEY_PREFERENCE_ROOT_FILESYSTEM
 import com.amaze.filemanager.asynchronous.services.ftp.FtpService.Companion.isRunning
@@ -74,6 +74,8 @@ import com.amaze.filemanager.databinding.DialogFtpLoginBinding
 import com.amaze.filemanager.databinding.FragmentFtpBinding
 import com.amaze.filemanager.filesystem.files.FileUtils
 import com.amaze.filemanager.ui.activities.MainActivity
+import com.amaze.filemanager.ui.activities.PreferencesActivity
+import com.amaze.filemanager.ui.fragments.preferencefragments.FtpServerPrefsFragment
 import com.amaze.filemanager.ui.notifications.FtpNotification
 import com.amaze.filemanager.ui.runIfDocumentsUIExists
 import com.amaze.filemanager.ui.theme.AppTheme
@@ -181,159 +183,17 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
         }
     }
 
-    // Pending upgrading material-dialogs to simplify the logic here.
     @Suppress("ComplexMethod", "LongMethod")
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.choose_ftp_port -> {
-                val currentFtpPort = defaultPortFromPreferences
-                MaterialDialog.Builder(requireContext())
-                    .input(
-                        getString(R.string.ftp_port_edit_menu_title),
-                        currentFtpPort.toString(),
-                        true
-                    ) { _: MaterialDialog?, _: CharSequence? -> }
-                    .inputType(InputType.TYPE_CLASS_NUMBER)
-                    .onPositive { dialog: MaterialDialog, _: DialogAction? ->
-                        val editText = dialog.inputEditText
-                        if (editText != null) {
-                            val name = editText.text.toString()
-                            val portNumber = name.toIntOrNull()
-                            if (portNumber == null || portNumber < 1024) {
-                                Toast.makeText(
-                                    activity,
-                                    R.string.ftp_port_change_error_invalid,
-                                    Toast.LENGTH_SHORT
-                                )
-                                    .show()
-                            } else {
-                                changeFTPServerPort(portNumber)
-                                Toast.makeText(
-                                    activity,
-                                    R.string.ftp_port_change_success,
-                                    Toast.LENGTH_SHORT
-                                )
-                                    .show()
-                            }
-                        }
-                    }
-                    .positiveText(getString(R.string.change).uppercase())
-                    .negativeText(R.string.cancel)
-                    .build()
-                    .show()
-                return true
-            }
-            R.id.ftp_path -> {
-                if (shouldUseSafFileSystem()) {
-                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-
-                    intent.runIfDocumentsUIExists(mainActivity) {
-                        activityResultHandlerOnFtpServerPathUpdate.launch(
-                            intent
+            R.id.ftp_server_prefs -> {
+                requireActivity().startActivity(
+                    Intent(requireActivity(), PreferencesActivity::class.java)
+                        .putExtra(
+                            PreferencesActivity.EXTRA_SHOW_FRAGMENT,
+                            FtpServerPrefsFragment::class.java.name
                         )
-                    }
-                } else {
-                    val dialogBuilder = FolderChooserDialog.Builder(requireActivity())
-                    dialogBuilder
-                        .chooseButton(R.string.choose_folder)
-                        .initialPath(defaultPathFromPreferences)
-                        .goUpLabel(getString(R.string.folder_go_up_one_level))
-                        .cancelButton(R.string.cancel)
-                        .tag(TAG)
-                        .build()
-                        .show(activity)
-                }
-
-                return true
-            }
-            R.id.ftp_login -> {
-                val loginDialogBuilder = MaterialDialog.Builder(requireContext())
-                val loginDialogView =
-                    DialogFtpLoginBinding.inflate(LayoutInflater.from(requireContext())).apply {
-                        initLoginDialogViews(this)
-                        loginDialogBuilder.onPositive { _: MaterialDialog, _: DialogAction ->
-                            if (checkboxFtpAnonymous.isChecked) {
-                                // remove preferences
-                                setFTPUsername("")
-                                setFTPPassword("")
-                            } else {
-                                // password and username field not empty, let's set them to preferences
-                                setFTPUsername(editTextDialogFtpUsername.text.toString())
-                                setFTPPassword(editTextDialogFtpPassword.text.toString())
-                            }
-                        }
-                    }
-                val dialog = loginDialogBuilder.customView(loginDialogView.root, true)
-                    .title(getString(R.string.ftp_login))
-                    .positiveText(getString(R.string.set).uppercase())
-                    .negativeText(getString(R.string.cancel))
-                    .build()
-
-                // TextWatcher for port number was deliberately removed. It didn't work anyway, so
-                // no reason to keep here. Pending reimplementation when material-dialogs lib is
-                // upgraded.
-
-                dialog.show()
-                return true
-            }
-            R.id.checkbox_ftp_readonly -> {
-                val shouldReadonly = !item.isChecked
-                item.isChecked = shouldReadonly
-                readonlyPreference = shouldReadonly
-                updatePathText()
-                promptUserToRestartServer()
-                return true
-            }
-            R.id.checkbox_ftp_secure -> {
-                val shouldSecure = !item.isChecked
-                item.isChecked = shouldSecure
-                securePreference = shouldSecure
-                promptUserToRestartServer()
-                return true
-            }
-            R.id.checkbox_ftp_legacy_filesystem -> {
-                val shouldUseSafFileSystem = !item.isChecked
-                item.isChecked = shouldUseSafFileSystem
-                legacyFileSystemPreference = shouldUseSafFileSystem
-                promptUserToRestartServer()
-                return true
-            }
-            R.id.ftp_timeout -> {
-                val timeoutBuilder = MaterialDialog.Builder(requireActivity())
-                timeoutBuilder.title(
-                    getString(R.string.ftp_timeout) +
-                        " (" +
-                        resources.getString(R.string.ftp_seconds) +
-                        ")"
                 )
-                timeoutBuilder.input(
-                    (
-                        FtpService.DEFAULT_TIMEOUT.toString() +
-                            " " +
-                            resources.getString(R.string.ftp_seconds)
-                        ),
-                    ftpTimeout.toString(),
-                    true
-                ) { _: MaterialDialog?, input: CharSequence ->
-                    val isInputInteger: Boolean = try {
-                        // try parsing for integer check
-                        input.toString().toInt()
-                        true
-                    } catch (e: NumberFormatException) {
-                        false
-                    }
-                    ftpTimeout = if (input.isEmpty() || !isInputInteger) {
-                        FtpService.DEFAULT_TIMEOUT
-                    } else {
-                        Integer.valueOf(input.toString())
-                    }
-                }
-                timeoutBuilder
-                    .positiveText(resources.getString(R.string.set).uppercase())
-                    .negativeText(resources.getString(R.string.cancel))
-                    .build()
-                    .show()
-                return true
             }
             R.id.exit -> {
                 requireActivity().finish()
@@ -345,16 +205,13 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         mainActivity.menuInflater.inflate(R.menu.ftp_server_menu, menu)
-        menu.findItem(R.id.checkbox_ftp_readonly).isChecked = readonlyPreference
-        menu.findItem(R.id.checkbox_ftp_secure).isChecked = securePreference
-        menu.findItem(R.id.checkbox_ftp_legacy_filesystem).isChecked = legacyFileSystemPreference
         super.onCreateOptionsMenu(menu, inflater)
     }
 
     private fun shouldUseSafFileSystem(): Boolean {
-        return mainActivity.prefs.getBoolean(
-            FtpService.KEY_PREFERENCE_SAF_FILESYSTEM,
-            false
+        return !mainActivity.prefs.getBoolean(
+            FtpService.KEY_PREFERENCE_LEGACY_FILESYSTEM,
+            true
         ) &&
             SDK_INT >= M
     }
@@ -387,8 +244,11 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
         updateSpans()
         when (signal) {
             FtpReceiverActions.STARTED, FtpReceiverActions.STARTED_FROM_TILE -> {
-                statusText.text = if (securePreference) spannedStatusSecure
-                else spannedStatusConnected
+                statusText.text = if (securePreference) {
+                    spannedStatusSecure
+                } else {
+                    spannedStatusConnected
+                }
 
                 url.text = spannedStatusUrl
                 ftpBtn.text = resources.getString(R.string.stop_ftp).uppercase()
@@ -563,7 +423,11 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
         username.text = "${resources.getString(R.string.username)}: $usernameFromPreferences"
         password.text = "${resources.getString(R.string.password)}: $passwordBulleted"
         ftpPasswordVisibleButton.setImageDrawable(
-            resources.getDrawable(R.drawable.ic_eye_grey600_24dp)
+            ResourcesCompat.getDrawable(
+                requireContext().resources,
+                R.drawable.ic_eye_grey600_24dp,
+                requireActivity().theme
+            )
         )
         ftpPasswordVisibleButton.visibility = if (passwordDecrypted?.isEmpty() == true) {
             View.GONE
@@ -575,13 +439,21 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
                 // password was not visible, let's make it visible
                 password.text = resources.getString(R.string.password) + ": " + passwordDecrypted
                 ftpPasswordVisibleButton.setImageDrawable(
-                    resources.getDrawable(R.drawable.ic_eye_off_grey600_24dp)
+                    ResourcesCompat.getDrawable(
+                        requireContext().resources,
+                        R.drawable.ic_eye_off_grey600_24dp,
+                        requireActivity().theme
+                    )
                 )
             } else {
                 // password was visible, let's hide it
                 password.text = resources.getString(R.string.password) + ": " + passwordBulleted
                 ftpPasswordVisibleButton.setImageDrawable(
-                    resources.getDrawable(R.drawable.ic_eye_grey600_24dp)
+                    ResourcesCompat.getDrawable(
+                        requireContext().resources,
+                        R.drawable.ic_eye_grey600_24dp,
+                        requireActivity().theme
+                    )
                 )
             }
         }
@@ -769,8 +641,11 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
         }
 
     private val defaultPortFromPreferences: Int
-        get() = mainActivity.prefs
-            .getInt(FtpService.PORT_PREFERENCE_KEY, FtpService.DEFAULT_PORT)
+        get() =
+            mainActivity.prefs
+                .getString(FtpService.PORT_PREFERENCE_KEY, DEFAULT_PORT.toString())?.let {
+                    Integer.valueOf(it)
+                } ?: DEFAULT_PORT
     private val usernameFromPreferences: String
         get() = mainActivity.prefs
             .getString(FtpService.KEY_PREFERENCE_USERNAME, FtpService.DEFAULT_USERNAME)!!
@@ -904,12 +779,12 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
         }
 
     private var legacyFileSystemPreference: Boolean
-        get() = mainActivity.prefs.getBoolean(FtpService.KEY_PREFERENCE_SAF_FILESYSTEM, false)
-        private set(useSafFileSystem) {
+        get() = mainActivity.prefs.getBoolean(FtpService.KEY_PREFERENCE_LEGACY_FILESYSTEM, true)
+        private set(useLegacyFileSystem) {
             mainActivity
                 .prefs
                 .edit()
-                .putBoolean(FtpService.KEY_PREFERENCE_SAF_FILESYSTEM, useSafFileSystem)
+                .putBoolean(FtpService.KEY_PREFERENCE_LEGACY_FILESYSTEM, useLegacyFileSystem)
                 .apply()
         }
 

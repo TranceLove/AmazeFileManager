@@ -671,8 +671,8 @@ altrimenti verrà controllata solo l\'occorrenza.</string>
 Dovrai farlo solo questa volta, fino a quando non sceglierai un percorso diverso da utilizzare.</string>
     <string name="android_data_prompt_saf_access">Da Android 10 sono imposte restrizioni su alcune cartelle, e per l\'accesso ad esse è necessario usare lo Storage Access Framework.\n\nPer favore consenti ad Amaze di accedere alle cartelle dalla gestione file del sistema selezionando \"Consenti Accesso\".</string>
     <string name="android_data_prompt_saf_access_title">Consenti accesso SAF</string>
-    <string name="ftp_preference_saf_filesystem_title">Usa filesystem legacy</string>
-    <string name="ftp_preference_saf_filesystem">Abilita questa opzione per usare la memoria esterna del dispositivo sulle versioni più recenti di Android</string>
+    <string name="ftp_preference_legacy_filesystem_title">Usa filesystem legacy</string>
+    <string name="ftp_preference_legacy_filesystem_summary_on">Abilita questa opzione per usare la memoria esterna del dispositivo sulle versioni più recenti di Android</string>
     <string name="ftp_server_fallback_path_reset_prompt">Il percorso condiviso del server FTP è stato reimpostato alla memoria interna poiché stai tornando all\'implementazione del filesystem legacy. Seleziona un nuovo percorso usando il menù in alto a destra.</string>
     <string name="ftp_server_reset_notify">Il percorso condiviso del server FTP è stato reimpostato alla memoria interna</string>
     <string name="ftp_server_root_unavailable">Stai scegliendo un percorso che richiede l\'accesso root. Abilita l\'esplorazione root nelle impostazioni se il tuo dispositivo è abilitato.</string>

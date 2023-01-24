@@ -129,7 +129,7 @@ class FtpService : Service(), Runnable {
         FtpServerFactory().run {
             val connectionConfigFactory = ConnectionConfigFactory()
             val shouldUseAndroidFileSystem =
-                preferences.getBoolean(KEY_PREFERENCE_SAF_FILESYSTEM, false)
+                !preferences.getBoolean(KEY_PREFERENCE_LEGACY_FILESYSTEM, true)
             if (SDK_INT >= KITKAT && shouldUseAndroidFileSystem) {
                 fileSystem = AndroidFileSystemFactory(applicationContext)
             } else if (preferences.getBoolean(PREFERENCE_ROOTMODE, false)) {
@@ -181,19 +181,24 @@ class FtpService : Service(), Runnable {
             val fac = ListenerFactory()
             if (preferences.getBoolean(KEY_PREFERENCE_SECURE, DEFAULT_SECURE)) {
                 try {
-                    val keyStore = KeyStore.getInstance("BKS")
                     val keyStorePassword = BuildConfig.FTP_SERVER_KEYSTORE_PASSWORD.toCharArray()
-                    keyStore.load(resources.openRawResource(R.raw.key), keyStorePassword)
+                    val keyStore = getKeyStore(keyStorePassword)
                     val keyManagerFactory = KeyManagerFactory
                         .getInstance(KeyManagerFactory.getDefaultAlgorithm())
                     keyManagerFactory.init(keyStore, keyStorePassword)
                     val trustManagerFactory = TrustManagerFactory
                         .getInstance(TrustManagerFactory.getDefaultAlgorithm())
                     trustManagerFactory.init(keyStore)
+                    val clientAuthFlag =
+                        if (preferences.getBoolean(KEY_PREFERENCE_TLS_EXPLICIT, false)) {
+                            ClientAuth.NEED
+                        } else {
+                            ClientAuth.WANT
+                        }
                     fac.sslConfiguration = DefaultSslConfiguration(
                         keyManagerFactory,
                         trustManagerFactory,
-                        ClientAuth.WANT,
+                        clientAuthFlag,
                         "TLS",
                         enabledCipherSuites,
                         "ftpserver"
@@ -259,6 +264,12 @@ class FtpService : Service(), Runnable {
             restartServicePI
     }
 
+    private fun getKeyStore(keyStorePassword: CharArray): KeyStore {
+        val keyStore = KeyStore.getInstance("BKS")
+        keyStore.load(resources.openRawResource(R.raw.key), keyStorePassword)
+        return keyStore
+    }
+
     companion object {
         private val log: Logger = LoggerFactory.getLogger(FtpService::class.java)
 
@@ -273,50 +284,47 @@ class FtpService : Service(), Runnable {
         const val KEY_PREFERENCE_TIMEOUT = "ftp_timeout"
         const val KEY_PREFERENCE_SECURE = "ftp_secure"
         const val KEY_PREFERENCE_READONLY = "ftp_readonly"
-        const val KEY_PREFERENCE_SAF_FILESYSTEM = "ftp_saf_filesystem"
+        const val KEY_PREFERENCE_LEGACY_FILESYSTEM = "ftp_legacy_filesystem"
         const val KEY_PREFERENCE_ROOT_FILESYSTEM = "ftp_root_filesystem"
+        const val KEY_PREFERENCE_TLS_EXPLICIT = "ftp_tls_explicit"
         const val INITIALS_HOST_FTP = "ftp://"
         const val INITIALS_HOST_SFTP = "ftps://"
 
         // RequestStartStopReceiver listens for these actions to start/stop this server
         const val ACTION_START_FTPSERVER =
-            "com.amaze.filemanager.services.ftpservice.FTPReceiver.ACTION_START_FTPSERVER"
+            "${BuildConfig.APPLICATION_ID}.services.ftpservice.FTPReceiver.ACTION_START_FTPSERVER"
         const val ACTION_STOP_FTPSERVER =
-            "com.amaze.filemanager.services.ftpservice.FTPReceiver.ACTION_STOP_FTPSERVER"
+            "${BuildConfig.APPLICATION_ID}.services.ftpservice.FTPReceiver.ACTION_STOP_FTPSERVER"
         const val TAG_STARTED_BY_TILE = "started_by_tile"
         // attribute of action_started, used by notification
 
-        private lateinit var _enabledCipherSuites: Array<String>
-
-        init {
-            _enabledCipherSuites = LinkedList<String>().apply {
-                if (SDK_INT >= Q) {
-                    add("TLS_AES_128_GCM_SHA256")
-                    add("TLS_AES_256_GCM_SHA384")
-                    add("TLS_CHACHA20_POLY1305_SHA256")
-                }
-                if (SDK_INT >= N) {
-                    add("TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256")
-                    add("TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256")
-                }
-                if (SDK_INT >= LOLLIPOP) {
-                    add("TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA")
-                    add("TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256")
-                    add("TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA")
-                    add("TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384")
-                    add("TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA")
-                    add("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256")
-                    add("TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA")
-                    add("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384")
-                    add("TLS_RSA_WITH_AES_128_GCM_SHA256")
-                    add("TLS_RSA_WITH_AES_256_GCM_SHA384")
-                }
-                if (SDK_INT < LOLLIPOP) {
-                    add("TLS_RSA_WITH_AES_128_CBC_SHA")
-                    add("TLS_RSA_WITH_AES_256_CBC_SHA")
-                }
-            }.toTypedArray()
-        }
+        private var _enabledCipherSuites: Array<String> = LinkedList<String>().apply {
+            if (SDK_INT >= Q) {
+                add("TLS_AES_128_GCM_SHA256")
+                add("TLS_AES_256_GCM_SHA384")
+                add("TLS_CHACHA20_POLY1305_SHA256")
+            }
+            if (SDK_INT >= N) {
+                add("TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256")
+                add("TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256")
+            }
+            if (SDK_INT >= LOLLIPOP) {
+                add("TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA")
+                add("TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256")
+                add("TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA")
+                add("TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384")
+                add("TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA")
+                add("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256")
+                add("TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA")
+                add("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384")
+                add("TLS_RSA_WITH_AES_128_GCM_SHA256")
+                add("TLS_RSA_WITH_AES_256_GCM_SHA384")
+            }
+            if (SDK_INT < LOLLIPOP) {
+                add("TLS_RSA_WITH_AES_128_CBC_SHA")
+                add("TLS_RSA_WITH_AES_256_CBC_SHA")
+            }
+        }.toTypedArray()
 
         /**
          * Return a list of available ciphers for ftpserver.
@@ -328,7 +336,7 @@ class FtpService : Service(), Runnable {
          * @see [javax.net.ssl.SSLEngine]
          */
         @JvmStatic
-        val enabledCipherSuites = _enabledCipherSuites
+        internal val enabledCipherSuites = _enabledCipherSuites
 
         private var serverThread: Thread? = null
         private var server: FtpServer? = null
@@ -341,8 +349,8 @@ class FtpService : Service(), Runnable {
          */
         @JvmStatic
         fun defaultPath(context: Context): String {
-            return if (PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(KEY_PREFERENCE_SAF_FILESYSTEM, false) && SDK_INT > M
+            return if (!PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(KEY_PREFERENCE_LEGACY_FILESYSTEM, true) && SDK_INT > M
             ) {
                 DocumentsContract.buildTreeDocumentUri(
                     "com.android.externalstorage.documents",
@@ -363,7 +371,9 @@ class FtpService : Service(), Runnable {
         }
 
         private fun getPort(preferences: SharedPreferences): Int {
-            return preferences.getInt(FtpService.PORT_PREFERENCE_KEY, FtpService.DEFAULT_PORT)
+            return preferences.getString(PORT_PREFERENCE_KEY, DEFAULT_PORT.toString())?.let {
+                Integer.valueOf(it)
+            } ?: DEFAULT_PORT
         }
     }
 }

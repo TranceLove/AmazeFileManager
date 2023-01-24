@@ -709,8 +709,8 @@
 Ezt csak egyszer kell megtennie, egészen addig, amíg legközelebb ki nem választ egy új helyet a megosztáshoz.</string>
     <string name="android_data_prompt_saf_access">Az Android 10 bevezetése óta az Android korlátozásokat vezetett be bizonyos könyvtárakra, és azokat a tárhely hozzáférési keretrendszer segítségével lehet elérni.\n\nKérjük, engedélyezze az Amaze számára a könyvtár elérését a rendszer fájlkezelőjéből a \"Hozzáférés engedélyezése\" gomb megnyomásával.</string>
     <string name="android_data_prompt_saf_access_title">SAF-hozzáférés engedélyezése</string>
-    <string name="ftp_preference_saf_filesystem_title">Örökölt fájlrendszer használata</string>
-    <string name="ftp_preference_saf_filesystem">Engedélyezze ezt az eszköz külső tárolójának újabb Android-verziókon való használatának támogatásához</string>
+    <string name="ftp_preference_legacy_filesystem_title">Örökölt fájlrendszer használata</string>
+    <string name="ftp_preference_legacy_filesystem_summary_on">Engedélyezze ezt az eszköz külső tárolójának újabb Android-verziókon való használatának támogatásához</string>
     <string name="ftp_server_fallback_path_reset_prompt">Az FTP-kiszolgáló megosztott elérési útvonala vissza lett állítva a belső tárolóra, mivel a régi fájlrendszer implementációjára váltott. Kérjük, válasszon új elérési útvonalat a jobb felső sarokban található menü segítségével, ha szükséges.</string>
     <string name="compressed_explorer_fragment_error_open_uri">Hiba a(z) \"%s\" URI olvasásra történő megnyitásakor.</string>
     <string name="error_empty_archive">A(z) \"%s\" egy üres archívum.</string>

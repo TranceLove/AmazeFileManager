@@ -43,6 +43,13 @@
     <Preference
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:icon="@drawable/ic_preference_ftpserver"
+        app:key="ftpserver"
+        app:summary="@string/ftp_server_preference_desc"
+        app:title="@string/ftp" />
+    <Preference
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         app:icon="@drawable/ic_preference_security"
         app:key="security"
         app:summary="@string/security_summary"

@@ -23,18 +23,19 @@ package com.amaze.filemanager.asynchronous.services.ftp
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import com.amaze.filemanager.BuildConfig.DEBUG
 import com.amaze.filemanager.asynchronous.services.ftp.FtpService.Companion.isRunning
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /** Created by yashwanthreddyg on 09-06-2016.  */
 class FtpReceiver : BroadcastReceiver() {
 
-    private val TAG = FtpReceiver::class.java.simpleName
+    private val logger: Logger = LoggerFactory.getLogger(FtpReceiver::class.java)
 
     override fun onReceive(context: Context, intent: Intent) {
         if (DEBUG) {
-            Log.v(TAG, "Received: ${intent.action}")
+            logger.debug("Received: ${intent.action}")
         }
         val service = Intent(context, FtpService::class.java)
         service.putExtras(intent)
@@ -43,9 +44,11 @@ class FtpReceiver : BroadcastReceiver() {
                 context.startService(service)
             } else if (intent.action == FtpService.ACTION_STOP_FTPSERVER) {
                 context.stopService(service)
-            } else Unit
+            } else {
+                Unit
+            }
         }.onFailure {
-            Log.e(TAG, "Failed to start/stop on intent ${it.message}")
+            logger.error("Failed to start/stop on intent", it)
         }
     }
 }

@@ -33,6 +33,7 @@ import androidx.annotation.Nullable;
 public final class MimeTypes {
 
   public static final String ALL_MIME_TYPES = "*/*";
+  public static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
 
   // construct a with an approximation of the capacity
   private static final HashMap<String, String> MIME_TYPES = new HashMap<>(1 + (int) (68 / 0.75));

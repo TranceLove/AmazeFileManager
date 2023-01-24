@@ -703,8 +703,8 @@
 
 Anda hanya perlu melakukan ini sekali, sampai nanti jika Anda ingin memilih lokasi baru untuk berbagi.</string>
     <string name="android_data_prompt_saf_access_title">Izinkan akses SAF</string>
-    <string name="ftp_preference_saf_filesystem_title">Gunakan sistem berkas lama</string>
-    <string name="ftp_preference_saf_filesystem">Aktifkan ini untuk mendukung penggunaan penyimpanan eksternal perangkat pada versi Android terbaru</string>
+    <string name="ftp_preference_legacy_filesystem_title">Gunakan sistem berkas lama</string>
+    <string name="ftp_preference_legacy_filesystem_summary_on">Aktifkan ini untuk mendukung penggunaan penyimpanan eksternal perangkat pada versi Android terbaru</string>
     <string name="compressed_explorer_fragment_error_open_uri">Galat membuka URI \"%s\" untuk dibaca.</string>
     <string name="error_empty_archive">\"%s\" adalah arsip kosong.</string>
     <string name="security_error">Berkas tidak bisa dibuka menggunakan aplikasi ini</string>

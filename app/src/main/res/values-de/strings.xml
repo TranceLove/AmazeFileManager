@@ -672,8 +672,8 @@ andernfalls wird nach Treffern gesucht.</string>
 Sie müssen diesen Schritt nur einmalig ausführen, bis Sie einen neuen Ort für die Datenfreigabe verwenden.</string>
     <string name="android_data_prompt_saf_access">Seit Android 10 gibt es bestimmte Einschränkungen auf Verzeichnisse. Für den Zugriff ist das Storage Access Framework (SAF) erforderlich.\n\nBitte erlauben Sie Amaze den Zugriff auf das Verzeichnis vom systemweiten Dateimanager aus, durch Drücken auf \"Zugriff erlauben\".</string>
     <string name="android_data_prompt_saf_access_title">Zugriff auf SAF erlauben</string>
-    <string name="ftp_preference_saf_filesystem_title">Älteres Dateisystem verwenden</string>
-    <string name="ftp_preference_saf_filesystem">Auf neuen Android-Versionen aktivieren, für die Unterstützung zur Verwendung externer Speichergeräte</string>
+    <string name="ftp_preference_legacy_filesystem_title">Älteres Dateisystem verwenden</string>
+    <string name="ftp_preference_legacy_filesystem_summary_on">Auf neuen Android-Versionen aktivieren, für die Unterstützung zur Verwendung externer Speichergeräte</string>
     <string name="ftp_server_fallback_path_reset_prompt">Der freigegebene Pfad des FTP-Servers wurde auf den internen Speicher zurückgesetzt, da Sie zur Legacy-Dateisystemimplementierung zurückwechseln. Bitte wählen Sie über das Menü oben rechts einen neuen Pfad aus.</string>
     <string name="ftp_server_reset_notify">Geteilter Pfad des FTP-Servers wurde auf den internen Speicher zurückgesetzt</string>
     <string name="ftp_server_root_unavailable">Sie wählen einen Pfad aus, der Root-Zugriff erfordert. Bitte aktivieren Sie in den Einstellungen den Root-Explorer, wenn Ihr Gerät gerootet ist.</string>

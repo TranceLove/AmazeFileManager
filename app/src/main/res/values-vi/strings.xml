@@ -705,8 +705,8 @@
 Bạn chỉ cần làm điều này một lần cho đến lần tiếp theo bạn chọn một vị trí mới để chia sẻ.</string>
     <string name="android_data_prompt_saf_access">Kể từ Android 10, Android đã áp đặt các hạn chế đối với một số thư mục nhất định và họ cần truy cập bằng Storage Access Framework.\n\nVui lòng cho phép Amaze truy cập vào thư mục từ trình quản lý tệp của hệ thống bằng cách nhấn vào \"Cho phép truy cập\".</string>
     <string name="android_data_prompt_saf_access_title">Cấp quyền truy cập SAF</string>
-    <string name="ftp_preference_saf_filesystem_title">Sử dụng filesystem cũ</string>
-    <string name="ftp_preference_saf_filesystem">Bật tính năng này để được hỗ trợ sử dụng bộ nhớ ngoài của thiết bị trên các phiên bản Android mới hơn</string>
+    <string name="ftp_preference_legacy_filesystem_title">Sử dụng filesystem cũ</string>
+    <string name="ftp_preference_legacy_filesystem_summary_on">Bật tính năng này để được hỗ trợ sử dụng bộ nhớ ngoài của thiết bị trên các phiên bản Android mới hơn</string>
     <string name="ftp_server_fallback_path_reset_prompt">Đường dẫn chia sẻ của máy chủ FTP đã được đặt lại thành bộ nhớ trong khi bạn đang chuyển về triển khai filesystem cũ. Vui lòng chọn một đường dẫn mới bằng cách sử dụng menu ở trên cùng bên phải nếu cần.</string>
     <string name="compressed_explorer_fragment_error_open_uri">Lỗi khi mở URI \"%s\" để đọc.</string>
     <string name="error_empty_archive">\"%s\" là một tệp lưu trữ trống.</string>

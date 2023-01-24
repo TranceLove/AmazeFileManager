@@ -43,11 +43,16 @@ import com.amaze.filemanager.ui.theme.AppTheme
 import com.amaze.filemanager.utils.PreferenceUtils
 import com.amaze.filemanager.utils.Utils
 import com.readystatesoftware.systembartint.SystemBarTintManager
+import org.slf4j.LoggerFactory
 import java.io.File
 
 class PreferencesActivity : ThemedActivity(), FolderChooserDialog.FolderCallback {
-    private companion object {
-        const val SAVED_INSTANCE_STATE_KEY = "savedInstanceState"
+    companion object {
+
+        const val EXTRA_SHOW_FRAGMENT = "extraShowFragment"
+
+        private val logger = LoggerFactory.getLogger(PreferencesActivity::class.java)
+        private const val SAVED_INSTANCE_STATE_KEY = "savedInstanceState"
     }
 
     lateinit var layout: View
@@ -68,6 +73,22 @@ class PreferencesActivity : ThemedActivity(), FolderChooserDialog.FolderCallback
         supportActionBar?.displayOptions =
             ActionBar.DISPLAY_HOME_AS_UP or ActionBar.DISPLAY_SHOW_TITLE
         initStatusBarResources(layout)
+
+        if (intent.hasExtra(EXTRA_SHOW_FRAGMENT)) {
+            runCatching {
+                intent.getStringExtra(EXTRA_SHOW_FRAGMENT)?.let { fragClassName ->
+                    val fragment: BasePrefsFragment =
+                        Class.forName(fragClassName).newInstance() as BasePrefsFragment
+                    supportFragmentManager
+                        .beginTransaction()
+                        .replace(R.id.preferences_container, fragment)
+                        .commit()
+                }
+            }.onFailure {
+                logger.error("Error instantiating preference fragment", it)
+            }
+            return
+        }
 
         if (savedInstanceState == null) {
             val fragment = PrefsFragment()

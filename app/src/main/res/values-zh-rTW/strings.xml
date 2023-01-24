@@ -698,7 +698,7 @@
     <string name="ftp_prompt_accept_first_start_saf_access">因為這是你第一次開啟 FTP伺服器，而你正以內部儲存空間共享到 FTP伺服器上，請容許 Amaze以 SAF存取內部儲存空間。
 
 你只需進行這個動作一次，直至你選擇把另一個位置共享到 FTP伺服器上。</string>
-    <string name="ftp_preference_saf_filesystem_title">使用傳統檔案系統</string>
+    <string name="ftp_preference_legacy_filesystem_title">使用傳統檔案系統</string>
     <string name="ftp_server_fallback_path_reset_prompt">選擇以傳統檔案系統運行後， FTP伺服器的共享路徑已經重置為內部儲存空間。如有需要，請以右上角的菜單選擇新的共享路徑。</string>
     <string name="error_empty_archive">\"%s\" 是空白的壓縮檔。</string>
     <string name="security_error">檔案不能以此 app開啟</string>

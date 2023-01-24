@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <EditTextPreference
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:key="ftpPort"
+        app:title="@string/ftp_port"
+        app:defaultValue="2211"
+        app:useSimpleSummaryProvider="true"
+    />
+    <Preference
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:key="ftp_path"
+        app:title="@string/ftp_path"
+        app:useSimpleSummaryProvider="true"
+    />
+
+    <EditTextPreference
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:key="ftp_username"
+        app:title="@string/ftp_login"
+        app:useSimpleSummaryProvider="true"
+        />
+
+    <EditTextPreference
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:key="ftp_password_encrypted"
+        app:title="@string/password" />
+
+    <SwitchPreferenceCompat
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:key="ftp_secure"
+        app:defaultValue="true"
+        app:title="@string/ftp_status_secure_connection"
+        app:summaryOff="@string/ftp_preference_secure_connection_summary_off"
+        app:summaryOn="@string/ftp_preference_secure_connection_summary_on"
+    />
+    <SwitchPreferenceCompat
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:key="ftp_readonly"
+        app:defaultValue="false"
+        app:title="@string/ftp_readonly"
+        app:summaryOff="@string/ftp_readonly_summary_off"
+        app:summaryOn="@string/ftp_readonly_summary_on"
+    />
+    <EditTextPreference
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:key="ftp_timeout"
+        app:title="@string/ftp_timeout"
+        app:useSimpleSummaryProvider="true"
+    />
+    <SwitchPreferenceCompat
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:key="ftp_legacy_filesystem"
+        app:defaultValue="false"
+        app:title="@string/ftp_preference_legacy_filesystem_title"
+        app:summaryOff="@string/ftp_preference_legacy_filesystem_summary_off"
+        app:summaryOn="@string/ftp_preference_legacy_filesystem_summary_on"
+    />
+    <SwitchPreferenceCompat
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:key="ftp_tls_explicit"
+        app:title="@string/ftp_preference_tls_explicit_title"
+        app:summaryOn="@string/ftp_preference_tls_explicit_summary_on"
+        app:summaryOff="@string/ftp_preference_tls_explicit_summary_off"
+    />
+</PreferenceScreen>

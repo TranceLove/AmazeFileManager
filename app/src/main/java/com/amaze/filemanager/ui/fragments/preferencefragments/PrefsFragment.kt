@@ -53,6 +53,12 @@ class PrefsFragment : BasePrefsFragment() {
                 true
             }
 
+        findPreference<Preference>("ftpserver")?.onPreferenceClickListener =
+            Preference.OnPreferenceClickListener {
+                activity.pushFragment(FtpServerPrefsFragment())
+                true
+            }
+
         findPreference<Preference>("security")?.onPreferenceClickListener =
             Preference.OnPreferenceClickListener {
                 activity.pushFragment(SecurityPrefsFragment())

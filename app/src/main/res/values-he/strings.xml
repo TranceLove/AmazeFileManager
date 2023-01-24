@@ -721,8 +721,8 @@
 עליך לבצע זאת פעם אחת בלבד, עד הפעם הבא בה ייבחר מקום חדש לשיתוף.</string>
     <string name="android_data_prompt_saf_access">מאז Android 10, מערכת Android כופה הגבלות על תיקיות מסוימות ויש לגשת אליהן עם תשתית הגישה לאחסון.\n\nנא לאפשר ל־Amaze גישה לתיקייה ממנהל הקבצים של המערכת על ידי לחיצה על „לאפשר גישה”.</string>
     <string name="android_data_prompt_saf_access_title">הענקת גישת לתשתית גישה לאחסון</string>
-    <string name="ftp_preference_saf_filesystem_title">להשתמש במערכת קבצים מיושנת</string>
-    <string name="ftp_preference_saf_filesystem">יש להפעיל את זה לקבלת תמיכה בשימוש באחסון החיצוני של המכשיר בגרסאות חדשות של Android</string>
+    <string name="ftp_preference_legacy_filesystem_title">להשתמש במערכת קבצים מיושנת</string>
+    <string name="ftp_preference_legacy_filesystem_summary_on">יש להפעיל את זה לקבלת תמיכה בשימוש באחסון החיצוני של המכשיר בגרסאות חדשות של Android</string>
     <string name="ftp_server_fallback_path_reset_prompt">הנתיב המשותף לשרת ה־FTP אופס לאחסון הפנימי עקב בקשתך לחזור להטמעת מערכת קבצים מיושנת. נא לבחור נתיב חדש באמצעות התפריט משמאל למעלה במקרה הצורך.</string>
     <string name="ftp_server_reset_notify">נתיב השיתוף ב־FTP התאפס לאחסון הפנימי</string>
     <string name="ftp_server_root_unavailable">הנתיב הנבחר דורש גישת משתמש על (root). נא להפעיל את סייר משתמש העל בהגדרות אם המכשיר שלך פרוץ (rooted).</string>

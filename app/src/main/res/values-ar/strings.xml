@@ -691,8 +691,8 @@
 يجب أن تقوم بذلك مرة واحدة فقط ، حتى تقوم بتحديد مكان جديد للمشاركة فيه في المرة القادمة. </string>
     <string name="android_data_prompt_saf_access">منذ Android 10 ، فرض Android قيودًا على أدلة معينة ، ويحتاجون إلى الوصول إلى Storage Access Framework.\n\nيُرجى السماح لـ Amaze بالوصول إلى الدليل من مدير ملفات النظام عن طريق النقر على \"السماح بالوصول\".</string>
     <string name="android_data_prompt_saf_access_title">منح وصول SAF</string>
-    <string name="ftp_preference_saf_filesystem_title">استخدم نظام الملفات القديم</string>
-    <string name="ftp_preference_saf_filesystem">قم بتمكين هذا لدعم استخدام وحدة التخزين الخارجية للجهاز على إصدارات Android الأحدث</string>
+    <string name="ftp_preference_legacy_filesystem_title">استخدم نظام الملفات القديم</string>
+    <string name="ftp_preference_legacy_filesystem_summary_on">قم بتمكين هذا لدعم استخدام وحدة التخزين الخارجية للجهاز على إصدارات Android الأحدث</string>
     <string name="ftp_server_fallback_path_reset_prompt">تم إعادة تعيين المسار المشترك لخادم FTP إلى وحدة التخزين الداخلية أثناء العودة إلى تطبيق نظام الملفات القديم. الرجاء تحديد مسار جديد باستخدام القائمة الموجودة في الجزء العلوي الأيمن حسب الضرورة.</string>
     <string name="compressed_explorer_fragment_error_open_uri">خطأ في فتح URI \"%s\" للقراءة.</string>
     <string name="error_empty_archive">\"%s\" هو أرشيف فارغ.</string>

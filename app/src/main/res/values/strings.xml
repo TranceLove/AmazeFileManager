@@ -478,7 +478,7 @@
     <string name="ftp_port">Port</string>
     <string name="ftp_login">Login</string>
     <string name="field_empty">Field can\'t be empty</string>
-    <string name="ftp_timeout">Idle timeout</string>
+    <string name="ftp_timeout">Idle timeout (in millisecs)</string>
     <string name="ftp_seconds">Seconds</string>
     <string name="intellihide_toolbar_title">Intellihide Toolbar</string>
     <string name="intellihide_toolbar_summary">Automatically hide toolbar while scrolling</string>
@@ -711,6 +711,8 @@
     <string name="clear_open_file">Clear cache</string>
     <string name="clear_open_file_summary">Clears selected default file opening apps</string>
     <string name="ftp_readonly">Read-only access</string>
+    <string name="ftp_readonly_summary_off">User can upload to and download from FTP server.</string>
+    <string name="ftp_readonly_summary_on">User can only download files from FTP server.</string>
     <string name="legacy_listing_title">Use legacy listing for root</string>
     <string name="legacy_listing_summary">If enabled, uses legacy method to list files</string>
     <string name="error_unsupported_v5_rar">RAR archive \"%s\" is unsupported RAR v5 archive.</string>
@@ -730,12 +732,19 @@
 You only need to do this once, until the next time you select a new location for sharing.</string>
     <string name="android_data_prompt_saf_access">Since Android 10, Android had imposed restrictions on certain directories, and they need to access with Storage Access Framework.\n\nPlease allow Amaze to access the directory from the system\'s file manager by tapping \"Allow Access\".</string>
     <string name="android_data_prompt_saf_access_title">Grant SAF access</string>
-    <string name="ftp_preference_saf_filesystem_title">Use legacy filesystem</string>
-    <string name="ftp_preference_saf_filesystem">Enable this for support for using device external storage on newer Android versions</string>
+    <string name="ftp_server_preference_desc">Customize various settings for the built-in FTP server</string>
+    <string name="ftp_preference_legacy_filesystem_title">Use legacy filesystem</string>
+    <string name="ftp_preference_legacy_filesystem_summary_on">Uses legacy filesystem access. Restricted to internal storage but is generally faster.</string>
+    <string name="ftp_preference_legacy_filesystem_summary_off">Uses Android Storage Access Framework to access storage. Slower, but required for external storage or newer Android versions.</string>
     <string name="ftp_server_fallback_path_reset_prompt">FTP server shared path had been reset to internal storage as you are switching back to legacy filesystem implementation. Please select a new path using the menu on the top right as necessary.</string>
     <string name="ftp_server_reset_notify">FTP server shared path had been reset to internal storage</string>
     <string name="ftp_server_root_unavailable">You are choosing a path which requires root access. Please enable root explorer in settings if your device is rooted.</string>
     <string name="ftp_server_root_filesystem_warning">You are choosing a path which requires root access, which enables read/write operations in the whole filesystem on your device, and it is dangerous - careless mistakes could brick your device!\n\nAre you sure?</string>
+    <string name="ftp_preference_tls_explicit_title">Require Explicit TLS</string>
+    <string name="ftp_preference_tls_explicit_summary_on">User must enable Explicit TLS when connecting to FTP server.</string>
+    <string name="ftp_preference_tls_explicit_summary_off">User can use implicit TLS when connecting to FTP server.</string>
+    <string name="ftp_preference_secure_connection_summary_off">TLS is disabled when connect to FTP server (unsafe).</string>
+    <string name="ftp_preference_secure_connection_summary_on">TLS is required when connect to FTP server.</string>
     <string name="compressed_explorer_fragment_error_open_uri">Error opening URI \"%s\" for reading.</string>
     <string name="error_empty_archive">\"%s\" is an empty archive.</string>
     <string name="error_bad_archive_without_info">\"%s\" is a corrupted archive.</string>
