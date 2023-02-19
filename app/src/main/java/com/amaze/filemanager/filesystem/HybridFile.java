@@ -23,6 +23,7 @@ package com.amaze.filemanager.filesystem;
 import static com.amaze.filemanager.filesystem.FileProperties.ANDROID_DATA_DIRS;
 import static com.amaze.filemanager.filesystem.ftp.NetCopyClientConnectionPool.FTPS_URI_PREFIX;
 import static com.amaze.filemanager.filesystem.ftp.NetCopyClientConnectionPool.FTP_URI_PREFIX;
+import static com.amaze.filemanager.filesystem.ftp.NetCopyClientConnectionPool.SLASH;
 import static com.amaze.filemanager.filesystem.ftp.NetCopyClientConnectionPool.SSH_URI_PREFIX;
 import static com.amaze.filemanager.filesystem.smb.CifsContexts.SMB_URI_PREFIX;
 
@@ -47,6 +48,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -102,16 +105,23 @@ import androidx.annotation.Nullable;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.preference.PreferenceManager;
 
+import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 import kotlin.collections.ArraysKt;
+import kotlin.collections.CollectionsKt;
 import kotlin.io.ByteStreamsKt;
 import kotlin.text.Charsets;
+import kotlin.text.MatchResult;
+import kotlin.text.Regex;
+import kotlin.text.StringsKt;
+
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.Buffer;
 import net.schmizz.sshj.common.IOUtils;
@@ -125,7 +135,7 @@ import net.schmizz.sshj.sftp.SFTPException;
 /** Hybrid file for handeling all types of files */
 public class HybridFile {
 
-  private final Logger LOG = LoggerFactory.getLogger(HybridFile.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HybridFile.class);
 
   public static final String DOCUMENT_FILE_PREFIX =
       "content://com.android.externalstorage.documents";
@@ -139,6 +149,7 @@ public class HybridFile {
   public HybridFile(OpenMode mode, String path) {
     this.path = path;
     this.mode = mode;
+    HybridFileExtKt.sanitizePathAsNecessary(this);
   }
 
   public HybridFile(OpenMode mode, String path, String name, boolean isDirectory) {
@@ -158,6 +169,7 @@ public class HybridFile {
     } else {
       this.path += "/" + name;
     }
+    HybridFileExtKt.sanitizePathAsNecessary(this);
   }
 
   public void generateMode(Context context) {
@@ -944,18 +956,18 @@ public class HybridFile {
               @Override
               public Boolean execute(@NonNull SFTPClient client) {
                 try {
-                  for (RemoteResourceInfo info :
-                      client.ls(NetCopyClientUtils.INSTANCE.extractRemotePathFrom(path))) {
-                    boolean isDirectory = false;
-                    try {
-                      isDirectory = SshClientUtils.isDirectory(client, info);
-                    } catch (IOException ifBrokenSymlink) {
-                      LOG.warn("IOException checking isDirectory(): " + info.getPath());
-                      continue;
-                    }
-                    HybridFileParcelable f = new HybridFileParcelable(path, isDirectory, info);
-                    onFileFound.onFileFound(f);
-                  }
+                  Flowable.fromIterable(client.ls(NetCopyClientUtils.INSTANCE.extractRemotePathFrom(path)))
+                    .parallel(10)
+                    .runOn(Schedulers.computation())
+                          .map(info -> {
+                            boolean isDirectory = false;
+                            try {
+                              isDirectory = SshClientUtils.isDirectory(client, info);
+                            } catch (IOException ifBrokenSymlink) {
+                              LOG.warn("IOException checking isDirectory(): " + info.getPath());
+                            }
+                            return new HybridFileParcelable(path, isDirectory, info);
+                          }).doOnNext(onFileFound::onFileFound).sequential().blockingSubscribe();
                 } catch (IOException e) {
                   LOG.warn("IOException", e);
                   AppConfig.toast(
@@ -1066,14 +1078,6 @@ public class HybridFile {
   private static String formatUriForDisplayInternal(
       @NonNull String scheme, @NonNull String host, @NonNull String path) {
     return String.format("%s://%s%s", scheme, host, path);
-  }
-
-  /**
-   * @deprecated use {@link #getInputStream(Context)} which allows handling content resolver
-   */
-  @Nullable
-  public InputStream getInputStream() {
-    return getInputStream(AppConfig.getInstance());
   }
 
   /**
@@ -1726,7 +1730,7 @@ public class HybridFile {
 
               @Override
               public void onError(Throwable e) {
-                LOG.warn("failed to get sha256 for sftp file", e);
+                LOG.warn("failed to get sha256 for file", e);
                 callback.apply(context.getString(R.string.error));
               }
             });

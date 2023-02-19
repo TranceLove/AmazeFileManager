@@ -225,5 +225,44 @@ class HybridFileTest {
         )
         assertEquals("down the pipe", file.getName(AppConfig.getInstance()))
     }
+
+    @Test
+    fun testSanitizePathAsNecessary() {
+        assertEquals(
+            "ftp://user:password@127.0.0.1:22222/multiple/levels/down/the/pipe",
+            HybridFile(
+                OpenMode.FTP,
+                "ftp://user:password@127.0.0.1:22222//multiple///levels////down////the/pipe"
+            ).path
+        )
+        assertEquals(
+            "ssh://user@127.0.0.1/multiple/levels/down/the/pipe",
+            HybridFile(
+                OpenMode.SFTP,
+                "ssh://user@127.0.0.1//multiple///levels////down////the/pipe"
+            ).path
+        )
+        assertEquals(
+            "ssh://user@127.0.0.1/multiple/levels/down/the/pipe",
+            HybridFile(
+                OpenMode.SFTP,
+                "ssh://user@127.0.0.1/multiple/levels/down/the/pipe"
+            ).path
+        )
+        assertEquals(
+            "smb://127.0.0.1/legacy?disableIpcSigningCheck=true",
+            HybridFile(
+                OpenMode.SMB,
+                "smb://127.0.0.1/legacy?disableIpcSigningCheck=true"
+            ).path
+        )
+        assertEquals(
+            "smb://127.0.0.1/legacy/again/try/duplicate/folder?disableIpcSigningCheck=true",
+            HybridFile(
+                OpenMode.SMB,
+                "smb://127.0.0.1/legacy//again/try/duplicate/////folder?disableIpcSigningCheck=true"
+            ).path
+        )
+    }
 }
 /* ktlint-enable max-line-length */
