@@ -40,11 +40,15 @@ buildscript {
         rxAndroidVersion = "2.1.1"
         rxJavaVersion = "2.2.9"
         okHttpVersion = "4.9.0"
+        sardineVersion = "0.8"
     }
     repositories {
         google()
         maven {
             url "https://plugins.gradle.org/m2/"
+        }
+        maven {
+            url 'https://jitpack.io'
         }
     }
     dependencies {

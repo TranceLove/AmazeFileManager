@@ -152,6 +152,7 @@ dependencies {
     testImplementation "androidx.room:room-migration:$roomVersion"
     testImplementation "io.mockk:mockk:$mockkVersion"
     kaptTest "com.google.auto.service:auto-service:1.0-rc4"
+    testImplementation "io.github.atetzner:webdav-embedded-server:0.2.1"
 
     androidTestImplementation "junit:junit:$junitVersion"//tests the app logic
     androidTestImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
@@ -206,6 +207,9 @@ dependencies {
 
     //OkHttp
     implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
+
+    //Sardine-android
+    implementation "com.github.thegrizzlylabs:sardine-android:$sardineVersion"
 
     implementation "org.bouncycastle:bcpkix-jdk15on:$bouncyCastleVersion"
     implementation "org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion"

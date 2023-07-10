@@ -26,6 +26,9 @@ import com.amaze.filemanager.asynchronous.asynctasks.ftp.auth.FtpAuthenticationT
 import com.amaze.filemanager.asynchronous.asynctasks.ssh.PemToKeyPairObservable
 import com.amaze.filemanager.asynchronous.asynctasks.ssh.SshAuthenticationTask
 import com.amaze.filemanager.filesystem.ftp.NetCopyClientUtils.extractBaseUriFrom
+import com.amaze.filemanager.filesystem.ssh.SSHClientImpl
+import com.amaze.filemanager.filesystem.webdav.WebdavClientImpl
+import com.thegrizzlylabs.sardineandroid.Sardine
 import io.reactivex.Flowable
 import io.reactivex.Maybe
 import io.reactivex.Observable.create
@@ -54,6 +57,8 @@ object NetCopyClientConnectionPool {
     const val FTP_URI_PREFIX = "ftp://"
     const val FTPS_URI_PREFIX = "ftps://"
     const val SSH_URI_PREFIX = "ssh://"
+    const val DAV_URI_PREFIX = "dav://"
+    const val DAVS_URI_PREFIX = "davs://"
     const val CONNECT_TIMEOUT = 30000
 
     private var connections: MutableMap<String, NetCopyClient<*>> = ConcurrentHashMap()
@@ -170,6 +175,8 @@ object NetCopyClientConnectionPool {
     private val createNetCopyClient: (String) -> NetCopyClient<*>? = { url ->
         if (url.startsWith(SSH_URI_PREFIX)) {
             createSshClient(url)
+        } else if (url.startsWith(DAV_URI_PREFIX) || url.startsWith(DAVS_URI_PREFIX)) {
+            createDavClient(url)
         } else {
             createFtpClient(url)
         }
@@ -385,6 +392,13 @@ object NetCopyClientConnectionPool {
         return result?.let { ftpClient ->
             FTPClientImpl(ftpClient)
         }
+    }
+
+    private fun createDavClient(url: String) : NetCopyClient<Sardine> {
+        NetCopyConnectionInfo(url).run {
+
+        }
+        return WebdavClientImpl(url)
     }
 
     class AsyncRemoveConnection internal constructor(

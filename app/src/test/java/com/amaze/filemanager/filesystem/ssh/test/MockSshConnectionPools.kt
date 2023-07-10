@@ -22,7 +22,7 @@ package com.amaze.filemanager.filesystem.ssh.test
 
 import com.amaze.filemanager.filesystem.ftp.NetCopyClient
 import com.amaze.filemanager.filesystem.ftp.NetCopyClientConnectionPool
-import com.amaze.filemanager.filesystem.ftp.SSHClientImpl
+import com.amaze.filemanager.filesystem.ssh.SSHClientImpl
 import net.schmizz.sshj.Config
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.FileAttributes
