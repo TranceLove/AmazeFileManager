@@ -199,7 +199,7 @@ public class TabFragment extends Fragment {
 
   public void updatePaths(int pos) {
     // Getting old path from database before clearing
-    TabHandler tabHandler = TabHandler.getInstance();
+    TabHandler tabHandler = TabHandler.INSTANCE;
 
     int i = 1;
     for (Fragment fragment : fragments) {
@@ -342,7 +342,7 @@ public class TabFragment extends Fragment {
    * @param addTab whether new tabs should be added to ui or just change values in database
    */
   public void refactorDrawerStorages(boolean addTab) {
-    TabHandler tabHandler = TabHandler.getInstance();
+    TabHandler tabHandler = TabHandler.INSTANCE;
     Tab tab1 = tabHandler.findTab(1);
     Tab tab2 = tabHandler.findTab(2);
     Tab[] tabs = tabHandler.getAllTabs();

@@ -38,7 +38,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
 import com.amaze.filemanager.R
-import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.ui.activities.MainActivity
 import com.amaze.filemanager.ui.activities.superclasses.ThemedActivity
 import com.amaze.filemanager.ui.provider.UtilitiesProvider
@@ -49,11 +48,14 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import org.slf4j.LoggerFactory
+import javax.inject.Inject
 
 /** Created by arpitkh996 on 16-01-2016 edited by Emmanuel Messulam <emmanuelbendavid></emmanuelbendavid>@gmail.com>  */
 class SmbSearchDialog : DialogFragment() {
 
-    private lateinit var utilsProvider: UtilitiesProvider
+    @Inject
+    lateinit var utilsProvider: UtilitiesProvider
+
     private lateinit var listViewAdapter: ListViewAdapter
     private val viewModel = ComputerParcelableViewModel()
     private var accentColor = 0
@@ -61,7 +63,6 @@ class SmbSearchDialog : DialogFragment() {
 
     override fun onCreate(bundle: Bundle?) {
         super.onCreate(bundle)
-        utilsProvider = AppConfig.getInstance().utilsProvider
         accentColor = (activity as ThemedActivity).accent
     }
 

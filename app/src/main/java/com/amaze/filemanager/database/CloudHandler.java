@@ -34,6 +34,8 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+import javax.inject.Inject;
+
 import io.reactivex.schedulers.Schedulers;
 
 /** Created by vishal on 18/4/17. */
@@ -53,6 +55,7 @@ public class CloudHandler {
   private final ExplorerDatabase database;
   private final Context context;
 
+  @Inject
   public CloudHandler(@NonNull Context context, @NonNull ExplorerDatabase explorerDatabase) {
     this.context = context;
     this.database = explorerDatabase;

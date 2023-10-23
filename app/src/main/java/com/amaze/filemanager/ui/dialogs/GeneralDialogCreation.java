@@ -953,7 +953,7 @@ public class GeneralDialogCreation {
     final String path = m.getCurrentPath();
     int accentColor = m.getMainActivity().getAccent();
     String[] sort = m.getResources().getStringArray(R.array.sortby);
-    int current = SortHandler.getSortType(m.getContext(), path);
+    int current = SortHandler.INSTANCE.getSortType(m.getContext(), path);
     MaterialDialog.Builder a = new MaterialDialog.Builder(m.getActivity());
     a.theme(appTheme.getMaterialDialogTheme(m.requireContext()));
     a.items(sort)
@@ -998,7 +998,7 @@ public class GeneralDialogCreation {
       MaterialDialog dialog,
       boolean desc) {
     final int sortType = desc ? dialog.getSelectedIndex() + 4 : dialog.getSelectedIndex();
-    SortHandler sortHandler = SortHandler.getInstance();
+    SortHandler sortHandler = SortHandler.INSTANCE;
     if (onlyThisFloders.contains(m.getCurrentPath())) {
       Sort oldSort = sortHandler.findEntry(m.getCurrentPath());
       Sort newSort = new Sort(m.getCurrentPath(), sortType);

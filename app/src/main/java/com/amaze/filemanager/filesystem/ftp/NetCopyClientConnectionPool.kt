@@ -25,7 +25,9 @@ import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.asynchronous.asynctasks.ftp.auth.FtpAuthenticationTask
 import com.amaze.filemanager.asynchronous.asynctasks.ssh.PemToKeyPairObservable
 import com.amaze.filemanager.asynchronous.asynctasks.ssh.SshAuthenticationTask
+import com.amaze.filemanager.database.UtilsHandler
 import com.amaze.filemanager.filesystem.ftp.NetCopyClientUtils.extractBaseUriFrom
+import dagger.hilt.android.EntryPointAccessors
 import io.reactivex.Flowable
 import io.reactivex.Maybe
 import io.reactivex.Observable.create
@@ -247,7 +249,7 @@ object NetCopyClientConnectionPool {
     @Suppress("TooGenericExceptionThrown")
     private fun createSshClient(url: String): NetCopyClient<SSHClient>? {
         val connInfo = NetCopyConnectionInfo(url)
-        val utilsHandler = AppConfig.getInstance().utilsHandler
+        val utilsHandler = EntryPointAccessors.fromApplication<UtilsHandler>(AppConfig.getInstance())
         val pem = utilsHandler.getSshAuthPrivateKey(url)
         val keyPair = AtomicReference<KeyPair?>(null)
         if (true == pem?.isNotEmpty()) {
@@ -337,7 +339,8 @@ object NetCopyClientConnectionPool {
     private fun createFtpClient(url: String): NetCopyClient<FTPClient>? {
         NetCopyConnectionInfo(url).run {
             val certInfo = if (FTPS_URI_PREFIX == prefix) {
-                AppConfig.getInstance().utilsHandler.getRemoteHostKey(url)
+                EntryPointAccessors.fromApplication<UtilsHandler>(AppConfig.getInstance())
+                    .getRemoteHostKey(url)
             } else {
                 null
             }

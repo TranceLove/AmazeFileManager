@@ -205,7 +205,7 @@ public class MainFragment extends Fragment
     mainFragmentViewModel.initIsList();
     mainFragmentViewModel.initColumns(sharedPref);
     mainFragmentViewModel.initSortModes(
-        SortHandler.getSortType(getContext(), getCurrentPath()), sharedPref);
+        SortHandler.INSTANCE.getSortType(getContext(), getCurrentPath()), sharedPref);
     mainFragmentViewModel.setAccentColor(requireMainActivity().getAccent());
     mainFragmentViewModel.setPrimaryColor(
         requireMainActivity().getCurrentColorPreference().getPrimaryFirstTab());

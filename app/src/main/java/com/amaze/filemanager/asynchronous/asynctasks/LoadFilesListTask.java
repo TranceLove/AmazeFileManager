@@ -79,6 +79,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
 
+import dagger.hilt.android.EntryPointAccessors;
 import jcifs.smb.SmbAuthException;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
@@ -254,7 +255,7 @@ public class LoadFilesListTask
   private void postListCustomPathProcess(
       @NonNull List<LayoutElementParcelable> list, @NonNull MainFragment mainFragment) {
 
-    int sortType = SortHandler.getSortType(context.get(), path);
+    int sortType = SortHandler.INSTANCE.getSortType(context.get(), path);
     int sortBy;
     int isAscending;
 
@@ -476,7 +477,7 @@ public class LoadFilesListTask
       return null;
     }
 
-    UtilsHandler utilsHandler = AppConfig.getInstance().getUtilsHandler();
+    UtilsHandler utilsHandler = EntryPointAccessors.fromApplication(context.get(), UtilsHandler.class);
     final LinkedList<String> paths = utilsHandler.getHistoryLinkedList();
     ArrayList<LayoutElementParcelable> songs = new ArrayList<>();
     for (String f : paths) {

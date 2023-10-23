@@ -37,6 +37,7 @@ import com.amaze.filemanager.filesystem.files.FileUtils
 import com.amaze.filemanager.ui.views.preference.PathSwitchPreference
 import com.amaze.filemanager.utils.DataUtils
 import com.amaze.filemanager.utils.SimpleTextWatcher
+import dagger.hilt.android.EntryPointAccessors
 
 class BookmarksPrefsFragment : BasePrefsFragment() {
     override val title = R.string.show_bookmarks_pref
@@ -87,7 +88,8 @@ class BookmarksPrefsFragment : BasePrefsFragment() {
 
     private fun showCreateDialog() {
         val fabSkin = activity.accent
-        val utilsHandler = AppConfig.getInstance().utilsHandler
+        val utilsHandler = EntryPointAccessors
+            .fromApplication<UtilsHandler>(AppConfig.getInstance())
         val dialogBinding = DialogTwoedittextsBinding.inflate(LayoutInflater.from(requireContext()))
 
         val v = dialogBinding.root
@@ -134,7 +136,8 @@ class BookmarksPrefsFragment : BasePrefsFragment() {
 
     private fun showEditDialog(p: PathSwitchPreference) {
         val fabSkin = activity.accent
-        val utilsHandler = AppConfig.getInstance().utilsHandler
+        val utilsHandler = EntryPointAccessors
+            .fromApplication<UtilsHandler>(AppConfig.getInstance())
         val dialogBinding = DialogTwoedittextsBinding.inflate(LayoutInflater.from(requireContext()))
 
         val v = dialogBinding.root
@@ -187,7 +190,8 @@ class BookmarksPrefsFragment : BasePrefsFragment() {
 
     private fun showDeleteDialog(p: PathSwitchPreference) {
         val fabSkin = activity.accent
-        val utilsHandler = AppConfig.getInstance().utilsHandler
+        val utilsHandler = EntryPointAccessors
+            .fromApplication<UtilsHandler>(AppConfig.getInstance())
 
         val dialog = MaterialDialog.Builder(activity)
             .title(R.string.question_delete_bookmark)

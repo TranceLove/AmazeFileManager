@@ -42,6 +42,7 @@ import java.io.File
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.util.*
+import javax.inject.Inject
 
 /**
  * Created by Vishal on 29-05-2017. Class handles database with tables having list of various
@@ -50,7 +51,7 @@ import java.util.*
  *
  * Try to use these functions from a background thread
  */
-class UtilsHandler(
+class UtilsHandler @Inject constructor(
     private val context: Context,
     private val utilitiesDatabase: UtilitiesDatabase
 ) {

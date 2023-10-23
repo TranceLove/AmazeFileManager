@@ -36,9 +36,9 @@ import com.amaze.filemanager.BuildConfig;
 import com.amaze.filemanager.R;
 import com.amaze.filemanager.crashreport.AcraReportSenderFactory;
 import com.amaze.filemanager.crashreport.ErrorActivity;
+import com.amaze.filemanager.database.DatabaseModule;
 import com.amaze.filemanager.database.ExplorerDatabase;
 import com.amaze.filemanager.database.UtilitiesDatabase;
-import com.amaze.filemanager.database.UtilsHandler;
 import com.amaze.filemanager.filesystem.ssh.CustomSshJConfig;
 import com.amaze.filemanager.ui.provider.UtilitiesProvider;
 import com.amaze.filemanager.utils.ScreenUtils;
@@ -54,6 +54,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatDelegate;
 
+import dagger.hilt.android.HiltAndroidApp;
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -62,13 +63,12 @@ import jcifs.Config;
 @AcraCore(
     buildConfigClass = BuildConfig.class,
     reportSenderFactoryClasses = AcraReportSenderFactory.class)
+@HiltAndroidApp
 public class AppConfig extends GlideApplication {
 
-  private Logger log = null;
+  private static final Logger log = LoggerFactory.getLogger(AppConfig.class);
 
   private UtilitiesProvider utilsProvider;
-  private UtilsHandler utilsHandler;
-
   private WeakReference<Context> mainActivityContext;
   private static ScreenUtils screenUtils;
 
@@ -85,23 +85,20 @@ public class AppConfig extends GlideApplication {
   @Override
   public void onCreate() {
     super.onCreate();
-    AppCompatDelegate.setCompatVectorFromResourcesEnabled(
-        true); // selector in srcCompat isn't supported without this
+    // selector in srcCompat isn't supported without this
+    AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+
     instance = this;
 
     CustomSshJConfig.init();
-    explorerDatabase = ExplorerDatabase.initialize(this);
+    explorerDatabase = DatabaseModule.INSTANCE.provideExplorerDatabase(this);
     utilitiesDatabase = UtilitiesDatabase.initialize(this);
-
-    utilsProvider = new UtilitiesProvider(this);
-    utilsHandler = new UtilsHandler(this, utilitiesDatabase);
 
     runInBackground(Config::registerSmbURLHandler);
 
     // disabling file exposure method check for api n+
     StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
     StrictMode.setVmPolicy(builder.build());
-    log = LoggerFactory.getLogger(AppConfig.class);
   }
 
   @Override
@@ -193,10 +190,6 @@ public class AppConfig extends GlideApplication {
 
   public static synchronized AppConfig getInstance() {
     return instance;
-  }
-
-  public UtilsHandler getUtilsHandler() {
-    return utilsHandler;
   }
 
   public void setMainActivityContext(@NonNull Activity activity) {

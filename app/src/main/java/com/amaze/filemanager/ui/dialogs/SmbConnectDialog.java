@@ -70,10 +70,13 @@ import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.fragment.app.DialogFragment;
 
+import javax.inject.Inject;
+
+import dagger.android.support.DaggerDialogFragment;
 import jcifs.smb.SmbFile;
 import kotlin.text.Charsets;
 
-public class SmbConnectDialog extends DialogFragment {
+public class SmbConnectDialog extends DaggerDialogFragment {
 
   // Dialog tag.
   public static final String TAG = "smbdialog";
@@ -86,7 +89,8 @@ public class SmbConnectDialog extends DialogFragment {
 
   private static final Logger LOG = LoggerFactory.getLogger(SmbConnectDialog.class);
 
-  private UtilitiesProvider utilsProvider;
+  @Inject
+  protected UtilitiesProvider utilsProvider;
 
   private SmbConnectionListener smbConnectionListener;
 
@@ -149,7 +153,7 @@ public class SmbConnectDialog extends DialogFragment {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    utilsProvider = ((BasicActivity) getActivity()).getUtilsProvider();
+//    utilsProvider = ((BasicActivity) getActivity()).getUtilsProvider();
   }
 
   @NonNull

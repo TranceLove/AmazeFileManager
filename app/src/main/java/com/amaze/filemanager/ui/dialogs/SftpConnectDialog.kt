@@ -38,8 +38,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.text.isDigitsOnly
-import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.DialogFragment
 import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.internal.MDButton
@@ -71,6 +69,8 @@ import com.amaze.filemanager.utils.SimpleTextWatcher
 import com.amaze.filemanager.utils.X509CertificateUtil.FINGERPRINT
 import com.amaze.filemanager.utils.urlEncoded
 import com.google.android.material.snackbar.Snackbar
+import dagger.android.support.DaggerDialogFragment
+import dagger.hilt.android.EntryPointAccessors
 import io.reactivex.Observable.create
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -85,9 +85,10 @@ import java.security.KeyPair
 import java.security.PublicKey
 import java.util.*
 import java.util.concurrent.Callable
+import javax.inject.Inject
 
 /** SSH/SFTP connection setup dialog.  */
-class SftpConnectDialog : DialogFragment() {
+class SftpConnectDialog : DaggerDialogFragment() {
 
     companion object {
 
@@ -130,11 +131,13 @@ class SftpConnectDialog : DialogFragment() {
 
     lateinit var binding: SftpDialogBinding
 
+    @Inject
+    lateinit var utilsProvider: UtilitiesProvider
+
     @Suppress("ComplexMethod")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         ctx = WeakReference(activity)
         binding = SftpDialogBinding.inflate(LayoutInflater.from(context))
-        val utilsProvider: UtilitiesProvider = AppConfig.getInstance().utilsProvider
         val edit = requireArguments().getBoolean(ARG_EDIT, false)
 
         initForm(edit)
@@ -294,7 +297,9 @@ class SftpConnectDialog : DialogFragment() {
                         DataUtils.getInstance().removeServer(i)
                         AppConfig.getInstance()
                             .runInBackground {
-                                AppConfig.getInstance().utilsHandler.removeFromDatabase(
+                                EntryPointAccessors
+                                    .fromApplication<UtilsHandler>(AppConfig.getInstance())
+                                    .removeFromDatabase(
                                     OperationData(
                                         UtilsHandler.Operation.SFTP,
                                         path,
@@ -370,7 +375,8 @@ class SftpConnectDialog : DialogFragment() {
     private fun positiveButtonForSftp(connectionSettings: ConnectionSettings, edit: Boolean) {
         connectionSettings.run {
             // Get original SSH host key
-            AppConfig.getInstance().utilsHandler.getRemoteHostKey(
+            EntryPointAccessors.fromApplication<UtilsHandler>(AppConfig.getInstance())
+                .getRemoteHostKey(
                 NetCopyClientUtils.deriveUriFrom(
                     prefix,
                     hostname,
@@ -680,7 +686,8 @@ class SftpConnectDialog : DialogFragment() {
                     if (DataUtils.getInstance().containsServer(encryptedPath) == -1) {
                         DataUtils.getInstance().addServer(arrayOf(connectionName, encryptedPath))
                         (activity as MainActivity).drawer.refreshDrawer()
-                        AppConfig.getInstance().utilsHandler.saveToDatabase(
+                        EntryPointAccessors.fromApplication<UtilsHandler>(AppConfig.getInstance())
+                            .saveToDatabase(
                             OperationData(
                                 UtilsHandler.Operation.SFTP,
                                 encryptedPath,
@@ -734,7 +741,7 @@ class SftpConnectDialog : DialogFragment() {
         DataUtils.getInstance().servers.sortWith(BookSorter())
         (activity as MainActivity).drawer.refreshDrawer()
         AppConfig.getInstance().runInBackground {
-            AppConfig.getInstance().utilsHandler.updateSsh(
+            EntryPointAccessors.fromApplication<UtilsHandler>(AppConfig.getInstance()).updateSsh(
                 connectionName,
                 requireArguments().getString(ARG_NAME)!!,
                 encryptedPath,

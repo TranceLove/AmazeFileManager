@@ -42,6 +42,7 @@ buildscript {
         rxAndroidVersion = "2.1.1"
         rxJavaVersion = "2.2.9"
         okHttpVersion = "4.9.0"
+        hiltVersion = "2.48.1"
     }
     repositories {
         google()
@@ -54,6 +55,7 @@ buildscript {
         classpath 'com.hiya:jacoco-android:0.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.project.starter:easylauncher:6.1.0"
+        classpath "com.google.dagger:hilt-android-gradle-plugin:2.42"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -61,6 +63,7 @@ buildscript {
 
 plugins {
     id "com.diffplug.spotless" version "6.5.0"
+    id 'com.google.dagger.hilt.android' version "${hiltVersion}" apply false
 }
 
 allprojects {

@@ -30,13 +30,16 @@ import com.amaze.filemanager.utils.DataUtils;
 
 import androidx.annotation.NonNull;
 
+import dagger.hilt.android.EntryPointAccessors;
+
 public class SaveOnDataUtilsChange implements DataUtils.DataChangeListener {
-  private final UtilsHandler utilsHandler = AppConfig.getInstance().getUtilsHandler();
+  private final UtilsHandler utilsHandler;
 
   private final WeakReference<Drawer> drawer;
 
-  public SaveOnDataUtilsChange(@NonNull Drawer drawer) {
+  public SaveOnDataUtilsChange(@NonNull Drawer drawer, @NonNull UtilsHandler utilsHandler) {
     this.drawer = new WeakReference<>(drawer);
+    this.utilsHandler = utilsHandler;
   }
 
   @Override

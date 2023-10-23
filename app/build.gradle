@@ -1,9 +1,12 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-apply plugin: 'kotlin-parcelize'
-apply plugin: 'com.hiya.jacoco-android'
-apply plugin: "com.starter.easylauncher"
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'kotlin-parcelize'
+    id 'com.hiya.jacoco-android'
+    id "com.starter.easylauncher"
+    id 'com.google.dagger.hilt.android'
+}
 
 android {
     namespace "com.amaze.filemanager"
@@ -134,6 +137,10 @@ dependencies {
 
     implementation "androidx.preference:preference-ktx:$androidXPrefVersion"
 
+    implementation "com.google.dagger:dagger-android-support:${hiltVersion}"
+    implementation "com.google.dagger:hilt-android:${hiltVersion}"
+    kapt "com.google.dagger:hilt-compiler:${hiltVersion}"
+
     //For tests
     testImplementation "junit:junit:$junitVersion"//tests the app logic
     testImplementation "org.robolectric:robolectric:$robolectricVersion"//tests android interaction
@@ -251,6 +258,11 @@ dependencies {
 
     implementation 'com.google.code.gson:gson:2.9.1'
 
+}
+
+// Allow references to generated code
+kapt {
+    correctErrorTypes true
 }
 
 kotlin {

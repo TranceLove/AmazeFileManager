@@ -23,7 +23,6 @@ package com.amaze.filemanager.database
 import android.content.Context
 import android.text.TextUtils
 import android.util.Base64
-import androidx.annotation.VisibleForTesting
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -109,8 +108,11 @@ abstract class UtilitiesDatabase : RoomDatabase() {
     abstract fun sftpEntryDao(): SftpEntryDao
 
     companion object {
+
+        @JvmStatic
         private val logger = LoggerFactory.getLogger(UtilitiesDatabase::class.java)
-        private const val DATABASE_NAME = "utilities.db"
+
+        internal const val DATABASE_NAME = "utilities.db"
         const val DATABASE_VERSION = 6
         const val TABLE_HISTORY = "history"
         const val TABLE_HIDDEN = "hidden"
@@ -126,8 +128,7 @@ abstract class UtilitiesDatabase : RoomDatabase() {
         const val COLUMN_PRIVATE_KEY_NAME = "ssh_key_name"
         const val COLUMN_PRIVATE_KEY = "ssh_key"
 
-        @VisibleForTesting
-        var overrideDatabaseBuilder: ((Context) -> Builder<UtilitiesDatabase>)? = null
+        internal var overrideDatabaseBuilder: ((Context) -> Builder<UtilitiesDatabase>)? = null
 
         private const val TEMP_TABLE_PREFIX = "temp_"
         private const val queryHistory = (

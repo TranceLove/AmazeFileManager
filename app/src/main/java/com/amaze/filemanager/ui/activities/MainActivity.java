@@ -127,6 +127,7 @@ import com.amaze.filemanager.ui.fragments.SearchWorkerFragment;
 import com.amaze.filemanager.ui.fragments.TabFragment;
 import com.amaze.filemanager.ui.fragments.data.MainFragmentViewModel;
 import com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants;
+import com.amaze.filemanager.ui.provider.UtilitiesProvider;
 import com.amaze.filemanager.ui.strings.StorageNamingHelper;
 import com.amaze.filemanager.ui.theme.AppTheme;
 import com.amaze.filemanager.ui.views.CustomZoomFocusChange;
@@ -200,6 +201,9 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.Flowable;
@@ -210,6 +214,7 @@ import kotlin.collections.ArraysKt;
 import kotlin.jvm.functions.Function1;
 import kotlin.text.Charsets;
 
+@AndroidEntryPoint
 public class MainActivity extends PermissionsActivity
     implements SmbConnectionListener,
         BookmarkCallback,
@@ -276,7 +281,10 @@ public class MainActivity extends PermissionsActivity
   private AppBarLayout appBarLayout;
 
   private SpeedDialOverlayLayout fabBgView;
-  private UtilsHandler utilsHandler;
+
+  @Inject
+  UtilsHandler utilsHandler;
+
   private CloudHandler cloudHandler;
   private CloudLoaderAsyncTask cloudLoaderAsyncTask;
   /**
@@ -354,12 +362,11 @@ public class MainActivity extends PermissionsActivity
     initialisePreferences();
     initializeInteractiveShell();
 
-    dataUtils.registerOnDataChangedListener(new SaveOnDataUtilsChange(drawer));
+    dataUtils.registerOnDataChangedListener(new SaveOnDataUtilsChange(drawer, utilsHandler));
 
     AppConfig.getInstance().setMainActivityContext(this);
 
     initialiseViews();
-    utilsHandler = AppConfig.getInstance().getUtilsHandler();
     cloudHandler = new CloudHandler(this, AppConfig.getInstance().getExplorerDatabase());
 
     initialiseFab(); // TODO: 7/12/2017 not init when actionIntent != null
@@ -534,7 +541,7 @@ public class MainActivity extends PermissionsActivity
     boolean b = getBoolean(PREFERENCE_NEED_TO_SET_HOME);
     // reset home and current paths according to new storages
     if (b) {
-      TabHandler tabHandler = TabHandler.getInstance();
+      TabHandler tabHandler = TabHandler.INSTANCE;
       tabHandler
           .clear()
           .subscribe(
@@ -1221,7 +1228,7 @@ public class MainActivity extends PermissionsActivity
                         mainFragment
                             .getMainFragmentViewModel()
                             .initSortModes(
-                                SortHandler.getSortType(
+                                SortHandler.INSTANCE.getSortType(
                                     this, mainFragment.getMainFragmentViewModel().getCurrentPath()),
                                 getPrefs());
                         mainFragment.updateList(false);

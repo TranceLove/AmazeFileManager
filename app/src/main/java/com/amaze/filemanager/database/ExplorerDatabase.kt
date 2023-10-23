@@ -21,9 +21,7 @@
 package com.amaze.filemanager.database
 
 import android.content.Context
-import androidx.annotation.VisibleForTesting
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -70,7 +68,7 @@ abstract class ExplorerDatabase : RoomDatabase() {
     abstract fun cloudEntryDao(): CloudEntryDao
 
     companion object {
-        private const val DATABASE_NAME = "explorer.db"
+        internal const val DATABASE_NAME = "explorer.db"
         const val DATABASE_VERSION = 11
         const val TABLE_TAB = "tab"
         const val TABLE_CLOUD_PERSIST = "cloud"
@@ -88,8 +86,7 @@ abstract class ExplorerDatabase : RoomDatabase() {
         const val COLUMN_SORT_PATH = "path"
         const val COLUMN_SORT_TYPE = "type"
 
-        @VisibleForTesting
-        var overrideDatabaseBuilder: ((Context) -> Builder<ExplorerDatabase>)? = null
+        internal var overrideDatabaseBuilder: ((Context) -> Builder<ExplorerDatabase>)? = null
 
         private const val TEMP_TABLE_PREFIX = "temp_"
 
@@ -320,32 +317,6 @@ abstract class ExplorerDatabase : RoomDatabase() {
                         "-2"
                 )
             }
-        }
-
-        /**
-         * Initialize the database. Optionally, may provide a custom way to create the database
-         * with supplied [Context].
-         */
-        @JvmStatic
-        fun initialize(context: Context): ExplorerDatabase {
-            val builder = overrideDatabaseBuilder?.invoke(context) ?: Room.databaseBuilder(
-                context,
-                ExplorerDatabase::class.java,
-                DATABASE_NAME
-            )
-            return builder
-                .addMigrations(MIGRATION_1_2)
-                .addMigrations(MIGRATION_2_3)
-                .addMigrations(MIGRATION_3_4)
-                .addMigrations(MIGRATION_4_5)
-                .addMigrations(MIGRATION_5_6)
-                .addMigrations(MIGRATION_6_7)
-                .addMigrations(MIGRATION_7_8)
-                .addMigrations(MIGRATION_8_9)
-                .addMigrations(MIGRATION_9_10)
-                .addMigrations(MIGRATION_10_11)
-                .allowMainThreadQueries()
-                .build()
         }
     }
 }

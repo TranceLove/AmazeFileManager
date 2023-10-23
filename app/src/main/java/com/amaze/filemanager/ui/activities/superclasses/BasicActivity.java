@@ -25,24 +25,33 @@ import com.amaze.filemanager.ui.colors.ColorPreferenceHelper;
 import com.amaze.filemanager.ui.provider.UtilitiesProvider;
 import com.amaze.filemanager.ui.theme.AppTheme;
 
+import android.os.Bundle;
+import android.os.PersistableBundle;
+
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import javax.inject.Inject;
+
 /** Created by rpiotaix on 17/10/16. */
-public class BasicActivity extends AppCompatActivity {
+public abstract class BasicActivity extends AppCompatActivity {
+
+  @Inject
+  protected UtilitiesProvider utilsProvider;
 
   protected AppConfig getAppConfig() {
     return (AppConfig) getApplication();
   }
 
   public ColorPreferenceHelper getColorPreference() {
-    return getAppConfig().getUtilsProvider().getColorPreference();
+    return getUtilsProvider().getColorPreference();
   }
 
   public AppTheme getAppTheme() {
-    return getAppConfig().getUtilsProvider().getAppTheme();
+    return getUtilsProvider().getAppTheme();
   }
 
   public UtilitiesProvider getUtilsProvider() {
-    return getAppConfig().getUtilsProvider();
+    return utilsProvider;
   }
 }
