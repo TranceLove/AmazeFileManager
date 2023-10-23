@@ -46,7 +46,9 @@ import com.readystatesoftware.systembartint.SystemBarTintManager
 import org.slf4j.LoggerFactory
 import java.io.File
 
-class PreferencesActivity : ThemedActivity(), FolderChooserDialog.FolderCallback {
+class PreferencesActivity :
+    ThemedActivity(),
+    FolderChooserDialog.FolderCallback {
     companion object {
 
         const val EXTRA_SHOW_FRAGMENT = "extraShowFragment"
@@ -117,7 +119,9 @@ class PreferencesActivity : ThemedActivity(), FolderChooserDialog.FolderCallback
         return if (item.itemId == android.R.id.home) {
             onBackPressed()
             true
-        } else false
+        } else {
+            false
+        }
     }
 
     override fun recreate() {

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/preferences_activity_navigation.xml"
+    app:startDestination="@+id/prefs_host_fragment">
+
+    <fragment
+        android:id="@+id/prefs_host_fragment"
+        android:name="com.amaze.filemanager.ui.fragments.preferencefragments.PrefsFragment"
+        android:label="@string/setting"
+        tools:layout="@android:layout/preference_list_fragment">
+
+    </fragment>
+
+</navigation>

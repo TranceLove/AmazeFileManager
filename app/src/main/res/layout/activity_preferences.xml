@@ -20,12 +20,13 @@
     -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_preferences"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    >
+    tools:context=".ui.activities.PreferencesActivity">
     <androidx.appcompat.widget.Toolbar
-        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/toolbar"
         android:layout_alignParentTop="true"
         android:layout_height="wrap_content"
@@ -39,6 +40,14 @@
         android:id="@+id/preferences_container"
         android:layout_below="@id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+        <fragment
+            android:id="@+id/prefs_host_fragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:name="com.amaze.filemanager.ui.fragments.preferencefragments.PrefsFragment"
+            app:defaultNavHost="true"
+            app:navigationGraph="@navigation/preferences_activity_navigation" />
+    </FrameLayout>
 
 </RelativeLayout>

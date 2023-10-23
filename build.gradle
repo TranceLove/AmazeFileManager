@@ -16,6 +16,7 @@ buildscript {
         androidXFragmentVersion = "1.4.1"
         androidXAppCompatVersion = "1.4.1"
         androidXAnnotationVersion = "1.3.0"
+        androidXNavigationVersion = "2.4.2"
         androidXPrefVersion = "1.2.0"
         androidXTestVersion = "1.4.0"
         androidXTestExtVersion = "1.1.3"
