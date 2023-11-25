@@ -29,8 +29,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.materialdialogs.MaterialDialog
 import com.amaze.filemanager.R
 import com.amaze.filemanager.shadows.ShadowMultiDex
+import com.amaze.filemanager.shadows.ShadowPasswordUtil
 import com.amaze.filemanager.shadows.jcifs.smb.ShadowSmbFile
-import com.amaze.filemanager.test.ShadowPasswordUtil
 import com.amaze.filemanager.test.getString
 import com.amaze.filemanager.ui.activities.PreferencesActivity
 import com.amaze.filemanager.ui.activities.PreferencesActivityTestBase

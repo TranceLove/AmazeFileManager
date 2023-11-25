@@ -21,7 +21,6 @@
 package com.amaze.filemanager.ui.fragments;
 
 import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.JELLY_BEAN;
 import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR2;
 import static android.os.Build.VERSION_CODES.Q;
 import static com.amaze.filemanager.filesystem.FileProperties.ANDROID_DATA_DIRS;
@@ -53,6 +52,7 @@ import com.amaze.filemanager.asynchronous.asynctasks.LoadFilesListTask;
 import com.amaze.filemanager.asynchronous.handlers.FileHandler;
 import com.amaze.filemanager.database.SortHandler;
 import com.amaze.filemanager.database.models.explorer.Tab;
+import com.amaze.filemanager.databinding.MainFragBinding;
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode;
 import com.amaze.filemanager.filesystem.CustomFileObserver;
 import com.amaze.filemanager.filesystem.FileProperties;
@@ -161,7 +161,7 @@ public class MainFragment extends Fragment
   private RecyclerView listView;
   private UtilitiesProvider utilsProvider;
   private HashMap<String, Bundle> scrolls = new HashMap<>();
-  private View rootView;
+  private MainFragBinding viewBinding;
   private FastScroller fastScroller;
   private CustomFileObserver customFileObserver;
 
@@ -219,9 +219,9 @@ public class MainFragment extends Fragment
 
   @Override
   public View onCreateView(
-      LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    rootView = inflater.inflate(R.layout.main_frag, container, false);
-    return rootView;
+      @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    viewBinding = MainFragBinding.inflate(inflater, container, false);
+    return viewBinding.getRoot();
   }
 
   @Override
@@ -229,9 +229,9 @@ public class MainFragment extends Fragment
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
     mainFragmentViewModel = new ViewModelProvider(this).get(MainFragmentViewModel.class);
-    listView = rootView.findViewById(R.id.listView);
+    listView = viewBinding.listView;
     mToolbarContainer = requireMainActivity().getAppbar().getAppbarLayout();
-    fastScroller = rootView.findViewById(R.id.fastscroll);
+    fastScroller = viewBinding.fastscroll;
     fastScroller.setPressedHandleColor(mainFragmentViewModel.getAccentColor());
     View.OnTouchListener onTouchListener =
         (view1, motionEvent) -> {
@@ -245,7 +245,7 @@ public class MainFragment extends Fragment
     //    listView.setOnDragListener(new MainFragmentDragListener());
     mToolbarContainer.setOnTouchListener(onTouchListener);
 
-    mSwipeRefreshLayout = rootView.findViewById(R.id.activity_main_swipe_refresh_layout);
+    mSwipeRefreshLayout = viewBinding.activityMainSwipeRefreshLayout;
 
     mSwipeRefreshLayout.setOnRefreshListener(() -> updateList(true));
 
@@ -258,16 +258,15 @@ public class MainFragment extends Fragment
     //   listView.setPadding(listView.getPaddingLeft(), paddingTop, listView.getPaddingRight(),
     // listView.getPaddingBottom());
 
-    setHasOptionsMenu(false);
     initNoFileLayout();
     HybridFile f = new HybridFile(OpenMode.UNKNOWN, mainFragmentViewModel.getCurrentPath());
-    f.generateMode(getActivity());
-    getMainActivity().getAppbar().getBottomBar().setClickListener();
+    f.generateMode(requireActivity());
+    requireMainActivity().getAppbar().getBottomBar().setClickListener();
 
     if (utilsProvider.getAppTheme().equals(AppTheme.LIGHT) && !mainFragmentViewModel.isList()) {
       listView.setBackgroundColor(Utils.getColor(getContext(), R.color.grid_background_light));
     } else {
-      listView.setBackgroundDrawable(null);
+      listView.setBackground(null);
     }
     listView.setHasFixedSize(true);
     if (mainFragmentViewModel.isList()) {
@@ -362,8 +361,7 @@ public class MainFragment extends Fragment
     mainFragmentViewModel.setList(true);
 
     if (utilsProvider.getAppTheme().equals(AppTheme.LIGHT)) {
-
-      listView.setBackgroundDrawable(null);
+      listView.setBackground(null);
     }
 
     if (mLayoutManager == null) mLayoutManager = new CustomScrollLinearLayoutManager(getActivity());
@@ -398,7 +396,7 @@ public class MainFragment extends Fragment
     }
   }
 
-  private BroadcastReceiver receiver2 =
+  private final BroadcastReceiver receiver2 =
       new BroadcastReceiver() {
 
         @Override
@@ -413,7 +411,7 @@ public class MainFragment extends Fragment
         }
       };
 
-  private BroadcastReceiver decryptReceiver =
+  private final BroadcastReceiver decryptReceiver =
       new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -503,7 +501,7 @@ public class MainFragment extends Fragment
               utilsProvider,
               true);
         } else {
-          if (getMainActivity().mReturnIntent) {
+          if (requireMainActivity().mReturnIntent) {
             // are we here to return an intent to another app
             returnIntentResults(
                 new HybridFileParcelable[] {layoutElementParcelable.generateBaseFile()});
@@ -744,7 +742,7 @@ public class MainFragment extends Fragment
   }
 
   void initNoFileLayout() {
-    nofilesview = rootView.findViewById(R.id.nofilelayout);
+    nofilesview = viewBinding.nofilelayout;
     nofilesview.setColorSchemeColors(mainFragmentViewModel.getAccentColor());
     nofilesview.setOnRefreshListener(
         () -> {
@@ -1015,9 +1013,9 @@ public class MainFragment extends Fragment
   public void rename(final HybridFileParcelable f) {
     MaterialDialog renameDialog =
         GeneralDialogCreation.showNameDialog(
-            getMainActivity(),
+            requireMainActivity(),
             "",
-            f.getName(getMainActivity()),
+            f.getName(requireMainActivity()),
             getResources().getString(R.string.rename),
             getResources().getString(R.string.save),
             null,
@@ -1027,7 +1025,7 @@ public class MainFragment extends Fragment
                   dialog.getCustomView().findViewById(R.id.singleedittext_input);
               String name1 = textfield.getText().toString().trim();
 
-              getMainActivity()
+              requireMainActivity()
                   .mainActivityHelper
                   .rename(
                       mainFragmentViewModel.getOpenMode(),
@@ -1035,8 +1033,8 @@ public class MainFragment extends Fragment
                       mainFragmentViewModel.getCurrentPath(),
                       name1,
                       f.isDirectory(),
-                      getActivity(),
-                      getMainActivity().isRootExplorer());
+                      requireActivity(),
+                      requireMainActivity().isRootExplorer());
             },
             (text) -> {
               boolean isValidFilename = FileProperties.isValidFilename(text);
@@ -1142,7 +1140,7 @@ public class MainFragment extends Fragment
           || (mainFragmentViewModel.getHome() != null
               && mainFragmentViewModel.getHome().equals(mainFragmentViewModel.getCurrentPath()))
           || mainFragmentViewModel.getIsOnCloudRoot()) {
-        getMainActivity().exit();
+        requireMainActivity().exit();
       } else if (OpenMode.DOCUMENT_FILE.equals(mainFragmentViewModel.getOpenMode())
           && !currentFile.getPath().startsWith("content://")) {
         if (CollectionsKt.contains(ANDROID_DEVICE_DATA_DIRS, currentFile.getParent(getContext()))) {
@@ -1492,11 +1490,7 @@ public class MainFragment extends Fragment
     /*if (!mainFragmentViewModel.isList()) {
       loadViews();
     }*/
-    if (android.os.Build.VERSION.SDK_INT >= JELLY_BEAN) {
-      mToolbarContainer.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-    } else {
-      mToolbarContainer.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-    }
+    mToolbarContainer.getViewTreeObserver().removeOnGlobalLayoutListener(this);
   }
 
   public @Nullable MainFragmentViewModel getMainFragmentViewModel() {

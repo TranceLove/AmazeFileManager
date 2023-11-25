@@ -198,11 +198,14 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import androidx.arch.core.util.Function;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
@@ -267,7 +270,7 @@ public class MainActivity extends PermissionsActivity
   private AppBar appbar;
   private Drawer drawer;
   // private HistoryManager history, grid;
-  private MainActivity mainActivity = this;
+  private final MainActivity mainActivity = this;
   private String pathInCompressedArchive;
   private boolean openProcesses = false;
   private MaterialDialog materialDialog;
@@ -363,6 +366,7 @@ public class MainActivity extends PermissionsActivity
     AppConfig.getInstance().setMainActivityContext(this);
 
     initialiseViews();
+    addMenuProvider(new MainActivityMenuProvider(this));
     utilsHandler = AppConfig.getInstance().getUtilsHandler();
     cloudHandler = new CloudHandler(this, AppConfig.getInstance().getExplorerDatabase());
 
@@ -1015,9 +1019,8 @@ public class MainActivity extends PermissionsActivity
    * @param hideFab Whether the FAB should be hidden in the new created {@link MainFragment} or not
    */
   public void goToMain(String path, boolean hideFab) {
-    FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-    // title.setText(R.string.app_name);
-    TabFragment tabFragment = new TabFragment();
+    NavController navController = Navigation.findNavController(this, R.id.content_frame_main_fragment);
+
     if (intent != null && intent.getAction() != null) {
       if (INTENT_ACTION_OPEN_QUICK_ACCESS.equals(intent.getAction())) {
         path = "5";
@@ -1031,47 +1034,14 @@ public class MainActivity extends PermissionsActivity
     }
     // This boolean will be given to the newly created MainFragment
     b.putBoolean(MainFragment.BUNDLE_HIDE_FAB, hideFab);
-    tabFragment.setArguments(b);
-    transaction.replace(R.id.content_frame, tabFragment);
-    // Commit the transaction
-    transaction.addToBackStack("tabt" + 1);
-    transaction.commitAllowingStateLoss();
+    navController.navigate(R.id.main_tab_fragment, b);
+
     appbar.setTitle(null);
 
     if (isCompressedOpen && pathInCompressedArchive != null) {
       openCompressed(pathInCompressedArchive);
       pathInCompressedArchive = null;
     }
-  }
-
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    MenuInflater menuInflater = getMenuInflater();
-    menuInflater.inflate(R.menu.activity_extra, menu);
-    /*
-    SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-    SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
-    searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-    searchView.setIconifiedByDefault(false);
-
-    MenuItem search = menu.findItem(R.id.search);
-    MenuItemCompat.setOnActionExpandListener(search, new MenuItemCompat.OnActionExpandListener() {
-        @Override
-        public boolean onMenuItemActionExpand(MenuItem item) {
-            // Stretching the SearchView across width of the Toolbar
-            toolbar.setContentInsetsRelative(0, 0);
-            return true;
-        }
-
-        @Override
-        public boolean onMenuItemActionCollapse(MenuItem item) {
-            // Restoring
-            toolbar.setContentInsetsRelative(TOOLBAR_START_INSET, 0);
-            return true;
-        }
-    });
-    */
-    return super.onCreateOptionsMenu(menu);
   }
 
   @Override
@@ -1159,145 +1129,6 @@ public class MainActivity extends PermissionsActivity
       invalidatePasteSnackbar(false);
     }
     return super.onPrepareOptionsMenu(menu);
-  }
-
-  // called when the user exits the action mode
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    // The action bar home/up action should open or close the drawer.
-    // ActionBarDrawerToggle will take care of this.
-    if (drawer.onOptionsItemSelected(item)) return true;
-    // Same thing goes to other Fragments loaded.
-    // If they have handled the options, we don't need to.
-    if (getFragmentAtFrame().onOptionsItemSelected(item)) return true;
-
-    // Handle action buttons
-    executeWithMainFragment(
-        mainFragment -> {
-          switch (item.getItemId()) {
-            case R.id.home:
-              mainFragment.home();
-              break;
-            case R.id.history:
-              HistoryDialog.showHistoryDialog(this, mainFragment);
-              break;
-            case R.id.sethome:
-              if (mainFragment.getMainFragmentViewModel().getOpenMode() != OpenMode.FILE
-                  && mainFragment.getMainFragmentViewModel().getOpenMode() != OpenMode.ROOT) {
-                Toast.makeText(mainActivity, R.string.not_allowed, Toast.LENGTH_SHORT).show();
-                break;
-              }
-              final MaterialDialog dialog =
-                  GeneralDialogCreation.showBasicDialog(
-                      mainActivity,
-                      R.string.question_set_path_as_home,
-                      R.string.set_as_home,
-                      R.string.yes,
-                      R.string.no);
-              dialog
-                  .getActionButton(DialogAction.POSITIVE)
-                  .setOnClickListener(
-                      (v) -> {
-                        mainFragment
-                            .getMainFragmentViewModel()
-                            .setHome(mainFragment.getCurrentPath());
-                        updatePaths(mainFragment.getMainFragmentViewModel().getNo());
-                        dialog.dismiss();
-                      });
-              dialog.show();
-              break;
-            case R.id.exit:
-              finish();
-              break;
-            case R.id.sortby:
-              GeneralDialogCreation.showSortDialog(mainFragment, getAppTheme(), getPrefs());
-              break;
-            case R.id.dsort:
-              String[] sort = getResources().getStringArray(R.array.directorysortmode);
-              MaterialDialog.Builder builder = new MaterialDialog.Builder(mainActivity);
-              builder.theme(getAppTheme().getMaterialDialogTheme());
-              builder.title(R.string.directorysort);
-              int current =
-                  Integer.parseInt(
-                      getPrefs()
-                          .getString(PreferencesConstants.PREFERENCE_DIRECTORY_SORT_MODE, "0"));
-
-              builder
-                  .items(sort)
-                  .itemsCallbackSingleChoice(
-                      current,
-                      (dialog1, view, which, text) -> {
-                        getPrefs()
-                            .edit()
-                            .putString(
-                                PreferencesConstants.PREFERENCE_DIRECTORY_SORT_MODE, "" + which)
-                            .commit();
-                        mainFragment
-                            .getMainFragmentViewModel()
-                            .initSortModes(
-                                SortHandler.getSortType(
-                                    this, mainFragment.getMainFragmentViewModel().getCurrentPath()),
-                                getPrefs());
-                        mainFragment.updateList(false);
-                        dialog1.dismiss();
-                        return true;
-                      });
-              builder.build().show();
-              break;
-            case R.id.hiddenitems:
-              HiddenFilesDialog.showHiddenDialog(this, mainFragment);
-              break;
-            case R.id.view:
-              int pathLayout =
-                  dataUtils.getListOrGridForPath(mainFragment.getCurrentPath(), DataUtils.LIST);
-              if (mainFragment.getMainFragmentViewModel().isList()) {
-                if (pathLayout == DataUtils.LIST) {
-                  AppConfig.getInstance()
-                      .runInBackground(
-                          () -> {
-                            utilsHandler.removeFromDatabase(
-                                new OperationData(
-                                    UtilsHandler.Operation.LIST, mainFragment.getCurrentPath()));
-                          });
-                }
-                utilsHandler.saveToDatabase(
-                    new OperationData(UtilsHandler.Operation.GRID, mainFragment.getCurrentPath()));
-
-                dataUtils.setPathAsGridOrList(mainFragment.getCurrentPath(), DataUtils.GRID);
-              } else {
-                if (pathLayout == DataUtils.GRID) {
-                  AppConfig.getInstance()
-                      .runInBackground(
-                          () -> {
-                            utilsHandler.removeFromDatabase(
-                                new OperationData(
-                                    UtilsHandler.Operation.GRID, mainFragment.getCurrentPath()));
-                          });
-                }
-
-                utilsHandler.saveToDatabase(
-                    new OperationData(UtilsHandler.Operation.LIST, mainFragment.getCurrentPath()));
-
-                dataUtils.setPathAsGridOrList(mainFragment.getCurrentPath(), DataUtils.LIST);
-              }
-              mainFragment.switchView();
-              break;
-            case R.id.extract:
-              Fragment fragment1 = getFragmentAtFrame();
-              if (fragment1 instanceof CompressedExplorerFragment) {
-                mainActivityHelper.extractFile(
-                    ((CompressedExplorerFragment) fragment1).compressedFile);
-              }
-              break;
-            case R.id.search:
-              getAppbar().getSearchView().revealSearchView();
-              break;
-          }
-          return null;
-        },
-        false);
-
-    return super.onOptionsItemSelected(item);
   }
 
   /*@Override
@@ -2563,7 +2394,6 @@ public class MainActivity extends PermissionsActivity
     executeWithMainFragment(lambda, false);
   }
 
-  @Nullable
   private void executeWithMainFragment(
       @NonNull Function<MainFragment, Void> lambda, boolean showToastIfMainFragmentIsNull) {
     final MainFragment mainFragment = getCurrentMainFragment();
@@ -2574,6 +2404,163 @@ public class MainActivity extends PermissionsActivity
       if (showToastIfMainFragmentIsNull) {
         AppConfig.toast(this, R.string.operation_unsuccesful);
       }
+    }
+  }
+
+  private class MainActivityMenuProvider implements MenuProvider {
+
+    private final MainActivity activity;
+
+    MainActivityMenuProvider(@NonNull MainActivity activity) {
+      this.activity = activity;
+    }
+
+    @Override
+    public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+      menuInflater.inflate(R.menu.activity_extra, menu);
+    }
+
+    @Override
+    public boolean onMenuItemSelected(@NonNull MenuItem item) {
+      // The action bar home/up action should open or close the drawer.
+      // ActionBarDrawerToggle will take care of this.
+      if (activity.drawer.onOptionsItemSelected(item)) return true;
+      // Same thing goes to other Fragments loaded.
+      // If they have handled the options, we don't need to.
+      if (activity.getFragmentAtFrame().onOptionsItemSelected(item)) return true;
+
+      // Handle action buttons
+      executeWithMainFragment(
+          mainFragment -> {
+            switch (item.getItemId()) {
+              case R.id.home:
+                mainFragment.home();
+                break;
+              case R.id.history:
+                HistoryDialog.showHistoryDialog(activity, mainFragment);
+                break;
+              case R.id.sethome:
+                if (mainFragment.getMainFragmentViewModel().getOpenMode() != OpenMode.FILE
+                    && mainFragment.getMainFragmentViewModel().getOpenMode() != OpenMode.ROOT) {
+                  Toast.makeText(activity, R.string.not_allowed, Toast.LENGTH_SHORT).show();
+                  break;
+                }
+                final MaterialDialog dialog =
+                    GeneralDialogCreation.showBasicDialog(
+                        activity,
+                        R.string.question_set_path_as_home,
+                        R.string.set_as_home,
+                        R.string.yes,
+                        R.string.no);
+                dialog
+                    .getActionButton(DialogAction.POSITIVE)
+                    .setOnClickListener(
+                        (v) -> {
+                          mainFragment
+                              .getMainFragmentViewModel()
+                              .setHome(mainFragment.getCurrentPath());
+                          updatePaths(mainFragment.getMainFragmentViewModel().getNo());
+                          dialog.dismiss();
+                        });
+                dialog.show();
+                break;
+              case R.id.exit:
+                finish();
+                break;
+              case R.id.sortby:
+                GeneralDialogCreation.showSortDialog(mainFragment, getAppTheme(), getPrefs());
+                break;
+              case R.id.dsort:
+                String[] sort = getResources().getStringArray(R.array.directorysortmode);
+                MaterialDialog.Builder builder = new MaterialDialog.Builder(activity);
+                builder.theme(getAppTheme().getMaterialDialogTheme());
+                builder.title(R.string.directorysort);
+                int current =
+                    Integer.parseInt(
+                        getPrefs()
+                            .getString(PreferencesConstants.PREFERENCE_DIRECTORY_SORT_MODE, "0"));
+
+                builder
+                    .items(sort)
+                    .itemsCallbackSingleChoice(
+                        current,
+                        (dialog1, view, which, text) -> {
+                          getPrefs()
+                              .edit()
+                              .putString(
+                                  PreferencesConstants.PREFERENCE_DIRECTORY_SORT_MODE, "" + which)
+                              .commit();
+                          mainFragment
+                              .getMainFragmentViewModel()
+                              .initSortModes(
+                                  SortHandler.getSortType(
+                                      activity,
+                                      mainFragment.getMainFragmentViewModel().getCurrentPath()),
+                                  getPrefs());
+                          mainFragment.updateList(false);
+                          dialog1.dismiss();
+                          return true;
+                        });
+                builder.build().show();
+                break;
+              case R.id.hiddenitems:
+                HiddenFilesDialog.showHiddenDialog(activity, mainFragment);
+                break;
+              case R.id.view:
+                int pathLayout =
+                    activity.dataUtils.getListOrGridForPath(
+                        mainFragment.getCurrentPath(), DataUtils.LIST);
+                if (mainFragment.getMainFragmentViewModel().isList()) {
+                  if (pathLayout == DataUtils.LIST) {
+                    AppConfig.getInstance()
+                        .runInBackground(
+                            () -> {
+                              activity.utilsHandler.removeFromDatabase(
+                                  new OperationData(
+                                      UtilsHandler.Operation.LIST, mainFragment.getCurrentPath()));
+                            });
+                  }
+                  activity.utilsHandler.saveToDatabase(
+                      new OperationData(
+                          UtilsHandler.Operation.GRID, mainFragment.getCurrentPath()));
+
+                  activity.dataUtils.setPathAsGridOrList(
+                      mainFragment.getCurrentPath(), DataUtils.GRID);
+                } else {
+                  if (pathLayout == DataUtils.GRID) {
+                    AppConfig.getInstance()
+                        .runInBackground(
+                            () -> {
+                              activity.utilsHandler.removeFromDatabase(
+                                  new OperationData(
+                                      UtilsHandler.Operation.GRID, mainFragment.getCurrentPath()));
+                            });
+                  }
+
+                  activity.utilsHandler.saveToDatabase(
+                      new OperationData(
+                          UtilsHandler.Operation.LIST, mainFragment.getCurrentPath()));
+
+                  activity.dataUtils.setPathAsGridOrList(
+                      mainFragment.getCurrentPath(), DataUtils.LIST);
+                }
+                mainFragment.switchView();
+                break;
+              case R.id.extract:
+                Fragment fragment1 = getFragmentAtFrame();
+                if (fragment1 instanceof CompressedExplorerFragment) {
+                  activity.mainActivityHelper.extractFile(
+                      ((CompressedExplorerFragment) fragment1).compressedFile);
+                }
+                break;
+              case R.id.search:
+                getAppbar().getSearchView().revealSearchView();
+                break;
+            }
+            return null;
+          },
+          false);
+      return false;
     }
   }
 }

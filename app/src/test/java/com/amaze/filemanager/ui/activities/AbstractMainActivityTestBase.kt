@@ -33,8 +33,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
 import com.amaze.filemanager.shadows.ShadowMultiDex
+import com.amaze.filemanager.shadows.ShadowPasswordUtil
 import com.amaze.filemanager.shadows.jcifs.smb.ShadowSmbFile
-import com.amaze.filemanager.test.ShadowPasswordUtil
 import com.amaze.filemanager.test.TestUtils
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.plugins.RxJavaPlugins

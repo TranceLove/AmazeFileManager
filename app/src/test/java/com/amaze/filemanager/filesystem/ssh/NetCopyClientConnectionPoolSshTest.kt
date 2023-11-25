@@ -33,7 +33,7 @@ import com.amaze.filemanager.filesystem.ftp.NetCopyClientConnectionPool.shutdown
 import com.amaze.filemanager.filesystem.ftp.NetCopyClientUtils.encryptFtpPathAsNecessary
 import com.amaze.filemanager.filesystem.ssh.test.TestUtils
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowPasswordUtil
+import com.amaze.filemanager.shadows.ShadowPasswordUtil
 import com.amaze.filemanager.utils.PasswordUtil
 import com.amaze.filemanager.utils.Utils
 import io.reactivex.android.plugins.RxAndroidPlugins

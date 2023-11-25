@@ -34,10 +34,11 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode
+import com.amaze.filemanager.shadows.ShadowFileUtils
 import com.amaze.filemanager.shadows.ShadowMultiDex
+import com.amaze.filemanager.shadows.ShadowPasswordUtil
 import com.amaze.filemanager.shadows.ShadowSmbUtil
-import com.amaze.filemanager.test.ShadowPasswordUtil
-import com.amaze.filemanager.test.ShadowTabHandler
+import com.amaze.filemanager.shadows.ShadowTabHandler
 import com.amaze.filemanager.test.TestUtils
 import com.amaze.filemanager.ui.activities.MainActivity
 import io.reactivex.android.plugins.RxAndroidPlugins
@@ -64,6 +65,7 @@ import org.robolectric.shadows.ShadowSQLiteConnection
         ShadowSmbUtil::class,
         ShadowMultiDex::class,
         ShadowTabHandler::class,
+        ShadowFileUtils::class,
         ShadowPasswordUtil::class,
     ],
     sdk = [KITKAT, P, Build.VERSION_CODES.R],

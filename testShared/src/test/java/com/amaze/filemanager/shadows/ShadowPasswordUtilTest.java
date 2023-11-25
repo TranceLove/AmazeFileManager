@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.amaze.filemanager.test;
+package com.amaze.filemanager.shadows;
 
 import static android.os.Build.VERSION_CODES.KITKAT;
 import static android.os.Build.VERSION_CODES.P;
@@ -40,7 +40,6 @@ import com.amaze.filemanager.database.UtilitiesDatabase;
 import com.amaze.filemanager.database.UtilsHandler;
 import com.amaze.filemanager.database.models.OperationData;
 import com.amaze.filemanager.filesystem.ftp.NetCopyClientUtils;
-import com.amaze.filemanager.shadows.ShadowMultiDex;
 import com.amaze.filemanager.utils.PasswordUtil;
 
 import android.os.Build;

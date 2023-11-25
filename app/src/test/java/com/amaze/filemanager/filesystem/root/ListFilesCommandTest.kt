@@ -30,7 +30,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode
 import com.amaze.filemanager.filesystem.HybridFileParcelable
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowNativeOperations
+import com.amaze.filemanager.shadows.ShadowNativeOperations
 import com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants
 import com.topjohnwu.superuser.Shell
 import io.mockk.every

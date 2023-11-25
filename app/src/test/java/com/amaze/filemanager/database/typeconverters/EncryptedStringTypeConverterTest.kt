@@ -26,7 +26,7 @@ import android.os.Build.VERSION_CODES.P
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.amaze.filemanager.database.models.StringWrapper
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowPasswordUtil
+import com.amaze.filemanager.shadows.ShadowPasswordUtil
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

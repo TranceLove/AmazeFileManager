@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/tab_navigation">
+    <fragment
+        android:id="@+id/tab_main_fragment"
+        android:name="com.amaze.filemanager.ui.fragments.MainFragment">
+       <argument android:name="path" app:argType="string" app:nullable="false" />
+    </fragment>
+</navigation>

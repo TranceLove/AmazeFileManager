@@ -36,7 +36,7 @@ import com.amaze.filemanager.R
 import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.filesystem.files.FileUtils
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowTabHandler
+import com.amaze.filemanager.shadows.ShadowTabHandler
 import com.amaze.filemanager.test.TestUtils.initializeInternalStorage
 import com.amaze.filemanager.ui.activities.MainActivity
 import io.reactivex.android.plugins.RxAndroidPlugins

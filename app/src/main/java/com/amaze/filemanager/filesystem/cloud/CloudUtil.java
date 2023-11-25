@@ -73,6 +73,7 @@ public class CloudUtil {
   /**
    * @deprecated use getCloudFiles()
    */
+  @Deprecated
   public static ArrayList<HybridFileParcelable> listFiles(
       String path, CloudStorage cloudStorage, OpenMode openMode) throws CloudPluginException {
     final ArrayList<HybridFileParcelable> baseFiles = new ArrayList<>();

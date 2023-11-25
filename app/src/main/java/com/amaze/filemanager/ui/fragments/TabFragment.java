@@ -35,6 +35,7 @@ import com.amaze.filemanager.R;
 import com.amaze.filemanager.application.AppConfig;
 import com.amaze.filemanager.database.TabHandler;
 import com.amaze.filemanager.database.models.explorer.Tab;
+import com.amaze.filemanager.databinding.TabfragmentBinding;
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode;
 import com.amaze.filemanager.ui.ColorCircleDrawable;
 import com.amaze.filemanager.ui.ExtensionsKt;
@@ -62,6 +63,7 @@ import android.view.animation.DecelerateInterpolator;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
@@ -72,9 +74,9 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 public class TabFragment extends Fragment {
-  private final Logger LOG = LoggerFactory.getLogger(TabFragment.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TabFragment.class);
 
-  private static final String KEY_PATH = "path";
+  public static final String KEY_PATH = "path";
   private static final String KEY_POSITION = "pos";
 
   private static final String KEY_FRAGMENT_0 = "tab0";
@@ -92,7 +94,7 @@ public class TabFragment extends Fragment {
   /** ink indicators for viewpager only for Lollipop+ */
   private Indicator indicator;
 
-  /** views for circlular drawables below android lollipop */
+  /** views for circular drawables below android lollipop */
   private AppCompatImageView circleDrawable1, circleDrawable2;
 
   /** color drawable for action bar background */
@@ -101,18 +103,18 @@ public class TabFragment extends Fragment {
   /** colors relative to current visible tab */
   private @ColorInt int startColor, endColor;
 
-  private ViewGroup rootView;
-
   private final ArgbEvaluator evaluator = new ArgbEvaluator();
   private ConstraintLayout dragPlaceholder;
 
+  private TabfragmentBinding viewBinding;
+
   @Override
   public View onCreateView(
-      LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    rootView = (ViewGroup) inflater.inflate(R.layout.tabfragment, container, false);
+      @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    viewBinding = TabfragmentBinding.inflate(inflater, container, false);
 
     fragmentManager = requireActivity().getSupportFragmentManager();
-    dragPlaceholder = rootView.findViewById(R.id.drag_placeholder);
+    dragPlaceholder = viewBinding.dragPlaceholder.getRoot();
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       indicator = requireActivity().findViewById(R.id.indicator);
@@ -124,7 +126,7 @@ public class TabFragment extends Fragment {
     sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireActivity());
     savePaths = sharedPrefs.getBoolean(PREFERENCE_SAVED_PATHS, DEFAULT_SAVED_PATHS);
 
-    viewPager = rootView.findViewById(R.id.pager);
+    viewPager = viewBinding.pager;
 
     boolean hideFab = false;
     if (getArguments() != null) {
@@ -188,7 +190,7 @@ public class TabFragment extends Fragment {
     mainActivity.updateViews(colorDrawable);
     */
 
-    return rootView;
+    return viewBinding.getRoot();
   }
 
   @Override
@@ -388,7 +390,7 @@ public class TabFragment extends Fragment {
     }
   }
 
-  private void addTab(@NonNull Tab tab, String path, boolean hideFabInTab) {
+  private void addTab(@NonNull Tab tab, @Nullable String path, boolean hideFabInTab) {
     MainFragment main = new MainFragment();
     Bundle b = new Bundle();
 
@@ -463,9 +465,9 @@ public class TabFragment extends Fragment {
 
   private void initLeftAndRightDragListeners(boolean destroy) {
     final MainFragment mainFragment = requireMainActivity().getCurrentMainFragment();
-    View leftPlaceholder = rootView.findViewById(R.id.placeholder_drag_left);
-    View rightPlaceholder = rootView.findViewById(R.id.placeholder_drag_right);
-    AppCompatImageView dragToTrash = rootView.findViewById(R.id.placeholder_trash_bottom);
+    View leftPlaceholder = viewBinding.placeholderDragLeft;
+    View rightPlaceholder = viewBinding.placeholderDragRight;
+    AppCompatImageView dragToTrash = viewBinding.placeholderTrashBottom;
     DataUtils dataUtils = DataUtils.getInstance();
     if (destroy) {
       leftPlaceholder.setOnDragListener(null);

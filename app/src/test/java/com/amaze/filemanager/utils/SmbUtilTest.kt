@@ -27,8 +27,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.amaze.filemanager.fileoperations.filesystem.DOESNT_EXIST
 import com.amaze.filemanager.fileoperations.filesystem.WRITABLE_ON_REMOTE
+import com.amaze.filemanager.shadows.ShadowPasswordUtil
 import com.amaze.filemanager.shadows.ShadowSmbUtil
-import com.amaze.filemanager.test.ShadowPasswordUtil
 import com.amaze.filemanager.utils.smb.SmbUtil.checkFolder
 import com.amaze.filemanager.utils.smb.SmbUtil.createFrom
 import com.amaze.filemanager.utils.smb.SmbUtil.getSmbDecryptedPath

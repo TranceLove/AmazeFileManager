@@ -24,7 +24,7 @@ package com.amaze.filemanager.filesystem.ftp
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowPasswordUtil
+import com.amaze.filemanager.shadows.ShadowPasswordUtil
 import com.amaze.filemanager.utils.urlDecoded
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

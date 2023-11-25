@@ -30,7 +30,7 @@ import com.amaze.filemanager.fileoperations.filesystem.OpenMode
 import com.amaze.filemanager.filesystem.HybridFile
 import com.amaze.filemanager.filesystem.ssh.test.MockSshConnectionPools
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowPasswordUtil
+import com.amaze.filemanager.shadows.ShadowPasswordUtil
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers

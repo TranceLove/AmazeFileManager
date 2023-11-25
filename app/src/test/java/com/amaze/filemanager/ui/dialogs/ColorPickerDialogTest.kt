@@ -25,8 +25,9 @@ import android.os.Build.VERSION_CODES.KITKAT
 import android.os.Build.VERSION_CODES.P
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.amaze.filemanager.application.AppConfig
+import com.amaze.filemanager.shadows.ShadowFileUtils
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowTabHandler
+import com.amaze.filemanager.shadows.ShadowTabHandler
 import com.amaze.filemanager.ui.colors.ColorPreferenceHelper
 import com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants
 import com.amaze.filemanager.ui.theme.AppTheme
@@ -40,7 +41,7 @@ import org.robolectric.annotation.Config
  */
 @RunWith(AndroidJUnit4::class)
 @Config(
-    shadows = [ShadowMultiDex::class, ShadowTabHandler::class],
+    shadows = [ShadowMultiDex::class, ShadowTabHandler::class, ShadowFileUtils::class],
     sdk = [KITKAT, P, VERSION_CODES.R],
 )
 class ColorPickerDialogTest {

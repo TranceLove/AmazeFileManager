@@ -58,6 +58,8 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.text.HtmlCompat
 import androidx.core.text.HtmlCompat.FROM_HTML_MODE_COMPACT
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.afollestad.materialdialogs.DialogAction
@@ -139,7 +141,7 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
+        (requireActivity() as MenuHost).addMenuProvider(FtpServerFragmentMenuProvider(this))
     }
 
     override fun onDestroyView() {
@@ -968,6 +970,191 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
     }
 
     private fun dismissSnackbar() = snackbar?.dismiss()
+
+    private class FtpServerFragmentMenuProvider(private val fragment: FtpServerFragment) :
+        MenuProvider {
+        override fun onCreateMenu(
+            menu: Menu,
+            menuInflater: MenuInflater,
+        ) {
+            menuInflater.inflate(R.menu.ftp_server_menu, menu)
+            menu.findItem(R.id.checkbox_ftp_readonly).isChecked = fragment.readonlyPreference
+            menu.findItem(R.id.checkbox_ftp_secure).isChecked = fragment.securePreference
+            menu.findItem(R.id.checkbox_ftp_legacy_filesystem).isChecked =
+                fragment.legacyFileSystemPreference
+        }
+
+        @Deprecated("Deprecated in Java")
+        @Suppress("ComplexMethod", "LongMethod")
+        override fun onMenuItemSelected(item: MenuItem): Boolean {
+            when (item.itemId) {
+                R.id.choose_ftp_port -> {
+                    val currentFtpPort = fragment.defaultPortFromPreferences
+                    MaterialDialog.Builder(fragment.requireContext())
+                        .input(
+                            fragment.getString(R.string.ftp_port_edit_menu_title),
+                            currentFtpPort.toString(),
+                            true,
+                        ) { _: MaterialDialog?, _: CharSequence? -> }
+                        .inputType(InputType.TYPE_CLASS_NUMBER)
+                        .onPositive { dialog: MaterialDialog, _: DialogAction? ->
+                            val editText = dialog.inputEditText
+                            if (editText != null) {
+                                val name = editText.text.toString()
+                                val portNumber = name.toIntOrNull()
+                                if (portNumber == null || portNumber < 1024) {
+                                    Toast.makeText(
+                                        fragment.activity,
+                                        R.string.ftp_port_change_error_invalid,
+                                        Toast.LENGTH_SHORT,
+                                    )
+                                        .show()
+                                } else {
+                                    fragment.changeFTPServerPort(portNumber)
+                                    Toast.makeText(
+                                        fragment.activity,
+                                        R.string.ftp_port_change_success,
+                                        Toast.LENGTH_SHORT,
+                                    )
+                                        .show()
+                                }
+                            }
+                        }
+                        .positiveText(fragment.getString(R.string.change).uppercase())
+                        .negativeText(R.string.cancel)
+                        .build()
+                        .show()
+                    return true
+                }
+                R.id.ftp_path -> {
+                    if (fragment.shouldUseSafFileSystem()) {
+                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+
+                        intent.runIfDocumentsUIExists(fragment.mainActivity) {
+                            fragment.activityResultHandlerOnFtpServerPathUpdate.launch(
+                                intent,
+                            )
+                        }
+                    } else {
+                        val dialogBuilder = FolderChooserDialog.Builder(fragment.requireActivity())
+                        dialogBuilder
+                            .chooseButton(R.string.choose_folder)
+                            .initialPath(fragment.defaultPathFromPreferences)
+                            .goUpLabel(fragment.getString(R.string.folder_go_up_one_level))
+                            .cancelButton(R.string.cancel)
+                            .tag(TAG)
+                            .build()
+                            .show(fragment.activity)
+                    }
+
+                    return true
+                }
+                R.id.ftp_login -> {
+                    val loginDialogBuilder = MaterialDialog.Builder(fragment.requireContext())
+                    val loginDialogView =
+                        DialogFtpLoginBinding.inflate(
+                            LayoutInflater.from(fragment.requireContext()),
+                        ).apply {
+                            fragment.initLoginDialogViews(this)
+                            loginDialogBuilder.onPositive { _: MaterialDialog, _: DialogAction ->
+                                if (checkboxFtpAnonymous.isChecked) {
+                                    // remove preferences
+                                    fragment.setFTPUsername("")
+                                    fragment.setFTPPassword("")
+                                } else {
+                                    // password and username field not empty, let's set them to preferences
+                                    fragment.setFTPUsername(
+                                        editTextDialogFtpUsername.text.toString(),
+                                    )
+                                    fragment.setFTPPassword(
+                                        editTextDialogFtpPassword.text.toString(),
+                                    )
+                                }
+                            }
+                        }
+                    val dialog =
+                        loginDialogBuilder.customView(loginDialogView.root, true)
+                            .title(fragment.getString(R.string.ftp_login))
+                            .positiveText(fragment.getString(R.string.set).uppercase())
+                            .negativeText(fragment.getString(R.string.cancel))
+                            .build()
+
+                    // TextWatcher for port number was deliberately removed. It didn't work anyway, so
+                    // no reason to keep here. Pending reimplementation when material-dialogs lib is
+                    // upgraded.
+
+                    dialog.show()
+                    return true
+                }
+                R.id.checkbox_ftp_readonly -> {
+                    val shouldReadonly = !item.isChecked
+                    item.isChecked = shouldReadonly
+                    fragment.readonlyPreference = shouldReadonly
+                    fragment.updatePathText()
+                    fragment.promptUserToRestartServer()
+                    return true
+                }
+                R.id.checkbox_ftp_secure -> {
+                    val shouldSecure = !item.isChecked
+                    item.isChecked = shouldSecure
+                    fragment.securePreference = shouldSecure
+                    fragment.promptUserToRestartServer()
+                    return true
+                }
+                R.id.checkbox_ftp_legacy_filesystem -> {
+                    val shouldUseSafFileSystem = !item.isChecked
+                    item.isChecked = shouldUseSafFileSystem
+                    fragment.legacyFileSystemPreference = shouldUseSafFileSystem
+                    fragment.promptUserToRestartServer()
+                    return true
+                }
+                R.id.ftp_timeout -> {
+                    val timeoutBuilder = MaterialDialog.Builder(fragment.requireActivity())
+                    timeoutBuilder.title(
+                        fragment.getString(R.string.ftp_timeout) +
+                            " (" +
+                            fragment.resources.getString(R.string.ftp_seconds) +
+                            ")",
+                    )
+                    timeoutBuilder.input(
+                        (
+                            FtpService.DEFAULT_TIMEOUT.toString() +
+                                " " +
+                                fragment.resources.getString(R.string.ftp_seconds)
+                        ),
+                        fragment.ftpTimeout.toString(),
+                        true,
+                    ) { _: MaterialDialog?, input: CharSequence ->
+                        val isInputInteger: Boolean =
+                            try {
+                                // try parsing for integer check
+                                input.toString().toInt()
+                                true
+                            } catch (e: NumberFormatException) {
+                                false
+                            }
+                        fragment.ftpTimeout =
+                            if (input.isEmpty() || !isInputInteger) {
+                                FtpService.DEFAULT_TIMEOUT
+                            } else {
+                                Integer.valueOf(input.toString())
+                            }
+                    }
+                    timeoutBuilder
+                        .positiveText(fragment.resources.getString(R.string.set).uppercase())
+                        .negativeText(fragment.resources.getString(R.string.cancel))
+                        .build()
+                        .show()
+                    return true
+                }
+                R.id.exit -> {
+                    fragment.requireActivity().finish()
+                    return true
+                }
+            }
+            return false
+        }
+    }
 
     companion object {
         const val TAG = "FtpServerFragment"

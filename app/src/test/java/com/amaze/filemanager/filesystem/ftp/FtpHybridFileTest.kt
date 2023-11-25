@@ -33,7 +33,7 @@ import com.amaze.filemanager.filesystem.OperationsTest
 import com.amaze.filemanager.filesystem.ftp.NetCopyClientConnectionPool.FTP_URI_PREFIX
 import com.amaze.filemanager.filesystem.ssh.test.TestUtils
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowPasswordUtil
+import com.amaze.filemanager.shadows.ShadowPasswordUtil
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers

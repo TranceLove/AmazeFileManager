@@ -37,7 +37,7 @@ import com.amaze.filemanager.database.UtilitiesDatabase.Companion.COLUMN_PRIVATE
 import com.amaze.filemanager.database.UtilitiesDatabase.Companion.TABLE_SFTP
 import com.amaze.filemanager.database.UtilitiesDatabase.Companion.TABLE_SMB
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowPasswordUtil
+import com.amaze.filemanager.shadows.ShadowPasswordUtil
 import com.amaze.filemanager.utils.PasswordUtil
 import com.amaze.filemanager.utils.smb.SmbUtil
 import org.junit.Assert.assertEquals

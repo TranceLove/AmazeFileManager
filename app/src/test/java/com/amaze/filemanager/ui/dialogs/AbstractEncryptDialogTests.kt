@@ -31,8 +31,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
+import com.amaze.filemanager.shadows.ShadowFileUtils
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowTabHandler
+import com.amaze.filemanager.shadows.ShadowTabHandler
 import com.amaze.filemanager.test.TestUtils.initializeInternalStorage
 import com.amaze.filemanager.ui.activities.MainActivity
 import org.junit.After
@@ -46,7 +47,7 @@ import org.robolectric.annotation.Config
  */
 @RunWith(AndroidJUnit4::class)
 @Config(
-    shadows = [ShadowMultiDex::class, ShadowTabHandler::class],
+    shadows = [ShadowMultiDex::class, ShadowTabHandler::class, ShadowFileUtils::class],
     sdk = [KITKAT, P, Build.VERSION_CODES.R],
 )
 abstract class AbstractEncryptDialogTests {

@@ -33,8 +33,9 @@ import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
 import com.amaze.filemanager.R
 import com.amaze.filemanager.application.AppConfig
+import com.amaze.filemanager.shadows.ShadowFileUtils
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowTabHandler
+import com.amaze.filemanager.shadows.ShadowTabHandler
 import com.amaze.filemanager.test.TestUtils
 import com.amaze.filemanager.ui.activities.MainActivity
 import io.reactivex.Observable
@@ -63,7 +64,7 @@ import java.util.concurrent.TimeUnit
  */
 @RunWith(AndroidJUnit4::class)
 @Config(
-    shadows = [ShadowMultiDex::class, ShadowTabHandler::class],
+    shadows = [ShadowMultiDex::class, ShadowTabHandler::class, ShadowFileUtils::class],
     sdk = [KITKAT, P, VERSION_CODES.R],
 )
 class PemToKeyPairObservableRsaTest {

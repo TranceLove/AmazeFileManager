@@ -609,6 +609,7 @@ public class HybridFile {
    *
    * @deprecated use {@link #isDirectory(Context)} to handle content resolvers
    */
+  @Deprecated
   public boolean isDirectory() {
     boolean isDirectory;
     switch (mode) {
@@ -703,6 +704,7 @@ public class HybridFile {
   /**
    * @deprecated use {@link #folderSize(Context)}
    */
+  @Deprecated
   public long folderSize() {
     long size = 0L;
 
@@ -1062,6 +1064,7 @@ public class HybridFile {
    *
    * @deprecated use forEachChildrenFile()
    */
+  @Deprecated
   public ArrayList<HybridFileParcelable> listFiles(Context context, boolean isRoot) {
     ArrayList<HybridFileParcelable> arrayList = new ArrayList<>();
     forEachChildrenFile(context, isRoot, arrayList::add);

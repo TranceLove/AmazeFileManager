@@ -36,6 +36,7 @@ import com.amaze.filemanager.adapters.data.AppDataParcelable;
 import com.amaze.filemanager.adapters.glide.AppsAdapterPreloadModel;
 import com.amaze.filemanager.adapters.holders.AppHolder;
 import com.amaze.filemanager.asynchronous.loaders.AppListLoader;
+import com.amaze.filemanager.databinding.FragmentAppListBinding;
 import com.amaze.filemanager.ui.activities.MainActivity;
 import com.amaze.filemanager.ui.provider.UtilitiesProvider;
 import com.amaze.filemanager.ui.theme.AppTheme;
@@ -59,6 +60,8 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
@@ -78,7 +81,8 @@ public class AppsListFragment extends Fragment
   private SharedPreferences sharedPreferences;
   private boolean isAscending;
   private int sortby;
-  private View rootView;
+
+  private FragmentAppListBinding appListBinding;
   private AppsAdapterPreloadModel modelProvider;
   private LinearLayoutManager linearLayoutManager;
   private RecyclerViewPreloader<String> preloader;
@@ -89,7 +93,6 @@ public class AppsListFragment extends Fragment
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setHasOptionsMenu(true);
   }
 
   @Nullable
@@ -98,8 +101,9 @@ public class AppsListFragment extends Fragment
       @NonNull LayoutInflater inflater,
       @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
-    rootView = inflater.inflate(R.layout.fragment_app_list, container, false);
-    return rootView;
+    appListBinding = FragmentAppListBinding.inflate(inflater, container, false);
+    ((MenuHost) requireActivity()).addMenuProvider(new AppsListFragmentMenuProvider(this));
+    return appListBinding.getRoot();
   }
 
   @Override
@@ -120,7 +124,7 @@ public class AppsListFragment extends Fragment
     sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
     isAscending = sharedPreferences.getBoolean(PREFERENCE_APPLIST_ISASCENDING, true);
     sortby = sharedPreferences.getInt(PREFERENCE_APPLIST_SORTBY, 0);
-    fastScroller = rootView.findViewById(R.id.fastscroll);
+    fastScroller = appListBinding.fastscroll;
     fastScroller.setPressedHandleColor(mainActivity.getAccent());
     fastScroller.setRecyclerView(getRecyclerView(), 1);
     mainActivity
@@ -133,32 +137,6 @@ public class AppsListFragment extends Fragment
     LoaderManager.getInstance(this).initLoader(ID_LOADER_APP_LIST, null, this);
   }
 
-  @Override
-  public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-    requireActivity().getMenuInflater().inflate(R.menu.app_menu, menu);
-    menu.findItem(R.id.checkbox_system_apps).setChecked(false);
-    super.onCreateOptionsMenu(menu, inflater);
-  }
-
-  @Override
-  public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.sort:
-        showSortDialog(((MainActivity) requireActivity()).getAppTheme());
-        return true;
-      case R.id.exit:
-        requireActivity().finish();
-        return true;
-      case R.id.checkbox_system_apps:
-        item.setChecked(!item.isChecked());
-        adapter.setData(appDataParcelableList, item.isChecked());
-        showSystemApps = item.isChecked();
-        return true;
-      default:
-        return super.onOptionsItemSelected(item);
-    }
-  }
-
   private void updateViews(MainActivity mainActivity, UtilitiesProvider utilsProvider) {
     mainActivity.getAppbar().setTitle(R.string.apps);
     mainActivity.hideFab();
@@ -166,12 +144,12 @@ public class AppsListFragment extends Fragment
     mainActivity.supportInvalidateOptionsMenu();
 
     if (utilsProvider.getAppTheme().equals(AppTheme.DARK)) {
-      getActivity()
+      requireActivity()
           .getWindow()
           .getDecorView()
           .setBackgroundColor(Utils.getColor(getContext(), R.color.holo_dark_background));
     } else if (utilsProvider.getAppTheme().equals(AppTheme.BLACK)) {
-      getActivity()
+      requireActivity()
           .getWindow()
           .getDecorView()
           .setBackgroundColor(Utils.getColor(getContext(), android.R.color.black));
@@ -253,7 +231,7 @@ public class AppsListFragment extends Fragment
     getSpinner().setVisibility(View.GONE);
     if (data.isEmpty()) {
       getRecyclerView().setVisibility(View.GONE);
-      rootView.findViewById(R.id.empty_text_view).setVisibility(View.VISIBLE);
+      appListBinding.emptyTextView.setVisibility(View.VISIBLE);
     } else {
       appDataParcelableList = new ArrayList<>(data);
       List<AppDataParcelable> adapterList = new ArrayList<>();
@@ -295,10 +273,44 @@ public class AppsListFragment extends Fragment
   }
 
   private RecyclerView getRecyclerView() {
-    return rootView.findViewById(R.id.list_view);
+    return appListBinding.listView;
   }
 
   private MaterialProgressBar getSpinner() {
-    return rootView.findViewById(R.id.loading_spinner);
+    return appListBinding.loadingSpinner;
+  }
+
+  private class AppsListFragmentMenuProvider implements MenuProvider {
+
+    private final AppsListFragment fragment;
+
+    AppsListFragmentMenuProvider(@NonNull AppsListFragment fragment) {
+      this.fragment = fragment;
+    }
+
+    @Override
+    public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+      menuInflater.inflate(R.menu.app_menu, menu);
+      menu.findItem(R.id.checkbox_system_apps).setChecked(false);
+    }
+
+    @Override
+    public boolean onMenuItemSelected(@NonNull MenuItem item) {
+      switch (item.getItemId()) {
+        case R.id.sort:
+          fragment.showSortDialog(((MainActivity) fragment.requireActivity()).getAppTheme());
+          return true;
+        case R.id.exit:
+          fragment.requireActivity().finish();
+          return true;
+        case R.id.checkbox_system_apps:
+          item.setChecked(!item.isChecked());
+          fragment.adapter.setData(fragment.appDataParcelableList, item.isChecked());
+          fragment.showSystemApps = item.isChecked();
+          return true;
+        default:
+          return false;
+      }
+    }
   }
 }

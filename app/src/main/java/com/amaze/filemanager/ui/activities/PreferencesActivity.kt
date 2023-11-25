@@ -78,6 +78,7 @@ class PreferencesActivity : ThemedActivity(), FolderChooserDialog.FolderCallback
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStack()

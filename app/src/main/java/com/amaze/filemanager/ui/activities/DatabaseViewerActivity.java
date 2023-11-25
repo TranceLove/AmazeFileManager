@@ -24,6 +24,7 @@ import static com.amaze.filemanager.ui.fragments.preferencefragments.Preferences
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,7 @@ public class DatabaseViewerActivity extends ThemedActivity {
   private String path;
   private ListView listView;
   private ArrayList<String> arrayList;
-  private ArrayAdapter arrayAdapter;
+  private ArrayAdapter<String> arrayAdapter;
   private Cursor c;
 
   // the copy of db file which is to be opened, in the app cache
@@ -71,7 +72,7 @@ public class DatabaseViewerActivity extends ThemedActivity {
     setSupportActionBar(toolbar);
 
     boolean useNewStack = getBoolean(PREFERENCE_TEXTEDITOR_NEWSTACK);
-    getSupportActionBar().setDisplayHomeAsUpEnabled(!useNewStack);
+    Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(!useNewStack);
 
     path = getIntent().getStringExtra("path");
 
@@ -137,7 +138,7 @@ public class DatabaseViewerActivity extends ThemedActivity {
                         "SELECT name FROM sqlite_master WHERE type='table'", null);
                 arrayList = getDbTableNames(c);
                 arrayAdapter =
-                    new ArrayAdapter(
+                    new ArrayAdapter<>(
                         DatabaseViewerActivity.this,
                         android.R.layout.simple_list_item_1,
                         arrayList);

@@ -38,8 +38,9 @@ import com.amaze.filemanager.BuildConfig
 import com.amaze.filemanager.R
 import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.fileoperations.filesystem.compressed.ArchivePasswordCache
+import com.amaze.filemanager.shadows.ShadowFileUtils
 import com.amaze.filemanager.shadows.ShadowMultiDex
-import com.amaze.filemanager.test.ShadowTabHandler
+import com.amaze.filemanager.shadows.ShadowTabHandler
 import com.amaze.filemanager.test.TestUtils
 import com.amaze.filemanager.test.randomBytes
 import com.amaze.filemanager.test.supportedArchiveExtensions
@@ -71,7 +72,7 @@ import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
-@Config(shadows = [ShadowMultiDex::class, ShadowTabHandler::class], sdk = [P])
+@Config(shadows = [ShadowMultiDex::class, ShadowTabHandler::class, ShadowFileUtils::class], sdk = [P])
 @LooperMode(LooperMode.Mode.PAUSED)
 @Suppress("TooManyFunctions", "StringLiteralDuplication")
 class ExtractServiceTest {

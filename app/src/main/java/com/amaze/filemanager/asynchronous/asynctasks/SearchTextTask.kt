@@ -41,6 +41,7 @@ class SearchTextTask(
 
     private val log: Logger = LoggerFactory.getLogger(SearchTextTask::class.java)
 
+    @Deprecated("Deprecated in Java")
     override fun doInBackground(vararg params: Unit): List<SearchResultIndex> {
         if (TextUtils.isEmpty(searchedText)) {
             return emptyList()
@@ -74,10 +75,12 @@ class SearchTextTask(
         return searchResultIndices
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onProgressUpdate(vararg values: SearchResultIndex) {
         updateListener.onUpdate(values[0])
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onPostExecute(searchResultIndices: List<SearchResultIndex>) {
         listener.onAsyncTaskFinished(searchResultIndices)
     }
