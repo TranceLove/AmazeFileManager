@@ -770,7 +770,7 @@ public class MainActivity extends PermissionsActivity
           isCompressedOpen = false;
           finish();
         } else {
-          super.onBackPressed();
+//          super.onBackPressed();
           supportInvalidateOptionsMenu();
           showFab();
         }

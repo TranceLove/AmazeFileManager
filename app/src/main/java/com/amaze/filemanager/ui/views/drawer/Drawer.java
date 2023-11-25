@@ -30,9 +30,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.amaze.filemanager.BuildConfig;
@@ -104,6 +101,9 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Drawer implements NavigationView.OnNavigationItemSelectedListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(Drawer.class);
@@ -126,7 +126,7 @@ public class Drawer implements NavigationView.OnNavigationItemSelectedListener {
   private volatile int phoneStorageCount =
       0; // number of storage available (internal/external/otg etc)
   private boolean isDrawerLocked = false;
-  //  private FragmentTransaction pending_fragmentTransaction;
+//  private FragmentTransaction pending_fragmentTransaction;
   private PendingPath pendingPath;
   private String firstPath = null, secondPath = null;
 
