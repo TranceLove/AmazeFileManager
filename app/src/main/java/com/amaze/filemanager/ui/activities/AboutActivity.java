@@ -149,7 +149,7 @@ public class AboutActivity extends ThemedActivity implements View.OnClickListene
           mAppBarLayout.setExpanded(hasFocus, true);
         });
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      if (getBoolean(PREFERENCE_COLORED_NAVIGATION)) {
+      if (getAppConfig().getBoolean(PREFERENCE_COLORED_NAVIGATION)) {
         getWindow().setNavigationBarColor(PreferenceUtils.getStatusColor(getPrimary()));
       } else {
         if (getAppTheme().equals(AppTheme.LIGHT)) {

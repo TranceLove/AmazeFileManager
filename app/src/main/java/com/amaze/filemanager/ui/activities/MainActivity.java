@@ -21,11 +21,9 @@
 package com.amaze.filemanager.ui.activities;
 
 import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR1;
 import static android.os.Build.VERSION_CODES.KITKAT;
 import static android.os.Build.VERSION_CODES.KITKAT_WATCH;
 import static android.os.Build.VERSION_CODES.LOLLIPOP;
-import static android.os.Build.VERSION_CODES.M;
 import static android.os.Build.VERSION_CODES.N;
 import static com.amaze.filemanager.fileoperations.filesystem.FolderStateKt.WRITABLE_OR_ON_SDCARD;
 import static com.amaze.filemanager.fileoperations.filesystem.OperationTypeKt.COMPRESS;
@@ -60,7 +58,6 @@ import static com.amaze.filemanager.ui.fragments.preferencefragments.Preferences
 import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_VIEW;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -95,10 +92,8 @@ import com.amaze.filemanager.database.models.OperationData;
 import com.amaze.filemanager.database.models.explorer.CloudEntry;
 import com.amaze.filemanager.fileoperations.exceptions.CloudPluginException;
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode;
-import com.amaze.filemanager.fileoperations.filesystem.StorageNaming;
 import com.amaze.filemanager.fileoperations.filesystem.usb.SingletonUsbOtg;
 import com.amaze.filemanager.fileoperations.filesystem.usb.UsbOtgRepresentation;
-import com.amaze.filemanager.filesystem.ExternalSdCardOperation;
 import com.amaze.filemanager.filesystem.FileUtil;
 import com.amaze.filemanager.filesystem.HybridFile;
 import com.amaze.filemanager.filesystem.HybridFileParcelable;
@@ -131,7 +126,6 @@ import com.amaze.filemanager.ui.fragments.ProcessViewerFragment;
 import com.amaze.filemanager.ui.fragments.TabFragment;
 import com.amaze.filemanager.ui.fragments.data.MainFragmentViewModel;
 import com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants;
-import com.amaze.filemanager.ui.strings.StorageNamingHelper;
 import com.amaze.filemanager.ui.theme.AppTheme;
 import com.amaze.filemanager.ui.views.CustomZoomFocusChange;
 import com.amaze.filemanager.ui.views.appbar.AppBar;
@@ -155,10 +149,8 @@ import com.leinardi.android.speeddial.SpeedDialActionItem;
 import com.leinardi.android.speeddial.SpeedDialOverlayLayout;
 import com.leinardi.android.speeddial.SpeedDialView;
 import com.readystatesoftware.systembartint.SystemBarTintManager;
-import com.topjohnwu.superuser.Shell;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -176,10 +168,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.os.storage.StorageManager;
-import android.os.storage.StorageVolume;
 import android.service.quicksettings.TileService;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -194,18 +183,15 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import androidx.arch.core.util.Function;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
@@ -336,8 +322,6 @@ public class MainActivity extends PermissionsActivity
   private PasteHelper pasteHelper;
   public MainActivityActionMode mainActivityActionMode;
 
-  private static final String DEFAULT_FALLBACK_STORAGE_PATH = "/storage/sdcard0";
-  private static final String INTERNAL_SHARED_STORAGE = "Internal shared storage";
   private static final String INTENT_ACTION_OPEN_QUICK_ACCESS =
       "com.amaze.filemanager.openQuickAccess";
   private static final String INTENT_ACTION_OPEN_RECENT = "com.amaze.filemanager.openRecent";
@@ -359,7 +343,6 @@ public class MainActivity extends PermissionsActivity
     }
 
     initialisePreferences();
-    initializeInteractiveShell();
 
     dataUtils.registerOnDataChangedListener(new SaveOnDataUtilsChange(drawer));
 
@@ -460,42 +443,28 @@ public class MainActivity extends PermissionsActivity
   public void invalidateFragmentAndBundle(Bundle savedInstanceState, boolean isCloudRefresh) {
     if (savedInstanceState == null) {
       if (openProcesses) {
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(
-            R.id.content_frame, new ProcessViewerFragment(), KEY_INTENT_PROCESS_VIEWER);
-        // transaction.addToBackStack(null);
+        getDrawer().getNavController().navigate(R.id.main_process_viewer_fragment);
         openProcesses = false;
-        // title.setText(utils.getString(con, R.string.process_viewer));
-        // Commit the transaction
-        transaction.commit();
         supportInvalidateOptionsMenu();
       } else if (intent.getAction() != null
           && (intent.getAction().equals(TileService.ACTION_QS_TILE_PREFERENCES)
               || INTENT_ACTION_OPEN_FTP_SERVER.equals(intent.getAction()))) {
-        // tile preferences, open ftp fragment
 
-        FragmentTransaction transaction2 = getSupportFragmentManager().beginTransaction();
-        transaction2.replace(R.id.content_frame, new FtpServerFragment());
+        getDrawer().getNavController().navigate(R.id.main_ftp_server_fragment);
         appBarLayout
             .animate()
             .translationY(0)
             .setInterpolator(new DecelerateInterpolator(2))
             .start();
 
-        drawer.deselectEverything();
-        transaction2.commit();
       } else if (intent.getAction() != null
           && INTENT_ACTION_OPEN_APP_MANAGER.equals(intent.getAction())) {
-        FragmentTransaction transaction3 = getSupportFragmentManager().beginTransaction();
-        transaction3.replace(R.id.content_frame, new AppsListFragment());
+        getDrawer().getNavController().navigate(R.id.main_app_list_fragment);
         appBarLayout
             .animate()
             .translationY(0)
             .setInterpolator(new DecelerateInterpolator(2))
             .start();
-
-        drawer.deselectEverything();
-        transaction3.commit();
       } else {
         if (path != null && path.length() > 0) {
           HybridFile file = new HybridFile(OpenMode.UNKNOWN, path);
@@ -750,25 +719,15 @@ public class MainActivity extends PermissionsActivity
     floatingActionButton.removeActionItemById(R.id.menu_new_cloud);
   }
 
-  /** Initializes an interactive shell, which will stay throughout the app lifecycle. */
-  private void initializeInteractiveShell() {
-    if (isRootExplorer()) {
-      // Enable mount-master flag when invoking su command, to force su run in the global mount
-      // namespace. See https://github.com/topjohnwu/libsu/issues/75
-      Shell.setDefaultBuilder(Shell.Builder.create().setFlags(Shell.FLAG_MOUNT_MASTER));
-      Shell.getShell();
-    }
-  }
-
   /**
    * @return paths to all available volumes in the system (include emulated)
    */
   public synchronized ArrayList<StorageDirectoryParcelable> getStorageDirectories() {
     ArrayList<StorageDirectoryParcelable> volumes;
     if (SDK_INT >= N) {
-      volumes = getStorageDirectoriesNew();
+      volumes = MainActivityStorageUtilExtKt.getStorageDirectoriesNew(this);
     } else {
-      volumes = getStorageDirectoriesLegacy();
+      volumes = MainActivityStorageUtilExtKt.getStorageDirectoriesLegacy(this);
     }
     if (isRootExplorer()) {
       volumes.add(
@@ -777,148 +736,6 @@ public class MainActivity extends PermissionsActivity
               getResources().getString(R.string.root_directory),
               R.drawable.ic_drawer_root_white));
     }
-    return volumes;
-  }
-
-  /**
-   * @return All available storage volumes (including internal storage, SD-Cards and USB devices)
-   */
-  @TargetApi(N)
-  public synchronized ArrayList<StorageDirectoryParcelable> getStorageDirectoriesNew() {
-    // Final set of paths
-    ArrayList<StorageDirectoryParcelable> volumes = new ArrayList<>();
-    StorageManager sm = getSystemService(StorageManager.class);
-    for (StorageVolume volume : sm.getStorageVolumes()) {
-      if (!volume.getState().equalsIgnoreCase(Environment.MEDIA_MOUNTED)
-          && !volume.getState().equalsIgnoreCase(Environment.MEDIA_MOUNTED_READ_ONLY)) {
-        continue;
-      }
-      File path = Utils.getVolumeDirectory(volume);
-      String name = volume.getDescription(this);
-      if (INTERNAL_SHARED_STORAGE.equalsIgnoreCase(name)) {
-        name = getString(R.string.storage_internal);
-      }
-      int icon;
-      if (!volume.isRemovable()) {
-        icon = R.drawable.ic_phone_android_white_24dp;
-      } else {
-        // HACK: There is no reliable way to distinguish USB and SD external storage
-        // However it is often enough to check for "USB" String
-        if (name.toUpperCase().contains("USB") || path.getPath().toUpperCase().contains("USB")) {
-          icon = R.drawable.ic_usb_white_24dp;
-        } else {
-          icon = R.drawable.ic_sd_storage_white_24dp;
-        }
-      }
-      volumes.add(new StorageDirectoryParcelable(path.getPath(), name, icon));
-    }
-    return volumes;
-  }
-
-  /**
-   * Returns all available SD-Cards in the system (include emulated)
-   *
-   * <p>Warning: Hack! Based on Android source code of version 4.3 (API 18) Because there was no
-   * standard way to get it before android N
-   *
-   * @return All available SD-Cards in the system (include emulated)
-   */
-  public synchronized ArrayList<StorageDirectoryParcelable> getStorageDirectoriesLegacy() {
-    List<String> rv = new ArrayList<>();
-
-    // Primary physical SD-CARD (not emulated)
-    final String rawExternalStorage = System.getenv("EXTERNAL_STORAGE");
-    // All Secondary SD-CARDs (all exclude primary) separated by ":"
-    final String rawSecondaryStoragesStr = System.getenv("SECONDARY_STORAGE");
-    // Primary emulated SD-CARD
-    final String rawEmulatedStorageTarget = System.getenv("EMULATED_STORAGE_TARGET");
-    if (TextUtils.isEmpty(rawEmulatedStorageTarget)) {
-      // Device has physical external storage; use plain paths.
-      if (TextUtils.isEmpty(rawExternalStorage)) {
-        // EXTERNAL_STORAGE undefined; falling back to default.
-        // Check for actual existence of the directory before adding to list
-        if (new File(DEFAULT_FALLBACK_STORAGE_PATH).exists()) {
-          rv.add(DEFAULT_FALLBACK_STORAGE_PATH);
-        } else {
-          // We know nothing else, use Environment's fallback
-          rv.add(Environment.getExternalStorageDirectory().getAbsolutePath());
-        }
-      } else {
-        rv.add(rawExternalStorage);
-      }
-    } else {
-      // Device has emulated storage; external storage paths should have
-      // userId burned into them.
-      final String rawUserId;
-      if (SDK_INT < JELLY_BEAN_MR1) {
-        rawUserId = "";
-      } else {
-        final String path = Environment.getExternalStorageDirectory().getAbsolutePath();
-        final String[] folders = DIR_SEPARATOR.split(path);
-        final String lastFolder = folders[folders.length - 1];
-        boolean isDigit = false;
-        try {
-          Integer.valueOf(lastFolder);
-          isDigit = true;
-        } catch (NumberFormatException ignored) {
-        }
-        rawUserId = isDigit ? lastFolder : "";
-      }
-      // /storage/emulated/0[1,2,...]
-      if (TextUtils.isEmpty(rawUserId)) {
-        rv.add(rawEmulatedStorageTarget);
-      } else {
-        rv.add(rawEmulatedStorageTarget + File.separator + rawUserId);
-      }
-    }
-    // Add all secondary storages
-    if (!TextUtils.isEmpty(rawSecondaryStoragesStr)) {
-      // All Secondary SD-CARDs splited into array
-      final String[] rawSecondaryStorages = rawSecondaryStoragesStr.split(File.pathSeparator);
-      Collections.addAll(rv, rawSecondaryStorages);
-    }
-    if (SDK_INT >= M && checkStoragePermission()) rv.clear();
-    if (SDK_INT >= KITKAT) {
-      String strings[] = ExternalSdCardOperation.getExtSdCardPathsForActivity(this);
-      for (String s : strings) {
-        File f = new File(s);
-        if (!rv.contains(s) && FileUtils.canListFiles(f)) rv.add(s);
-      }
-    }
-    File usb = getUsbDrive();
-    if (usb != null && !rv.contains(usb.getPath())) rv.add(usb.getPath());
-
-    if (SDK_INT >= KITKAT) {
-      if (SingletonUsbOtg.getInstance().isDeviceConnected()) {
-        rv.add(OTGUtil.PREFIX_OTG + "/");
-      }
-    }
-
-    // Assign a label and icon to each directory
-    ArrayList<StorageDirectoryParcelable> volumes = new ArrayList<>();
-    for (String file : rv) {
-      File f = new File(file);
-      @DrawableRes int icon;
-
-      if ("/storage/emulated/legacy".equals(file)
-          || "/storage/emulated/0".equals(file)
-          || "/mnt/sdcard".equals(file)) {
-        icon = R.drawable.ic_phone_android_white_24dp;
-      } else if ("/storage/sdcard1".equals(file)) {
-        icon = R.drawable.ic_sd_storage_white_24dp;
-      } else if ("/".equals(file)) {
-        icon = R.drawable.ic_drawer_root_white;
-      } else {
-        icon = R.drawable.ic_sd_storage_white_24dp;
-      }
-
-      @StorageNaming.DeviceDescription
-      int deviceDescription = StorageNaming.getDeviceDescriptionLegacy(f);
-      String name = StorageNamingHelper.getNameForDeviceDescription(this, f, deviceDescription);
-
-      volumes.add(new StorageDirectoryParcelable(file, name, icon));
-    }
-
     return volumes;
   }
 
@@ -953,10 +770,7 @@ public class MainActivity extends PermissionsActivity
           isCompressedOpen = false;
           finish();
         } else {
-          FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-          fragmentTransaction.setCustomAnimations(R.anim.slide_out_bottom, R.anim.slide_out_bottom);
-          fragmentTransaction.remove(compressedExplorerFragment);
-          fragmentTransaction.commit();
+          super.onBackPressed();
           supportInvalidateOptionsMenu();
           showFab();
         }
@@ -991,9 +805,6 @@ public class MainActivity extends PermissionsActivity
     if (backPressedToExitOnce) {
       NetCopyClientConnectionPool.INSTANCE.shutdown();
       finish();
-      if (isRootExplorer()) {
-        closeInteractiveShell();
-      }
     } else {
       this.backPressedToExitOnce = true;
       final Toast toast = Toast.makeText(this, getString(R.string.press_again), Toast.LENGTH_SHORT);
@@ -1019,8 +830,7 @@ public class MainActivity extends PermissionsActivity
    * @param hideFab Whether the FAB should be hidden in the new created {@link MainFragment} or not
    */
   public void goToMain(String path, boolean hideFab) {
-    NavController navController = Navigation.findNavController(this, R.id.content_frame_main_fragment);
-
+    // title.setText(R.string.app_name);
     if (intent != null && intent.getAction() != null) {
       if (INTENT_ACTION_OPEN_QUICK_ACCESS.equals(intent.getAction())) {
         path = "5";
@@ -1034,8 +844,7 @@ public class MainActivity extends PermissionsActivity
     }
     // This boolean will be given to the newly created MainFragment
     b.putBoolean(MainFragment.BUNDLE_HIDE_FAB, hideFab);
-    navController.navigate(R.id.main_tab_fragment, b);
-
+    getDrawer().getNavController().navigate(R.id.main_tab_fragment, b);
     appbar.setTitle(null);
 
     if (isCompressedOpen && pathInCompressedArchive != null) {
@@ -1210,51 +1019,12 @@ public class MainActivity extends PermissionsActivity
     registerReceiver(receiver2, new IntentFilter(TAG_INTENT_FILTER_GENERAL));
 
     if (SDK_INT >= Build.VERSION_CODES.KITKAT) {
-      updateUsbInformation();
+      MainActivityStorageUtilExtKt.updateUsbInformation(this);
     }
-  }
-
-  /** Updates everything related to USB devices MUST ALWAYS be called after onResume() */
-  @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-  private void updateUsbInformation() {
-    boolean isInformationUpdated = false;
-    List<UsbOtgRepresentation> connectedDevices = OTGUtil.getMassStorageDevicesConnected(this);
-
-    if (!connectedDevices.isEmpty()) {
-      if (SingletonUsbOtg.getInstance().getUsbOtgRoot() != null
-          && OTGUtil.isUsbUriAccessible(this)) {
-        for (UsbOtgRepresentation device : connectedDevices) {
-          if (SingletonUsbOtg.getInstance().checkIfRootIsFromDevice(device)) {
-            isInformationUpdated = true;
-            break;
-          }
-        }
-
-        if (!isInformationUpdated) {
-          SingletonUsbOtg.getInstance().resetUsbOtgRoot();
-        }
-      }
-
-      if (!isInformationUpdated) {
-        SingletonUsbOtg.getInstance().setConnectedDevice(connectedDevices.get(0));
-        isInformationUpdated = true;
-      }
-    }
-
-    if (!isInformationUpdated) {
-      SingletonUsbOtg.getInstance().resetUsbOtgRoot();
-      drawer.refreshDrawer();
-    }
-
-    // Registering intent filter for OTG
-    IntentFilter otgFilter = new IntentFilter();
-    otgFilter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-    otgFilter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-    registerReceiver(mOtgReceiver, otgFilter);
   }
 
   /** Receiver to check if a USB device is connected at the runtime of application */
-  BroadcastReceiver mOtgReceiver =
+  final BroadcastReceiver mOtgReceiver =
       new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -1277,13 +1047,6 @@ public class MainActivity extends PermissionsActivity
   @Override
   public boolean onKeyDown(int keyCode, KeyEvent event) {
     if (keyCode == KeyEvent.KEYCODE_MENU) {
-      /*
-      ImageView ib = findViewById(R.id.action_overflow);
-      if (ib.getVisibility() == View.VISIBLE) {
-          ib.performClick();
-      }
-      */
-      // return 'true' to prevent further propagation of the key event
       return true;
     }
 
@@ -1295,22 +1058,9 @@ public class MainActivity extends PermissionsActivity
     super.onDestroy();
     // TODO: 6/5/2017 Android may choose to not call this method before destruction
     // TODO: https://developer.android.com/reference/android/app/Activity.html#onDestroy%28%29
-    closeInteractiveShell();
     NetCopyClientConnectionPool.INSTANCE.shutdown();
     if (drawer != null && drawer.getBilling() != null) {
       drawer.getBilling().destroyBillingInstance();
-    }
-  }
-
-  /** Closes the interactive shell and threads associated */
-  private void closeInteractiveShell() {
-    if (isRootExplorer()) {
-      // close interactive shell
-      try {
-        Shell.getShell().close();
-      } catch (IOException e) {
-        LOG.error("Error closing Shell", e);
-      }
     }
   }
 
@@ -1321,14 +1071,9 @@ public class MainActivity extends PermissionsActivity
 
   public void openCompressed(String path) {
     appBarLayout.animate().translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
-    FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-    fragmentTransaction.setCustomAnimations(R.anim.slide_in_top, R.anim.slide_in_bottom);
-    Fragment zipFragment = new CompressedExplorerFragment();
     Bundle bundle = new Bundle();
     bundle.putString(CompressedExplorerFragment.KEY_PATH, path);
-    zipFragment.setArguments(bundle);
-    fragmentTransaction.add(R.id.content_frame, zipFragment);
-    fragmentTransaction.commitAllowingStateLoss();
+    getDrawer().getNavController().navigate(R.id.main_compressed_explorer_fragment, bundle);
   }
 
   public @Nullable MainFragment getCurrentMainFragment() {
@@ -1347,7 +1092,10 @@ public class MainActivity extends PermissionsActivity
   }
 
   public Fragment getFragmentAtFrame() {
-    return getSupportFragmentManager().findFragmentById(R.id.content_frame);
+    NavHostFragment navHostFragment =
+        (NavHostFragment)
+            getSupportFragmentManager().findFragmentById(R.id.content_frame_main_fragment);
+    return navHostFragment.getChildFragmentManager().getFragments().get(0);
   }
 
   public void setPagingEnabled(boolean b) {
@@ -1695,12 +1443,12 @@ public class MainActivity extends PermissionsActivity
                 getTabFragment().setCurrentItem(1);
               }
             } else if (event.getKeyCode() == KeyEvent.KEYCODE_DPAD_LEFT) {
-              findViewById(R.id.content_frame).requestFocus();
+              findViewById(R.id.content_frame_main_fragment).requestFocus();
             } else if (event.getKeyCode() == KeyEvent.KEYCODE_DPAD_DOWN) {
               if (pasteHelper != null
                   && pasteHelper.getSnackbar() != null
                   && pasteHelper.getSnackbar().isShown())
-                ((Snackbar.SnackbarLayout) pasteHelper.getSnackbar().getView())
+                (pasteHelper.getSnackbar().getView())
                     .findViewById(R.id.snackBarActionButton)
                     .requestFocus();
             } else if (event.getKeyCode() == KeyEvent.KEYCODE_DPAD_CENTER) {
@@ -1870,14 +1618,8 @@ public class MainActivity extends PermissionsActivity
         invalidateFragmentAndBundle(null, false);
       }
     } else if ((openProcesses = i.getBooleanExtra(KEY_INTENT_PROCESS_VIEWER, false))) {
-      FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-      transaction.replace(
-          R.id.content_frame, new ProcessViewerFragment(), KEY_INTENT_PROCESS_VIEWER);
-      //   transaction.addToBackStack(null);
+      getDrawer().getNavController().navigate(R.id.main_process_viewer_fragment);
       openProcesses = false;
-      // title.setText(utils.getString(con, R.string.process_viewer));
-      // Commit the transaction
-      transaction.commitAllowingStateLoss();
       supportInvalidateOptionsMenu();
     } else if (intent.getAction() != null) {
       checkForExternalIntent(intent);
@@ -2118,14 +1860,15 @@ public class MainActivity extends PermissionsActivity
         args.putInt(ARGS_KEY_LOADER, service.ordinal());
 
         // check if we already had done some work on the loader
-        Loader loader = getSupportLoaderManager().getLoader(REQUEST_CODE_CLOUD_LIST_KEY);
+        LoaderManager loaderManager = LoaderManager.getInstance(this);
+        Loader loader = loaderManager.getLoader(REQUEST_CODE_CLOUD_LIST_KEY);
         if (loader != null && loader.isStarted()) {
 
           // making sure that loader is not started
-          getSupportLoaderManager().destroyLoader(REQUEST_CODE_CLOUD_LIST_KEY);
+          loaderManager.destroyLoader(REQUEST_CODE_CLOUD_LIST_KEY);
         }
 
-        getSupportLoaderManager().initLoader(REQUEST_CODE_CLOUD_LIST_KEY, args, this);
+        loaderManager.initLoader(REQUEST_CODE_CLOUD_LIST_KEY, args, this);
       }
     } catch (CloudPluginException e) {
       LOG.warn("failure when adding cloud plugin connections", e);
@@ -2182,7 +1925,7 @@ public class MainActivity extends PermissionsActivity
 
           // we want keys for services saved in database, and the cloudrail app key which
           // is at index 1
-          String ids[] = new String[cloudEntries.size() + 1];
+          String[] ids = new String[cloudEntries.size() + 1];
 
           ids[0] = 1 + "";
           for (int i = 1; i <= cloudEntries.size(); i++) {
@@ -2217,7 +1960,7 @@ public class MainActivity extends PermissionsActivity
   }
 
   @Override
-  public void onLoadFinished(Loader<Cursor> loader, final Cursor data) {
+  public void onLoadFinished(@NonNull Loader<Cursor> loader, final Cursor data) {
     if (data == null) {
       Toast.makeText(
               this,
@@ -2405,6 +2148,10 @@ public class MainActivity extends PermissionsActivity
         AppConfig.toast(this, R.string.operation_unsuccesful);
       }
     }
+  }
+
+  public boolean getBoolean(@NonNull String key) {
+    return getAppConfig().getBoolean(key);
   }
 
   private class MainActivityMenuProvider implements MenuProvider {

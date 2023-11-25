@@ -20,7 +20,31 @@
 
 package com.amaze.filemanager.application;
 
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_BOOKMARKS_ADDED;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_CHANGEPATHS;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_COLORED_NAVIGATION;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_COLORIZE_ICONS;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_DISABLE_PLAYER_INTENT_FILTERS;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_ENABLE_MARQUEE_FILENAME;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_NEED_TO_SET_HOME;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_ROOTMODE;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_ROOT_LEGACY_LISTING;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_SHOW_DIVIDERS;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_SHOW_FILE_SIZE;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_SHOW_GOBACK_BUTTON;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_SHOW_HEADERS;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_SHOW_HIDDENFILES;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_SHOW_LAST_MODIFIED;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_SHOW_PERMISSIONS;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_SHOW_SIDEBAR_FOLDERS;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_SHOW_SIDEBAR_QUICKACCESSES;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_SHOW_THUMB;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_TEXTEDITOR_NEWSTACK;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_USE_CIRCULAR_IMAGES;
+import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_VIEW;
+
 import java.io.File;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Callable;
 
@@ -49,6 +73,7 @@ import com.amaze.filemanager.ui.provider.UtilitiesProvider;
 import com.amaze.filemanager.utils.ScreenUtils;
 import com.amaze.trashbin.TrashBin;
 import com.amaze.trashbin.TrashBinConfig;
+import com.topjohnwu.superuser.Shell;
 
 import android.app.Activity;
 import android.app.Application;
@@ -75,7 +100,9 @@ import jcifs.smb.SmbException;
     reportSenderFactoryClasses = AcraReportSenderFactory.class)
 public class AppConfig extends GlideApplication {
 
-  private Logger log = null;
+  private static final Logger log = LoggerFactory.getLogger(AppConfig.class);
+
+  private SharedPreferences sharedPreferences;
 
   private UtilitiesProvider utilsProvider;
   private UtilsHandler utilsHandler;
@@ -101,11 +128,15 @@ public class AppConfig extends GlideApplication {
   @Override
   public void onCreate() {
     super.onCreate();
-    AppCompatDelegate.setCompatVectorFromResourcesEnabled(
-        true); // selector in srcCompat isn't supported without this
+    // selector in srcCompat isn't supported without this
+    AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
     instance = this;
 
+    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
     CustomSshJConfig.init();
+    initializeInteractiveShell();
+
     explorerDatabase = ExplorerDatabase.initialize(this);
     utilitiesDatabase = UtilitiesDatabase.initialize(this);
 
@@ -117,7 +148,6 @@ public class AppConfig extends GlideApplication {
     // disabling file exposure method check for api n+
     StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
     StrictMode.setVmPolicy(builder.build());
-    log = LoggerFactory.getLogger(AppConfig.class);
   }
 
   @Override
@@ -129,6 +159,7 @@ public class AppConfig extends GlideApplication {
   @Override
   public void onTerminate() {
     super.onTerminate();
+    closeInteractiveShell();
   }
 
   /**
@@ -215,6 +246,10 @@ public class AppConfig extends GlideApplication {
     return utilsHandler;
   }
 
+  public SharedPreferences getSharedPreferences() {
+    return sharedPreferences;
+  }
+
   public void setMainActivityContext(@NonNull Activity activity) {
     mainActivityContext = new WeakReference<>(activity);
     screenUtils = new ScreenUtils(activity);
@@ -235,6 +270,10 @@ public class AppConfig extends GlideApplication {
 
   public UtilitiesDatabase getUtilitiesDatabase() {
     return utilitiesDatabase;
+  }
+
+  public boolean isRootExplorer() {
+    return getBoolean(PREFERENCE_ROOTMODE);
   }
 
   /**
@@ -294,6 +333,43 @@ public class AppConfig extends GlideApplication {
     return trashBin;
   }
 
+  public boolean getBoolean(String key) {
+    boolean defaultValue;
+
+    switch (key) {
+      case PREFERENCE_SHOW_PERMISSIONS:
+      case PREFERENCE_SHOW_GOBACK_BUTTON:
+      case PREFERENCE_SHOW_HIDDENFILES:
+      case PREFERENCE_BOOKMARKS_ADDED:
+      case PREFERENCE_ROOTMODE:
+      case PREFERENCE_COLORED_NAVIGATION:
+      case PREFERENCE_TEXTEDITOR_NEWSTACK:
+      case PREFERENCE_CHANGEPATHS:
+      case PREFERENCE_ROOT_LEGACY_LISTING:
+      case PREFERENCE_DISABLE_PLAYER_INTENT_FILTERS:
+        defaultValue = false;
+        break;
+      case PREFERENCE_SHOW_FILE_SIZE:
+      case PREFERENCE_SHOW_DIVIDERS:
+      case PREFERENCE_SHOW_HEADERS:
+      case PREFERENCE_USE_CIRCULAR_IMAGES:
+      case PREFERENCE_COLORIZE_ICONS:
+      case PREFERENCE_SHOW_THUMB:
+      case PREFERENCE_SHOW_SIDEBAR_QUICKACCESSES:
+      case PREFERENCE_NEED_TO_SET_HOME:
+      case PREFERENCE_SHOW_SIDEBAR_FOLDERS:
+      case PREFERENCE_VIEW:
+      case PREFERENCE_SHOW_LAST_MODIFIED:
+      case PREFERENCE_ENABLE_MARQUEE_FILENAME:
+        defaultValue = true;
+        break;
+      default:
+        throw new IllegalArgumentException("Please map \'" + key + "\'");
+    }
+
+    return getSharedPreferences().getBoolean(key, defaultValue);
+  }
+
   private TrashBinConfig getTrashBinConfig() {
     if (trashBinConfig == null) {
       SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -319,5 +395,27 @@ public class AppConfig extends GlideApplication {
               TRASH_BIN_BASE_PATH, days, bytes, numOfFiles, intervalHours, false, true);
     }
     return trashBinConfig;
+  }
+
+  /** Initializes an interactive shell, which will stay throughout the app lifecycle. */
+  private void initializeInteractiveShell() {
+    if (isRootExplorer()) {
+      // Enable mount-master flag when invoking su command, to force su run in the global mount
+      // namespace. See https://github.com/topjohnwu/libsu/issues/75
+      Shell.setDefaultBuilder(Shell.Builder.create().setFlags(Shell.FLAG_MOUNT_MASTER));
+      Shell.getShell();
+    }
+  }
+
+  /** Closes the interactive shell and threads associated */
+  private void closeInteractiveShell() {
+    if (isRootExplorer()) {
+      // close interactive shell
+      try {
+        Shell.getShell().close();
+      } catch (IOException e) {
+        log.error("Error closing Shell", e);
+      }
+    }
   }
 }

@@ -149,29 +149,29 @@ public class ProcessViewerFragment extends Fragment {
     super.onResume();
 
     Intent intent = new Intent(getActivity(), CopyService.class);
-    getActivity().bindService(intent, mCopyConnection, 0);
+    requireActivity().bindService(intent, mCopyConnection, 0);
 
     Intent intent1 = new Intent(getActivity(), ExtractService.class);
-    getActivity().bindService(intent1, mExtractConnection, 0);
+    requireActivity().bindService(intent1, mExtractConnection, 0);
 
     Intent intent2 = new Intent(getActivity(), ZipService.class);
-    getActivity().bindService(intent2, mCompressConnection, 0);
+    requireActivity().bindService(intent2, mCompressConnection, 0);
 
     Intent intent3 = new Intent(getActivity(), EncryptService.class);
-    getActivity().bindService(intent3, mEncryptConnection, 0);
+    requireActivity().bindService(intent3, mEncryptConnection, 0);
 
     Intent intent4 = new Intent(getActivity(), DecryptService.class);
-    getActivity().bindService(intent4, mDecryptConnection, 0);
+    requireActivity().bindService(intent4, mDecryptConnection, 0);
   }
 
   @Override
   public void onPause() {
     super.onPause();
-    getActivity().unbindService(mCopyConnection);
-    getActivity().unbindService(mExtractConnection);
-    getActivity().unbindService(mCompressConnection);
-    getActivity().unbindService(mEncryptConnection);
-    getActivity().unbindService(mDecryptConnection);
+    requireActivity().unbindService(mCopyConnection);
+    requireActivity().unbindService(mExtractConnection);
+    requireActivity().unbindService(mCompressConnection);
+    requireActivity().unbindService(mEncryptConnection);
+    requireActivity().unbindService(mDecryptConnection);
   }
 
   @Override

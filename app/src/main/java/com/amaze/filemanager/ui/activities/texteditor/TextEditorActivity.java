@@ -124,7 +124,7 @@ public class TextEditorActivity extends ThemedActivity
     // downButton.setEnabled(false);
 
     if (getSupportActionBar() != null) {
-      boolean useNewStack = getBoolean(PREFERENCE_TEXTEDITOR_NEWSTACK);
+      boolean useNewStack = getAppConfig().getBoolean(PREFERENCE_TEXTEDITOR_NEWSTACK);
       getSupportActionBar().setDisplayHomeAsUpEnabled(!useNewStack);
     }
     mainTextView = findViewById(R.id.textEditorMainEditText);
@@ -142,7 +142,8 @@ public class TextEditorActivity extends ThemedActivity
     ActionBar actionBar = getSupportActionBar();
 
     if (actionBar != null) {
-      actionBar.setDisplayHomeAsUpEnabled(!getBoolean(PREFERENCE_TEXTEDITOR_NEWSTACK));
+      actionBar.setDisplayHomeAsUpEnabled(
+          !getAppConfig().getBoolean(PREFERENCE_TEXTEDITOR_NEWSTACK));
       actionBar.setTitle(viewModel.getFile().name);
     }
 
@@ -326,7 +327,7 @@ public class TextEditorActivity extends ThemedActivity
         if (editableFileAbstraction.scheme.equals(FILE)) {
           File currentFile = editableFileAbstraction.hybridFileParcelable.getFile();
           if (currentFile != null && currentFile.exists()) {
-            boolean useNewStack = getBoolean(PREFERENCE_TEXTEDITOR_NEWSTACK);
+            boolean useNewStack = getAppConfig().getBoolean(PREFERENCE_TEXTEDITOR_NEWSTACK);
             FileUtils.openWith(currentFile, this, useNewStack);
           } else {
             Toast.makeText(this, R.string.not_allowed, Toast.LENGTH_SHORT).show();

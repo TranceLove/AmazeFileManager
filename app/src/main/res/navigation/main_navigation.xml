@@ -2,18 +2,34 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_navigation"
-    app:startDestination="@id/main_tab_fragment">
+    app:startDestination="@id/main_start_fragment">
     <fragment
         android:name="com.amaze.filemanager.ui.fragments.TabFragment"
         android:id="@+id/main_tab_fragment">
-        <argument app:name="path" app:argType="String" app:nullable="false" />
+        <argument android:name="path" app:argType="string" app:nullable="false" />
     </fragment>
+    <fragment
+        android:name="com.amaze.filemanager.ui.fragments.CompressedExplorerFragment"
+        android:id="@+id/main_compressed_explorer_fragment">
+        <argument android:name="path" app:argType="string" app:nullable="false" />
+    </fragment>
+    <fragment
+        android:name="com.amaze.filemanager.ui.fragments.StartFragment"
+        android:id="@+id/main_start_fragment" />
     <fragment
         android:name="com.amaze.filemanager.ui.fragments.AppsListFragment"
         android:id="@+id/main_app_list_fragment" />
     <fragment
         android:name="com.amaze.filemanager.ui.fragments.FtpServerFragment"
         android:id="@+id/main_ftp_server_fragment" />
+    <fragment
+        android:name="com.amaze.filemanager.ui.fragments.ProcessViewerFragment"
+        android:id="@+id/main_process_viewer_fragment" />
+    <fragment
+        android:name="com.amaze.filemanager.ui.fragments.DbViewerFragment"
+        android:id="@+id/main_db_viewer_fragment">
+        <argument android:name="table" app:argType="string" app:nullable="false" />
+    </fragment>
     <activity
         android:name="com.amaze.filemanager.ui.activities.PreferencesActivity"
         android:id="@+id/main_preferences_activity" />

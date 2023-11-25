@@ -35,6 +35,7 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.RelativeLayout;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.fragment.app.Fragment;
@@ -73,8 +74,8 @@ public class DbViewerFragment extends Fragment {
   }
 
   @Override
-  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
+  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    super.onViewCreated(view, savedInstanceState);
     if (databaseViewerActivity.getAppTheme().equals(AppTheme.DARK)) {
       relativeLayout.setBackgroundColor(Utils.getColor(getContext(), R.color.holo_dark_background));
       webView.setBackgroundColor(Utils.getColor(getContext(), R.color.holo_dark_background));
@@ -82,8 +83,8 @@ public class DbViewerFragment extends Fragment {
       relativeLayout.setBackgroundColor(Utils.getColor(getContext(), android.R.color.black));
       webView.setBackgroundColor(Utils.getColor(getContext(), android.R.color.black));
     } else {
-      relativeLayout.setBackgroundColor(Color.parseColor("#ffffff"));
-      webView.setBackgroundColor(Color.parseColor("#ffffff"));
+      relativeLayout.setBackgroundColor(Color.WHITE);
+      webView.setBackgroundColor(Color.WHITE);
     }
   }
 

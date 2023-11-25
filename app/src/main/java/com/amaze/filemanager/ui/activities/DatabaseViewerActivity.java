@@ -71,7 +71,7 @@ public class DatabaseViewerActivity extends ThemedActivity {
     toolbar = findViewById(R.id.toolbar);
     setSupportActionBar(toolbar);
 
-    boolean useNewStack = getBoolean(PREFERENCE_TEXTEDITOR_NEWSTACK);
+    boolean useNewStack = getAppConfig().getBoolean(PREFERENCE_TEXTEDITOR_NEWSTACK);
     Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(!useNewStack);
 
     path = getIntent().getStringExtra("path");

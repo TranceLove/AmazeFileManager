@@ -138,7 +138,7 @@ public class ThemedActivity extends PreferenceActivity {
       } else {
         window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
       }
-      if (getBoolean(PREFERENCE_COLORED_NAVIGATION)) {
+      if (getAppConfig().getBoolean(PREFERENCE_COLORED_NAVIGATION)) {
         window.setNavigationBarColor(PreferenceUtils.getStatusColor(getPrimary()));
       } else {
         if (getAppTheme().equals(AppTheme.LIGHT)) {

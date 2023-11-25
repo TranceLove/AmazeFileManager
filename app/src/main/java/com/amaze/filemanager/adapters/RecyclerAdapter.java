@@ -1518,7 +1518,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
   }
 
   private boolean getBoolean(String key) {
-    return preferenceActivity.getBoolean(key);
+    return AppConfig.getInstance().getBoolean(key);
   }
 
   public static class ListItem {

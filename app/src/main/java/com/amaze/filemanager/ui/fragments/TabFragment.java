@@ -89,7 +89,6 @@ public class TabFragment extends Fragment {
   private ScreenSlidePagerAdapter sectionsPagerAdapter;
   private ViewPager2 viewPager;
   private SharedPreferences sharedPrefs;
-  private String path;
 
   /** ink indicators for viewpager only for Lollipop+ */
   private Indicator indicator;
@@ -130,7 +129,6 @@ public class TabFragment extends Fragment {
 
     boolean hideFab = false;
     if (getArguments() != null) {
-      path = getArguments().getString(KEY_PATH);
       hideFab = getArguments().getBoolean(MainFragment.BUNDLE_HIDE_FAB);
     }
 
@@ -373,6 +371,7 @@ public class TabFragment extends Fragment {
         sharedPrefs.edit().putBoolean(PreferencesConstants.PREFERENCE_ROOTMODE, true).apply();
       }
     } else {
+      String path = getArguments().getString(KEY_PATH, null);
       if (path != null && path.length() != 0) {
         if (MainActivity.currentTab == 0) {
           addTab(tab1, path, hideFabInCurrentMainFragment);

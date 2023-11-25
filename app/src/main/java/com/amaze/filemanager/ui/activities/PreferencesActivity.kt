@@ -145,7 +145,7 @@ class PreferencesActivity : ThemedActivity(), FolderChooserDialog.FolderCallback
             val config = tintManager.config
             layoutParams.setMargins(0, config.statusBarHeight, 0, 0)
         } else if (Build.VERSION.SDK_INT >= 21) {
-            val colouredNavigation = getBoolean(PreferencesConstants.PREFERENCE_COLORED_NAVIGATION)
+            val colouredNavigation = appConfig.getBoolean(PreferencesConstants.PREFERENCE_COLORED_NAVIGATION)
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
             val tabStatusColor = PreferenceUtils.getStatusColor(primaryColor)
