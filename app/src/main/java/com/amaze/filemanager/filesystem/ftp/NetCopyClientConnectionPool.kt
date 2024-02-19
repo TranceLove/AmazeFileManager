@@ -26,6 +26,9 @@ import com.amaze.filemanager.asynchronous.asynctasks.ftp.auth.FtpAuthenticationT
 import com.amaze.filemanager.asynchronous.asynctasks.ssh.PemToKeyPairObservable
 import com.amaze.filemanager.asynchronous.asynctasks.ssh.SshAuthenticationTask
 import com.amaze.filemanager.filesystem.ftp.NetCopyClientUtils.extractBaseUriFrom
+import com.amaze.filemanager.filesystem.ssh.SSHClientImpl
+import com.thegrizzlylabs.sardineandroid.Sardine
+import com.thegrizzlylabs.sardineandroid.impl.OkHttpSardine
 import io.reactivex.Flowable
 import io.reactivex.Maybe
 import io.reactivex.Observable.create
@@ -50,10 +53,15 @@ object NetCopyClientConnectionPool {
 
     const val FTP_DEFAULT_PORT = 21
     const val FTPS_DEFAULT_PORT = 990
+    const val HTTP_DEFAULT_PORT = 80
+    const val HTTPS_DEFAULT_PORT = 443
     const val SSH_DEFAULT_PORT = 22
     const val FTP_URI_PREFIX = "ftp://"
     const val FTPS_URI_PREFIX = "ftps://"
     const val SSH_URI_PREFIX = "ssh://"
+    const val WEBDAV_URI_PREFIX = "dav://"
+    const val HTTP_URI_PREFIX = "http://"
+    const val HTTPS_URI_PREFIX = "https://"
     const val CONNECT_TIMEOUT = 30000
 
     private var connections: MutableMap<String, NetCopyClient<*>> = ConcurrentHashMap()
@@ -66,6 +74,9 @@ object NetCopyClientConnectionPool {
 
     @JvmField
     var ftpClientFactory: FTPClientFactory = DefaultFTPClientFactory()
+
+    @JvmField
+    var webdavClientFactory: WebdavClientFactory = DefaultWebdavClientFactory()
 
     /**
      * Obtain a [NetCopyClient] connection from the underlying connection pool.
@@ -428,6 +439,10 @@ object NetCopyClientConnectionPool {
         fun create(uri: String): FTPClient
     }
 
+    interface WebdavClientFactory {
+        fun create(uri: String): Sardine
+    }
+
     /** Default [SSHClientFactory] implementation.  */
     internal class DefaultSSHClientFactory : SSHClientFactory {
         override fun create(config: Config): SSHClient {
@@ -448,6 +463,12 @@ object NetCopyClientConnectionPool {
                 it.connectTimeout = CONNECT_TIMEOUT
                 it.controlEncoding = Charsets.UTF_8.name()
             }
+        }
+    }
+
+    internal class DefaultWebdavClientFactory: WebdavClientFactory {
+        override fun create(uri: String): Sardine {
+            return OkHttpSardine()
         }
     }
 }

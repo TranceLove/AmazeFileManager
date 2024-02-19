@@ -18,8 +18,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.amaze.filemanager.filesystem.ftp
+package com.amaze.filemanager.filesystem.ssh
 
+import com.amaze.filemanager.filesystem.ftp.NetCopyClient
 import net.schmizz.sshj.SSHClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
