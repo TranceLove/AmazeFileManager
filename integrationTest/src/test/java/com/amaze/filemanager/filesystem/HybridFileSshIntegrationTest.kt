@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode
 import com.amaze.filemanager.filesystem.ftp.NetCopyClientConnectionPool
+import com.amaze.filemanager.filesystem.ssh.TestUtils
 import com.amaze.filemanager.shadows.ShadowMultiDex
 import com.amaze.filemanager.shadows.jcifs.smb.ShadowSmbFile
 import com.amaze.filemanager.test.ShadowPasswordUtil
