@@ -1,0 +1,12 @@
+appId: com.amaze.filemanager.debug
+---
+- stopApp
+- clearState
+- launchApp:
+    permissions:
+        notifications: allow
+        android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION: allow
+- tapOn:
+    id: "com.amaze.filemanager.debug:id/home"
+- tapOn: "Download"
+

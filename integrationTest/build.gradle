@@ -1,0 +1,166 @@
+import java.nio.file.Files
+import java.nio.file.Paths
+import org.yaml.snakeyaml.Yaml
+
+import java.security.SecureRandom
+
+buildscript {
+    ext {
+        serverContainer = "$rootDir/target/tmp-server-container"
+    }
+}
+
+plugins {
+    id "com.android.library"
+    id "kotlin-android"
+    id "com.hiya.jacoco-android"
+}
+
+android {
+    namespace "com.amaze.filemanager.integrationTest"
+
+    compileSdk libs.versions.compileSdk.get().toInteger()
+
+    defaultConfig {
+        minSdkVersion libs.versions.minSdk.get().toInteger()
+        targetSdkVersion libs.versions.targetSdk.get().toInteger()
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            debuggable true
+            enableUnitTestCoverage true
+        }
+
+        release {
+            minifyEnabled false
+        }
+    }
+
+    flavorDimensions = ['static']
+
+    productFlavors {
+        fdroid {
+            dimension 'static'
+        }
+
+        play {
+            dimension 'static'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            returnDefaultValues = true
+        }
+    }
+
+    sourceSets {
+        test.java.srcDirs += '../testShared/src/test/java'
+    }
+}
+
+dependencies {
+    implementation project(":app")
+    implementation project(":file_operations")
+
+    testImplementation libs.junit
+    testImplementation libs.robolectric//tests android interaction
+    testImplementation libs.robolectric.shadows.httpclient//tests android interaction
+    testImplementation libs.androidX.multidex
+    testImplementation libs.androidX.core
+    testImplementation libs.androidX.test.core
+    testImplementation libs.androidX.test.runner
+    testImplementation libs.androidX.test.rules
+    testImplementation libs.androidX.test.ext.junit
+    testImplementation libs.androidX.fragment.testing
+    testImplementation libs.mockito.core
+    testImplementation libs.mockito.inline
+    testImplementation libs.mockito.kotlin
+    testImplementation libs.awaitility
+    testImplementation libs.mockk
+    testImplementation libs.kotlin.coroutine.test
+    testImplementation libs.androidX.core.testing
+    testImplementation libs.jsoup
+    testImplementation libs.room.migration
+
+    testImplementation libs.sshj
+    testImplementation libs.jcifs.ng
+    testImplementation libs.commons.net
+    testImplementation libs.okhttp
+    testImplementation libs.rxandroid
+    testImplementation libs.rxjava
+    testImplementation libs.room.runtime
+    testImplementation libs.room.rxjava2
+    testImplementation libs.bcpkix.jdk18on
+    testImplementation libs.bcprov.jdk18on
+    testImplementation libs.acra.core
+    testImplementation libs.slf4j.api
+    testImplementation libs.logback.classic
+}
+
+tasks.register("createServerDirectory") {
+    doLast {
+        Files.createDirectories(Paths.get(serverContainer))
+    }
+}
+
+tasks.register("clearServerDirectory") {
+    doLast {
+        Files.walk(Paths.get(serverContainer))
+            .sorted(Comparator.reverseOrder())
+            .map(Path::toFile)
+            .forEach(File::delete)
+    }
+}
+
+tasks.register("generatePassword") {
+    doLast {
+        def sr = new SecureRandom()
+        sr.setSeed(System.currentTimeMillis())
+        def bytes = new byte[16]
+        sr.nextBytes(bytes)
+        System.env("CURRENT_PASSWORD", Base64.encoder.encodeToString(bytes))
+    }
+}
+
+def yaml = new Yaml().load(new File(project.rootDir, "docker-compose.yaml").newInputStream())
+List<String> containers = yaml.services.collect().collect { entry ->
+    entry.key
+}
+println("Services defined: $containers")
+
+for (containerName in containers) {
+    def currentContainerName = containerName
+    tasks.register("pull${currentContainerName.capitalize()}ContainerImage", Exec) {
+        dependsOn "createServerDirectory", "generatePassword"
+        commandLine "docker", "compose", "pull", currentContainerName
+        environment "CONTAINER_CWD", serverContainer.toString()
+    }
+    tasks.register("start${currentContainerName.capitalize()}Container", Exec) {
+        dependsOn "pull${currentContainerName.capitalize()}ContainerImage"
+        commandLine "docker", "compose", "up", "-d", currentContainerName
+        environment "CONTAINER_CWD", serverContainer.toString()
+    }
+    tasks.register("stop${currentContainerName.capitalize()}Container", Exec) {
+        commandLine "docker", "compose", "stop", currentContainerName
+        environment "CONTAINER_CWD", serverContainer.toString()
+    }
+}
+
+kotlin {
+    jvmToolchain(11)
+}

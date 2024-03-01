@@ -1,0 +1,29 @@
+services:
+  ssh:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM sickp/alpine-sshd:7.9
+        RUN echo "root:sunshine" | chpasswd
+    volumes:
+      - ${CONTAINER_CWD}:/data
+    ports:
+      - "2222:22"
+  ftp:
+    image: fclairamb/ftpserver:latest
+    volumes:
+      - ${CONTAINER_CWD}:/data
+    ports:
+      - "2121:21"
+      - "2990:990"
+  smb:
+    image: elswork/samba:4.15.5
+    volumes:
+      - ${CONTAINER_CWD}:/data
+  webdav:
+    image: sigoden/dufs:v0.41.0
+    volumes:
+      - ${CONTAINER_CWD}:/data
+    ports:
+      - "8080:80"
+      - "8443:443"

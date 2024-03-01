@@ -1,10 +1,12 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-apply plugin: 'kotlin-parcelize'
-apply plugin: 'com.hiya.jacoco-android'
-apply plugin: "com.starter.easylauncher"
-apply plugin: 'com.google.devtools.ksp'
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'kotlin-parcelize'
+    id "com.hiya.jacoco-android"
+    id "com.starter.easylauncher"
+    id 'com.google.devtools.ksp'
+}
 
 android {
     namespace "com.amaze.filemanager"
@@ -14,7 +16,6 @@ android {
             excludes += ['proguard-project.txt', 'project.properties', 'META-INF/LICENSE.txt', 'META-INF/LICENSE', 'META-INF/NOTICE.txt', 'META-INF/NOTICE', 'META-INF/DEPENDENCIES.txt', 'META-INF/DEPENDENCIES']
         }
     }
-
 
     defaultConfig {
         applicationId "com.amaze.filemanager"
@@ -171,8 +172,8 @@ dependencies {
     testImplementation libs.mockk
     testImplementation libs.kotlin.coroutine.test
     testImplementation libs.androidX.core.testing
+    testImplementation libs.logback.classic
     kspTest libs.auto.service
-    testImplementation 'ch.qos.logback:logback-classic:1.4.14'
 
     androidTestImplementation libs.junit //tests the app logic
     androidTestImplementation libs.androidX.test.expresso
@@ -300,23 +301,6 @@ project.afterEvaluate {
 
 clean.dependsOn supportOldLangCodes
 clean.mustRunAfter supportOldLangCodes
-
-jacoco {
-    toolVersion = libs.versions.jacoco.get()
-}
-
-tasks.withType(JacocoReport).configureEach {
-    reports {
-        csv.required.set(false)
-        html.required.set(true)
-        xml.required.set(true)
-    }
-}
-
-tasks.withType(Test).configureEach {
-    jacoco.includeNoLocationClasses = true
-    jacoco.excludes = ['jdk.internal.*']
-}
 
 Properties props = new Properties()
 def propFile = new File('signing.properties')

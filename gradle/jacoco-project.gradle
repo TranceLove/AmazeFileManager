@@ -1,0 +1,83 @@
+apply plugin: "jacoco"
+
+jacoco {
+    toolVersion = libs.versions.jacoco.get()
+}
+
+tasks.withType(Test).configureEach {
+    jacoco.includeNoLocationClasses = true
+    jacoco.excludes = ['jdk.internal.*']
+}
+
+project.afterEvaluate {
+    def variants = ["fdroidDebug", "playDebug"]
+
+    variants.every { variant ->
+        def capitalizedName = variant.capitalize()
+        tasks.register("jacocoTest${capitalizedName}UnitTestFullReport", JacocoReport) {
+            group = "Reporting"
+            description = "Generate overall Jacoco coverage report for the ${variant} build."
+
+            reports {
+                html.required.set(true)
+                html.outputLocation.set(new File(buildDir, "jacoco/jacocoHtml"))
+                xml.required.set(true)
+                xml.outputLocation.set(new File(buildDir, "jacoco/jacocoXml"))
+                csv.required.set(false)
+            }
+
+            def excludes = [
+                '**/R.class',
+                '**/R$*.class',
+                '**/BuildConfig.*',
+                '**/Manifest*.*',
+                '**/*Test*.*',
+                'android/**/*.*',
+                'androidx/**/*.*',
+                '**/*$ViewInjector*.*',
+                '**/*Dagger*.*',
+                '**/*MembersInjector*.*',
+                '**/*_Factory.*',
+                '**/*_Provide*Factory*.*',
+                '**/*_ViewBinding*.*',
+                '**/AutoValue_*.*',
+                '**/R2.class',
+                '**/R2$*.class',
+                '**/*Directions$*',
+                '**/*Directions.*',
+                '**/*Binding.*'
+            ]
+
+            def jClasses = subprojects.collect { proj ->
+                "${proj.buildDir}/intermediates/javac/$variant/classes"
+            }.flatten()
+            def kClasses = subprojects.collect { proj ->
+                "${proj.buildDir}/tmp/kotlin-classes/$variant"
+            }.flatten()
+
+            def javaClasses = jClasses.collect { path ->
+                fileTree(dir: path, excludes: excludes)
+            }
+            def kotlinClasses = kClasses.collect { path ->
+                fileTree(dir: path, excludes: excludes)
+            }
+
+            classDirectories.from = files([javaClasses, kotlinClasses])
+            def sources = subprojects.collect { proj ->
+                ["${proj.projectDir}/src/main/java", "${proj.projectDir}/src/main/kotlin",
+                 "${proj.projectDir}/src/$variant/java", "${proj.projectDir}/src/$variant/kotlin"]
+            }.flatten()
+            sourceDirectories.from = files(sources)
+
+            def executions = subprojects.collect { proj ->
+                def path = "${proj.buildDir}/outputs/unit_test_code_coverage/${variant}UnitTest/test${variant.capitalize()}UnitTest.exec"
+                if (!new File(path).exists()) {
+                    path = "${proj.buildDir}/outputs/unit_test_code_coverage/${variant}UnitTest/testDebugUnitTest.exec"
+                }
+                if ((new File(path)).exists()) path else null
+            }.flatten()
+            executions.removeAll([null])
+            executionData.from = files(executions)
+        }
+    }
+}

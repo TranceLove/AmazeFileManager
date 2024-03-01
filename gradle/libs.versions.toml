@@ -5,6 +5,7 @@ targetSdk = "33"
 
 kotlin = "1.9.10"
 
+snakeYaml = "1.33"
 legacySupportV13 = "1.0.0"
 systembartint = "1.0.3"
 robolectric = "4.9"
@@ -55,7 +56,7 @@ commonsCompress = "1.22"
 libsu = "3.2.1"
 mockk = "1.12.2"
 logbackAndroid = "3.0.0"
-logbackClassic = "1.2.11"
+logbackClassic = "1.4.14"
 commonsNet = "3.8.0"
 ftpserver = "1.1.1"
 jsoup = "1.13.1"
@@ -167,3 +168,5 @@ acra-core = { module = "ch.acra:acra-core", version.ref = "acraCore" }
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }
 
 amaze-trashBin = { module = "com.github.TeamAmaze:AmazeTrashBin", version.ref = "amazeTrashBin" }
+
+snakeYaml = { module = "org.yaml:snakeyaml", version.ref = "snakeYaml"}

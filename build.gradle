@@ -3,6 +3,14 @@
 buildscript {
     ext {
         kotlin_version = "1.9.10"
+
+        integrationTests = [
+                sshServerStarted: false,
+                smbServerStarted: false,
+                ftpServerStarted: false,
+                hasMaestroTests: false,
+                hasRobolectricTests: false
+        ]
     }
     repositories {
         google()
@@ -12,9 +20,10 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.3.1'
-        classpath 'com.hiya:jacoco-android:0.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.project.starter:easylauncher:6.1.0"
+        classpath 'com.hiya:jacoco-android:0.2'
+        classpath libs.snakeYaml
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -24,6 +33,8 @@ plugins {
     id "com.diffplug.spotless" version "6.25.0"
     id "com.google.devtools.ksp" version "1.9.10-1.0.13" apply false
 }
+
+apply from: 'gradle/jacoco-project.gradle'
 
 allprojects {
     repositories {
@@ -138,7 +149,7 @@ subprojects {
                 it.dependsOn fetchRobolectricDependencies
             }
         }
-        if (project.plugins.hasPlugin("jacoco-android")) {
+        if (project.plugins.hasPlugin("jacoco-android")){
             android {
                 testOptions.unitTests.all {
                     jacoco {
