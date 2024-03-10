@@ -44,6 +44,8 @@ public class OperationData {
   public final String sshKeyName;
   public final String sshKey;
 
+  public final String defaultPath;
+
   /**
    * Constructor for types {@link Operation#HIDDEN}, {@link Operation#HISTORY}, {@link
    * Operation#LIST} or {@link Operation#GRID}
@@ -60,6 +62,7 @@ public class OperationData {
     hostKey = null;
     sshKeyName = null;
     sshKey = null;
+    defaultPath = null;
   }
 
   /** Constructor for types {@link Operation#BOOKMARKS} or {@link Operation#SMB} */
@@ -74,6 +77,7 @@ public class OperationData {
     hostKey = null;
     sshKeyName = null;
     sshKey = null;
+    defaultPath = null;
   }
 
   /**
@@ -87,7 +91,8 @@ public class OperationData {
       @NonNull String name,
       @Nullable String hostKey,
       @Nullable String sshKeyName,
-      @Nullable String sshKey) {
+      @Nullable String sshKey,
+      @Nullable String defaultPath) {
     if (type != SFTP) throw new IllegalArgumentException("Wrong constructor for object type");
 
     this.type = type;
@@ -96,6 +101,7 @@ public class OperationData {
     this.hostKey = hostKey;
     this.sshKeyName = sshKeyName;
     this.sshKey = sshKey;
+    this.defaultPath = defaultPath;
   }
 
   @NonNull

@@ -84,6 +84,7 @@ object TestUtils {
                 "Test",
                 certInfo?.toString(),
                 null,
+                null,
                 null
             )
         )
@@ -129,6 +130,7 @@ object TestUtils {
                 "Test",
                 SecurityUtils.getFingerprint(hostKeyPair.public),
                 null,
+                null,
                 null
             )
         ) else utilsHandler.saveToDatabase(
@@ -138,7 +140,8 @@ object TestUtils {
                 "Test",
                 SecurityUtils.getFingerprint(hostKeyPair.public),
                 "id_rsa",
-                privateKeyContents
+                privateKeyContents,
+                null
             )
         )
         Shadows.shadowOf(Looper.getMainLooper()).idle()

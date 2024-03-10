@@ -102,6 +102,7 @@ public class ShadowPasswordUtilTest {
             "Test",
             fingerprint,
             null,
+            null,
             null));
 
     await()

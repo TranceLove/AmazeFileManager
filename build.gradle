@@ -8,7 +8,7 @@ buildscript {
         sshjVersion = '0.35.0'
         jcifsVersion = '2.1.9'
         fabSpeedDialVersion = '3.1.1'
-        roomVersion = '2.5.0'
+        roomVersion = '2.5.2'
         bouncyCastleVersion = '1.70'
         awaitilityVersion = "3.1.6"
         androidXCoreVersion = "1.7.0"

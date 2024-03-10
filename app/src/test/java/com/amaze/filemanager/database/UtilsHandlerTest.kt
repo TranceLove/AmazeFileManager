@@ -216,6 +216,7 @@ class UtilsHandlerTest {
             "SSH connection 1",
             "ab:cd:ef:gh",
             null,
+            null,
             null
         )
         AppConfig.getInstance().run {
@@ -253,7 +254,8 @@ class UtilsHandlerTest {
             "SSH connection 1",
             "ab:cd:ef:gh",
             "Test SSH key",
-            "abcdefghijkl"
+            "abcdefghijkl",
+            null
         )
         AppConfig.getInstance().run {
             utilsHandler.run {

@@ -39,14 +39,16 @@ class SftpEntryTest {
             "SSH connection 1",
             "ab:cd:ef:gh:ij:kl:00",
             "SSH key",
-            "abcdefghijkl"
+            "abcdefghijkl",
+            null
         )
         val b = SftpEntry(
             "ssh://root@127.0.0.1:22222",
             "SSH connection 1",
             "ab:cd:ef:gh:ij:kl:00",
             "SSH key",
-            "abcdefghijkl"
+            "abcdefghijkl",
+            null
         )
         assertEquals(a, b)
         assertEquals(a.hashCode(), b.hashCode())
@@ -56,14 +58,16 @@ class SftpEntryTest {
             "SSH connection 1",
             "ab:cd:ef:gh:ij:kl:00",
             "SSH key",
-            "abcdefghijkl"
+            "abcdefghijkl",
+            null
         )
         val d = SftpEntry(
             "ssh://root@127.0.0.1:22222",
             "SSH connection 1",
             "ab:cd:ef:gh:ij:kl:00",
             "SSH test auth key",
-            "abcdefghijkl"
+            "abcdefghijkl",
+            null
         )
         assertEquals(c, d)
         assertEquals(c.hashCode(), d.hashCode())
@@ -73,12 +77,14 @@ class SftpEntryTest {
             "SSH connection 1",
             "ab:cd:ef:gh:ij:kl:00",
             null,
+            null,
             null
         )
         val f = SftpEntry(
             "ssh://root:toor@127.0.0.1:22222",
             "SSH connection 1",
             "ab:cd:ef:gh:ij:kl:00",
+            null,
             null,
             null
         )

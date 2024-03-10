@@ -21,6 +21,7 @@
 package com.amaze.filemanager.database
 
 import android.content.Context
+import android.database.sqlite.SQLiteException
 import android.text.TextUtils
 import android.util.Base64
 import androidx.annotation.VisibleForTesting
@@ -43,6 +44,7 @@ import com.amaze.filemanager.database.models.utilities.Hidden
 import com.amaze.filemanager.database.models.utilities.History
 import com.amaze.filemanager.database.models.utilities.SftpEntry
 import com.amaze.filemanager.database.models.utilities.SmbEntry
+import com.amaze.filemanager.filesystem.ftp.NetCopyConnectionInfo
 import com.amaze.filemanager.filesystem.ftp.NetCopyConnectionInfo.Companion.AT
 import com.amaze.filemanager.filesystem.ftp.NetCopyConnectionInfo.Companion.COLON
 import com.amaze.filemanager.utils.PasswordUtil.decryptPassword
@@ -109,9 +111,10 @@ abstract class UtilitiesDatabase : RoomDatabase() {
     abstract fun sftpEntryDao(): SftpEntryDao
 
     companion object {
+
         private val logger = LoggerFactory.getLogger(UtilitiesDatabase::class.java)
         private const val DATABASE_NAME = "utilities.db"
-        const val DATABASE_VERSION = 6
+        const val DATABASE_VERSION = 7
         const val TABLE_HISTORY = "history"
         const val TABLE_HIDDEN = "hidden"
         const val TABLE_LIST = "list"
@@ -125,6 +128,7 @@ abstract class UtilitiesDatabase : RoomDatabase() {
         const val COLUMN_HOST_PUBKEY = "pub_key"
         const val COLUMN_PRIVATE_KEY_NAME = "ssh_key_name"
         const val COLUMN_PRIVATE_KEY = "ssh_key"
+        const val COLUMN_DEFAULT_PATH = "default_path"
 
         @VisibleForTesting
         var overrideDatabaseBuilder: ((Context) -> Builder<UtilitiesDatabase>)? = null
@@ -209,7 +213,7 @@ abstract class UtilitiesDatabase : RoomDatabase() {
                 COLUMN_PRIVATE_KEY_NAME +
                 " TEXT," +
                 COLUMN_PRIVATE_KEY +
-                " TEXT" +
+                " TEXT " +
                 ");"
             )
 
@@ -287,7 +291,11 @@ abstract class UtilitiesDatabase : RoomDatabase() {
                 backupTable = TEMP_TABLE_PREFIX + TABLE_SFTP
                 database.execSQL(querySftp.replace(TABLE_SFTP, backupTable))
                 database.execSQL(
-                    "INSERT INTO $backupTable SELECT * FROM $TABLE_SFTP group by path;"
+                    "INSERT INTO $backupTable ($COLUMN_ID, $COLUMN_NAME, $COLUMN_PATH, " +
+                        "$COLUMN_HOST_PUBKEY, $COLUMN_PRIVATE_KEY_NAME, $COLUMN_PRIVATE_KEY)" +
+                        " SELECT $COLUMN_ID, $COLUMN_NAME, $COLUMN_PATH, $COLUMN_HOST_PUBKEY, " +
+                        "$COLUMN_PRIVATE_KEY_NAME, $COLUMN_PRIVATE_KEY FROM $TABLE_SFTP " +
+                        "group by path;"
                 )
                 database.execSQL("DROP TABLE $TABLE_SFTP;")
                 database.execSQL("ALTER TABLE $backupTable RENAME TO $TABLE_SFTP;")
@@ -474,13 +482,72 @@ abstract class UtilitiesDatabase : RoomDatabase() {
             return updateSqls
         }
 
-        internal val MIGRATION_5_6: Migration = object : Migration(5, DATABASE_VERSION) {
+        internal val MIGRATION_5_6: Migration = object : Migration(5, 6) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 val updateSqls: MutableList<String> = ArrayList()
                 updateSqls.addAll(migratePasswordInUris(database, TABLE_SMB))
                 updateSqls.addAll(migratePasswordInUris(database, TABLE_SFTP))
                 for (updateSql in updateSqls) {
                     database.execSQL(updateSql)
+                }
+            }
+        }
+
+        internal val MIGRATION_6_7: Migration = object : Migration(6, DATABASE_VERSION) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                /*
+                 * Some idiot design at Room Framework I'll never understand requires modification
+                 * of previously applied migration, thereby making the default_path column migration
+                 * would miss for version 6->7. Therefore adding a try-catch here, to check for the
+                 * column and add it to the table as necessary.
+                 *
+                 * - TranceLove
+                 */
+                try {
+                    database.query("SELECT $COLUMN_DEFAULT_PATH FROM $TABLE_SFTP LIMIT 1")
+                } catch (ifColumnNotExist: SQLiteException) {
+                    database.execSQL(
+                        "ALTER TABLE $TABLE_SFTP ADD $COLUMN_DEFAULT_PATH TEXT DEFAULT NULL"
+                    )
+                }
+                val updateSqls: MutableList<String> = ArrayList()
+                var cursor = database.query(
+                    "SELECT $COLUMN_ID, $COLUMN_PATH FROM $TABLE_SFTP ORDER BY $COLUMN_ID ASC"
+                )
+                while (cursor.moveToNext()) {
+                    val id = cursor.getInt(0)
+                    val path = cursor.getString(1)
+                    val connInfo = NetCopyConnectionInfo(path)
+                    val basePath = constructBaseUriWithCredentialsFrom(connInfo)
+                    val defaultPath = if (connInfo.defaultPath != null) {
+                        "'${connInfo.defaultPath}'"
+                    } else {
+                        "NULL"
+                    }
+                    updateSqls.add(
+                        "UPDATE $TABLE_SFTP SET $COLUMN_PATH = '$basePath', " +
+                            "$COLUMN_DEFAULT_PATH = $defaultPath WHERE $COLUMN_ID = $id"
+                    )
+                }
+                cursor.close()
+                for (updateSql in updateSqls) {
+                    database.execSQL(updateSql)
+                }
+            }
+
+            private fun constructBaseUriWithCredentialsFrom(
+                connectionInfo: NetCopyConnectionInfo
+            ): String {
+                return connectionInfo.run {
+                    if (username.isNotEmpty()) {
+                        "$prefix$username${if (true == password?.isNotEmpty()) {
+                            ":$password"
+                        } else {
+                            ""
+                        }}@$host${if (port == 0) "" else ":$port"}"
+                    } else {
+                        "$prefix$host${if (port == 0) "" else ":$port"}"
+                    }
                 }
             }
         }

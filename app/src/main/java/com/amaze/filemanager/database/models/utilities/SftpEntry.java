@@ -45,11 +45,21 @@ public class SftpEntry extends OperationDataWithName {
   @ColumnInfo(name = UtilitiesDatabase.COLUMN_PRIVATE_KEY)
   public String sshKey;
 
-  public SftpEntry(String path, String name, String hostKey, String sshKeyName, String sshKey) {
+  @ColumnInfo(name = UtilitiesDatabase.COLUMN_DEFAULT_PATH)
+  public String defaultPath;
+
+  public SftpEntry(
+      String path,
+      String name,
+      String hostKey,
+      String sshKeyName,
+      String sshKey,
+      String defaultPath) {
     super(name, path);
     this.hostKey = hostKey;
     this.sshKeyName = sshKeyName;
     this.sshKey = sshKey;
+    //    this.defaultPath = defaultPath;
   }
 
   @NonNull

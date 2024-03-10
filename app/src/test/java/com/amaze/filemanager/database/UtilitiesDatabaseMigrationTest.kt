@@ -29,6 +29,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.amaze.filemanager.database.UtilitiesDatabase.Companion.COLUMN_DEFAULT_PATH
 import com.amaze.filemanager.database.UtilitiesDatabase.Companion.COLUMN_HOST_PUBKEY
 import com.amaze.filemanager.database.UtilitiesDatabase.Companion.COLUMN_NAME
 import com.amaze.filemanager.database.UtilitiesDatabase.Companion.COLUMN_PATH
@@ -87,7 +88,8 @@ class UtilitiesDatabaseMigrationTest {
                 UtilitiesDatabase.MIGRATION_2_3,
                 UtilitiesDatabase.MIGRATION_3_4,
                 UtilitiesDatabase.MIGRATION_4_5,
-                UtilitiesDatabase.MIGRATION_5_6
+                UtilitiesDatabase.MIGRATION_5_6,
+                UtilitiesDatabase.MIGRATION_6_7
             )
             .build()
         utilitiesDatabase.openHelper.writableDatabase
@@ -138,6 +140,7 @@ class UtilitiesDatabaseMigrationTest {
             TEST_DB
         )
             .addMigrations(UtilitiesDatabase.MIGRATION_5_6)
+            .addMigrations(UtilitiesDatabase.MIGRATION_6_7)
             .allowMainThreadQueries()
             .build()
         utilitiesDatabase.openHelper.writableDatabase
@@ -174,5 +177,101 @@ class UtilitiesDatabaseMigrationTest {
 //            )
 //        } ?: fail("test no password entry not found")
         utilitiesDatabase.close()
+    }
+
+    @Test
+    @Suppress("ComplexMethod", "LongMethod", "StringLiteralDuplication")
+    fun testMigrationFrom6To7() {
+        val db = helper.createDatabase(TEST_DB, 6)
+        db.execSQL(
+            "INSERT INTO $TABLE_SFTP ($COLUMN_NAME, $COLUMN_PATH, $COLUMN_HOST_PUBKEY) " +
+                "VALUES ('test no default path', 'ssh://user:abcdefgh@10.0.0.1', '12345678')"
+        )
+        db.execSQL(
+            "INSERT INTO $TABLE_SFTP ($COLUMN_NAME, $COLUMN_PATH, $COLUMN_HOST_PUBKEY) " +
+                "VALUES ('test has default path', 'ssh://user:abcdefgh@10.0.0.2/home/user/test', " +
+                "'12345678')"
+        )
+        db.execSQL(
+            "INSERT INTO $TABLE_SFTP ($COLUMN_NAME, $COLUMN_PATH, $COLUMN_HOST_PUBKEY) " +
+                "VALUES ('test no default path no password', 'ssh://user@10.0.0.3', '12345678')"
+        )
+        db.execSQL(
+            "INSERT INTO $TABLE_SFTP ($COLUMN_NAME, $COLUMN_PATH, $COLUMN_HOST_PUBKEY) " +
+                "VALUES ('test has default path no password'," +
+                " 'ssh://user@10.0.0.4/home/user/test', '12345678')"
+        )
+        db.execSQL(
+            "INSERT INTO $TABLE_SFTP ($COLUMN_NAME, $COLUMN_PATH) " +
+                "VALUES ('test no user no default path', 'ftp://10.0.0.5')"
+        )
+        db.execSQL(
+            "INSERT INTO $TABLE_SFTP ($COLUMN_NAME, $COLUMN_PATH) " +
+                "VALUES ('test no user has default path', 'ftp://10.0.0.6/home/user/test')"
+        )
+        db.close()
+        val utilitiesDatabase = Room.databaseBuilder(
+            InstrumentationRegistry.getInstrumentation().targetContext,
+            UtilitiesDatabase::class.java,
+            TEST_DB
+        )
+            .addMigrations(UtilitiesDatabase.MIGRATION_6_7)
+            .allowMainThreadQueries()
+            .build()
+
+        utilitiesDatabase.openHelper.writableDatabase.run {
+            verifyMigrateFrom6To7(
+                this,
+                "test no default path",
+                "ssh://user:abcdefgh@10.0.0.1",
+                null
+            )
+            verifyMigrateFrom6To7(
+                this,
+                "test has default path",
+                "ssh://user:abcdefgh@10.0.0.2",
+                "/home/user/test"
+            )
+            verifyMigrateFrom6To7(
+                this,
+                "test no default path no password",
+                "ssh://user@10.0.0.3",
+                null
+            )
+            verifyMigrateFrom6To7(
+                this,
+                "test has default path no password",
+                "ssh://user@10.0.0.4",
+                "/home/user/test"
+            )
+            verifyMigrateFrom6To7(
+                this,
+                "test no user no default path",
+                "ftp://10.0.0.5",
+                null
+            )
+            verifyMigrateFrom6To7(
+                this,
+                "test no user has default path",
+                "ftp://10.0.0.6",
+                "/home/user/test"
+            )
+        }
+    }
+
+    private fun verifyMigrateFrom6To7(
+        database: SupportSQLiteDatabase,
+        name: String,
+        expectedBaseUri: String,
+        expectedDefaultPath: String?
+    ) {
+        val cursor = database.query(
+            "SELECT $COLUMN_PATH, $COLUMN_DEFAULT_PATH FROM $TABLE_SFTP " +
+                "WHERE $COLUMN_NAME = '$name'"
+        )
+        cursor.moveToFirst()
+        assertEquals(expectedBaseUri, cursor.getString(0))
+        assertEquals(expectedDefaultPath, cursor.getString(1))
+        cursor.close()
     }
 }

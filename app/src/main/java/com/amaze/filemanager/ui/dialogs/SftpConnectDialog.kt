@@ -82,7 +82,6 @@ import java.io.BufferedReader
 import java.lang.ref.WeakReference
 import java.security.KeyPair
 import java.security.PublicKey
-import java.util.*
 import java.util.concurrent.Callable
 
 /** SSH/SFTP connection setup dialog.  */
@@ -298,6 +297,7 @@ class SftpConnectDialog : DialogFragment() {
                                         UtilsHandler.Operation.SFTP,
                                         path,
                                         connectionName,
+                                        null,
                                         null,
                                         null,
                                         null
@@ -686,7 +686,8 @@ class SftpConnectDialog : DialogFragment() {
                                 connectionName,
                                 hostKeyFingerprint,
                                 selectedParsedKeyPairName,
-                                getPemContents()
+                                getPemContents(),
+                                null
                             )
                         )
                         val ma = (activity as MainActivity).currentMainFragment
