@@ -21,6 +21,10 @@
 package com.amaze.filemanager.ui.theme;
 
 import com.afollestad.materialdialogs.Theme;
+import com.amaze.filemanager.R;
+
+import androidx.annotation.IdRes;
+import androidx.annotation.StyleRes;
 
 /** This enum represents the theme of the app (LIGHT or DARK) */
 public enum AppTheme {
@@ -36,6 +40,18 @@ public enum AppTheme {
       case DARK:
       case BLACK:
         return Theme.DARK;
+    }
+  }
+
+  @StyleRes
+  public int getMaterialDesignDialogTheme() {
+    switch (this) {
+      default:
+      case LIGHT:
+        return R.style.appDialogThemeLight;
+      case DARK:
+      case BLACK:
+        return R.style.appDialogThemeDark;
     }
   }
 }

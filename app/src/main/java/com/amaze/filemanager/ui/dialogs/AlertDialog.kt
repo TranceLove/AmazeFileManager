@@ -20,17 +20,18 @@
 
 package com.amaze.filemanager.ui.dialogs
 
+import android.content.DialogInterface
 import androidx.annotation.Nullable
 import androidx.annotation.StringRes
-import com.afollestad.materialdialogs.MaterialDialog
 import com.amaze.filemanager.ui.activities.superclasses.ThemedActivity
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /**
  * Alert Dialog.
  */
 object AlertDialog {
     /**
-     * Display an alert dialog. Optionally accepts a [MaterialDialog.SingleButtonCallback] to
+     * Display an alert dialog. Optionally accepts a [DialogInterface.OnClickListener] to
      * provide additional behaviour when dialog button is pressed.
      *
      * Button default text is OK, but can be customized too.
@@ -41,26 +42,12 @@ object AlertDialog {
         @StringRes content: Int,
         @StringRes title: Int,
         @StringRes positiveButtonText: Int = android.R.string.ok,
-        @Nullable onPositive: MaterialDialog.SingleButtonCallback? = null,
-        contentIsHtml: Boolean = false,
+        @Nullable onPositive: DialogInterface.OnClickListener? = null
     ) {
-        val accentColor: Int = activity.accent
-        val a =
-            MaterialDialog.Builder(activity)
-                .content(content, contentIsHtml)
-                .widgetColor(accentColor)
-                .theme(
-                    activity
-                        .appTheme
-                        .getMaterialDialogTheme(),
-                )
-                .title(title)
-                .positiveText(positiveButtonText)
-                .positiveColor(accentColor)
-
-        if (onPositive != null) {
-            a.onPositive(onPositive)
-        }
-        a.build().show()
+        MaterialAlertDialogBuilder(activity, activity.appTheme.materialDesignDialogTheme)
+            .setTitle(title)
+            .setMessage(content)
+            .setPositiveButton(positiveButtonText, onPositive)
+            .show()
     }
 }

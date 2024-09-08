@@ -26,23 +26,20 @@
 
     <!-- appCompat -->
     <!-- light -->
-    <style name="appCompatLight" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="appCompatLight" parent="Theme.Material3.Light.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="windowActionModeOverlay">true</item>
         <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
         <item name="popup">@style/ThemeOverlay.AppCompat.Light</item>
         <item name="toolbar_theme">@style/overflow_light</item>
-
     </style>
     <style name="overflow_light" parent="Theme.AppCompat.Light.DarkActionBar">
-
         <item name="android:textColorSecondary">#ffffff</item>
         <item name="android:textColorPrimary">#ffffff</item>
         <item name="android:textColorHint">#ffffff</item>
         <item name="actionModeStyle">@style/custom_action_mode_light</item>
         <item name="android:actionModeStyle">@style/custom_action_mode_light</item>
-
     </style>
     <style name="custom_action_mode_light" parent="Widget.AppCompat.ActionMode">
         <item name="actionBarPopupTheme">@style/ThemeOverlay.AppCompat.Light</item>
@@ -139,6 +136,12 @@
         <item name="behavior_peekHeight">@dimen/material_sheet_peek_height</item>
         <item name="behavior_hideable">false</item>
     </style>
+
+    <style name="appDialogThemeLight" parent="Theme.Material3.Light.Dialog">
+        <item name="colorSurface">@color/primary_white</item>
+    </style>
+
+    <style name="appDialogThemeDark" parent="Theme.Material3.Dark.Dialog" />
 
     <!-- Amaze utils style -->
     <style name="Custom.Dialog.Dark" parent="Theme.AppCompat.Dialog.Alert">

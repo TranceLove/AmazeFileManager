@@ -89,6 +89,7 @@ import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -136,14 +137,16 @@ import kotlin.collections.ArraysKt;
 import kotlin.collections.CollectionsKt;
 
 public class MainFragment extends Fragment
-    implements BottomBarButtonPath,
+        implements BottomBarButtonPath,
         ViewTreeObserver.OnGlobalLayoutListener,
         AdjustListViewForTv<ItemViewHolder> {
 
   private static final Logger LOG = LoggerFactory.getLogger(MainFragment.class);
   private static final String KEY_FRAGMENT_MAIN = "main";
 
-  /** Key for boolean in arguments whether to hide the FAB if this {@link MainFragment} is shown */
+  /**
+   * Key for boolean in arguments whether to hide the FAB if this {@link MainFragment} is shown
+   */
   public static final String BUNDLE_HIDE_FAB = "hideFab";
 
   public SwipeRefreshLayout mSwipeRefreshLayout;
@@ -174,31 +177,31 @@ public class MainFragment extends Fragment
   private boolean hideFab = false;
 
   private final ActivityResultLauncher<Intent> handleDocumentUriForRestrictedDirectories =
-      registerForActivityResult(
-          new ActivityResultContracts.StartActivityForResult(),
-          result -> {
-            if (SDK_INT >= Q) {
-              if (result.getData() != null && getContext() != null) {
-                getContext()
-                    .getContentResolver()
-                    .takePersistableUriPermission(
-                        result.getData().getData(),
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                SafRootHolder.setUriRoot(result.getData().getData());
-                loadlist(result.getData().getDataString(), false, OpenMode.DOCUMENT_FILE, true);
-              } else if (getContext() != null) {
-                AppConfig.toast(requireContext(), getString(R.string.operation_unsuccesful));
-              }
-            }
-          });
+          registerForActivityResult(
+                  new ActivityResultContracts.StartActivityForResult(),
+                  result -> {
+                    if (SDK_INT >= Q) {
+                      if (result.getData() != null && getContext() != null) {
+                        getContext()
+                                .getContentResolver()
+                                .takePersistableUriPermission(
+                                        result.getData().getData(),
+                                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        SafRootHolder.setUriRoot(result.getData().getData());
+                        loadlist(result.getData().getDataString(), false, OpenMode.DOCUMENT_FILE, true);
+                      } else if (getContext() != null) {
+                        AppConfig.toast(requireContext(), getString(R.string.operation_unsuccesful));
+                      }
+                    }
+                  });
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     mainFragmentViewModel = new ViewModelProvider(this).get(MainFragmentViewModel.class);
     mainActivityViewModel =
-        new ViewModelProvider(requireMainActivity()).get(MainActivityViewModel.class);
+            new ViewModelProvider(requireMainActivity()).get(MainActivityViewModel.class);
 
     utilsProvider = requireMainActivity().getUtilsProvider();
     sharedPref = PreferenceManager.getDefaultSharedPreferences(requireActivity());
@@ -206,12 +209,12 @@ public class MainFragment extends Fragment
     mainFragmentViewModel.initIsList();
     mainFragmentViewModel.initColumns(sharedPref);
     mainFragmentViewModel.initSortModes(
-        SortHandler.getSortType(getContext(), getCurrentPath()), sharedPref);
+            SortHandler.getSortType(getContext(), getCurrentPath()), sharedPref);
     mainFragmentViewModel.setAccentColor(requireMainActivity().getAccent());
     mainFragmentViewModel.setPrimaryColor(
-        requireMainActivity().getCurrentColorPreference().getPrimaryFirstTab());
+            requireMainActivity().getCurrentColorPreference().getPrimaryFirstTab());
     mainFragmentViewModel.setPrimaryTwoColor(
-        requireMainActivity().getCurrentColorPreference().getPrimarySecondTab());
+            requireMainActivity().getCurrentColorPreference().getPrimarySecondTab());
     if (getArguments() != null) {
       hideFab = getArguments().getBoolean(BUNDLE_HIDE_FAB, false);
     }
@@ -219,7 +222,7 @@ public class MainFragment extends Fragment
 
   @Override
   public View onCreateView(
-      LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+          LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     rootView = inflater.inflate(R.layout.main_frag, container, false);
     return rootView;
   }
@@ -234,13 +237,13 @@ public class MainFragment extends Fragment
     fastScroller = rootView.findViewById(R.id.fastscroll);
     fastScroller.setPressedHandleColor(mainFragmentViewModel.getAccentColor());
     View.OnTouchListener onTouchListener =
-        (view1, motionEvent) -> {
-          if (adapter != null && mainFragmentViewModel.getStopAnims()) {
-            stopAnimation();
-            mainFragmentViewModel.setStopAnims(false);
-          }
-          return false;
-        };
+            (view1, motionEvent) -> {
+              if (adapter != null && mainFragmentViewModel.getStopAnims()) {
+                stopAnimation();
+                mainFragmentViewModel.setStopAnims(false);
+              }
+              return false;
+            };
     listView.setOnTouchListener(onTouchListener);
     //    listView.setOnDragListener(new MainFragmentDragListener());
     mToolbarContainer.setOnTouchListener(onTouchListener);
@@ -251,9 +254,9 @@ public class MainFragment extends Fragment
 
     // String itemsstring = res.getString(R.string.items);// TODO: 23/5/2017 use or delete
     mToolbarContainer.setBackgroundColor(
-        MainActivity.currentTab == 1
-            ? mainFragmentViewModel.getPrimaryTwoColor()
-            : mainFragmentViewModel.getPrimaryColor());
+            MainActivity.currentTab == 1
+                    ? mainFragmentViewModel.getPrimaryTwoColor()
+                    : mainFragmentViewModel.getPrimaryColor());
 
     //   listView.setPadding(listView.getPaddingLeft(), paddingTop, listView.getPaddingRight(),
     // listView.getPaddingBottom());
@@ -278,7 +281,7 @@ public class MainFragment extends Fragment
         mLayoutManagerGrid = new CustomScrollGridLayoutManager(getActivity(), 3);
       else
         mLayoutManagerGrid =
-            new CustomScrollGridLayoutManager(getActivity(), mainFragmentViewModel.getColumns());
+                new CustomScrollGridLayoutManager(getActivity(), mainFragmentViewModel.getColumns());
       setGridLayoutSpanSizeLookup(mLayoutManagerGrid);
       listView.setLayoutManager(mLayoutManagerGrid);
     }
@@ -286,7 +289,7 @@ public class MainFragment extends Fragment
     // View footerView = getActivity().getLayoutInflater().inflate(R.layout.divider, null);// TODO:
     // 23/5/2017 use or delete
     dividerItemDecoration =
-        new DividerItemDecoration(requireActivity(), false, getBoolean(PREFERENCE_SHOW_DIVIDERS));
+            new DividerItemDecoration(requireActivity(), false, getBoolean(PREFERENCE_SHOW_DIVIDERS));
     listView.addItemDecoration(dividerItemDecoration);
     mSwipeRefreshLayout.setColorSchemeColors(mainFragmentViewModel.getAccentColor());
     DefaultItemAnimator animator = new DefaultItemAnimator();
@@ -317,22 +320,22 @@ public class MainFragment extends Fragment
   void setGridLayoutSpanSizeLookup(GridLayoutManager mLayoutManagerGrid) {
 
     mLayoutManagerGrid.setSpanSizeLookup(
-        new CustomScrollGridLayoutManager.SpanSizeLookup() {
+            new CustomScrollGridLayoutManager.SpanSizeLookup() {
 
-          @Override
-          public int getSpanSize(int position) {
-            switch (adapter.getItemViewType(position)) {
-              case RecyclerAdapter.TYPE_HEADER_FILES:
-              case RecyclerAdapter.TYPE_HEADER_FOLDERS:
-                return (mainFragmentViewModel.getColumns() == 0
-                        || mainFragmentViewModel.getColumns() == -1)
-                    ? 3
-                    : mainFragmentViewModel.getColumns();
-              default:
-                return 1;
-            }
-          }
-        });
+              @Override
+              public int getSpanSize(int position) {
+                switch (adapter.getItemViewType(position)) {
+                  case RecyclerAdapter.TYPE_HEADER_FILES:
+                  case RecyclerAdapter.TYPE_HEADER_FOLDERS:
+                    return (mainFragmentViewModel.getColumns() == 0
+                            || mainFragmentViewModel.getColumns() == -1)
+                            ? 3
+                            : mainFragmentViewModel.getColumns();
+                  default:
+                    return 1;
+                }
+              }
+            });
   }
 
   void switchToGrid() {
@@ -349,7 +352,7 @@ public class MainFragment extends Fragment
         mLayoutManagerGrid = new CustomScrollGridLayoutManager(getActivity(), 3);
       else
         mLayoutManagerGrid =
-            new CustomScrollGridLayoutManager(getActivity(), mainFragmentViewModel.getColumns());
+                new CustomScrollGridLayoutManager(getActivity(), mainFragmentViewModel.getColumns());
     setGridLayoutSpanSizeLookup(mLayoutManagerGrid);
     listView.setLayoutManager(mLayoutManagerGrid);
     listView.clearOnScrollListeners();
@@ -376,9 +379,9 @@ public class MainFragment extends Fragment
 
   public void switchView() {
     boolean isPathLayoutGrid =
-        DataUtils.getInstance()
-                .getListOrGridForPath(mainFragmentViewModel.getCurrentPath(), DataUtils.LIST)
-            == DataUtils.GRID;
+            DataUtils.getInstance()
+                    .getListOrGridForPath(mainFragmentViewModel.getCurrentPath(), DataUtils.LIST)
+                    == DataUtils.GRID;
     reloadListElements(false, isPathLayoutGrid);
   }
 
@@ -386,10 +389,10 @@ public class MainFragment extends Fragment
     if (mainFragmentViewModel.getCurrentPath() != null) {
       if (mainFragmentViewModel.getListElements().size() == 0) {
         loadlist(
-            mainFragmentViewModel.getCurrentPath(),
-            true,
-            mainFragmentViewModel.getOpenMode(),
-            false);
+                mainFragmentViewModel.getCurrentPath(),
+                true,
+                mainFragmentViewModel.getOpenMode(),
+                false);
       } else {
         reloadListElements(true, !mainFragmentViewModel.isList());
       }
@@ -399,35 +402,35 @@ public class MainFragment extends Fragment
   }
 
   private BroadcastReceiver receiver2 =
-      new BroadcastReceiver() {
+          new BroadcastReceiver() {
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
-          // load the list on a load broadcast
-          // local file system don't need an explicit load, we've set an observer to
-          // take actions on creation/moving/deletion/modification of file on current path
-          if (getCurrentPath() != null) {
-            mainActivityViewModel.evictPathFromListCache(getCurrentPath());
-          }
-          updateList(false);
-        }
-      };
+            @Override
+            public void onReceive(Context context, Intent intent) {
+              // load the list on a load broadcast
+              // local file system don't need an explicit load, we've set an observer to
+              // take actions on creation/moving/deletion/modification of file on current path
+              if (getCurrentPath() != null) {
+                mainActivityViewModel.evictPathFromListCache(getCurrentPath());
+              }
+              updateList(false);
+            }
+          };
 
   private BroadcastReceiver decryptReceiver =
-      new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
+          new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
 
-          if (mainFragmentViewModel.isEncryptOpen()
-              && mainFragmentViewModel.getEncryptBaseFile() != null) {
-            FileUtils.openFile(
-                mainFragmentViewModel.getEncryptBaseFile().getFile(),
-                requireMainActivity(),
-                sharedPref);
-            mainFragmentViewModel.setEncryptOpen(false);
-          }
-        }
-      };
+              if (mainFragmentViewModel.isEncryptOpen()
+                      && mainFragmentViewModel.getEncryptBaseFile() != null) {
+                FileUtils.openFile(
+                        mainFragmentViewModel.getEncryptBaseFile().getFile(),
+                        requireMainActivity(),
+                        sharedPref);
+                mainFragmentViewModel.setEncryptOpen(false);
+              }
+            }
+          };
 
   public void home() {
     loadlist((mainFragmentViewModel.getHome()), false, OpenMode.FILE, false);
@@ -436,16 +439,16 @@ public class MainFragment extends Fragment
   /**
    * method called when list item is clicked in the adapter
    *
-   * @param isBackButton is it the back button aka '..'
-   * @param position the position
+   * @param isBackButton            is it the back button aka '..'
+   * @param position                the position
    * @param layoutElementParcelable the list item
-   * @param imageView the check icon that is to be animated
+   * @param imageView               the check icon that is to be animated
    */
   public void onListItemClicked(
-      boolean isBackButton,
-      int position,
-      LayoutElementParcelable layoutElementParcelable,
-      AppCompatImageView imageView) {
+          boolean isBackButton,
+          int position,
+          LayoutElementParcelable layoutElementParcelable,
+          AppCompatImageView imageView) {
 
     if (requireMainActivity().getListItemSelected()) {
       if (isBackButton) {
@@ -468,9 +471,9 @@ public class MainFragment extends Fragment
         }
 
         String path =
-            !layoutElementParcelable.hasSymlink()
-                ? layoutElementParcelable.desc
-                : layoutElementParcelable.symlink;
+                !layoutElementParcelable.hasSymlink()
+                        ? layoutElementParcelable.desc
+                        : layoutElementParcelable.symlink;
 
         if (layoutElementParcelable.isDirectory) {
           if (layoutElementParcelable.getMode() == OpenMode.TRASH_BIN) {
@@ -481,32 +484,32 @@ public class MainFragment extends Fragment
             loadlist(path, false, mainFragmentViewModel.getOpenMode(), false);
           }
         } else if (layoutElementParcelable.desc.endsWith(CryptUtil.CRYPT_EXTENSION)
-            || layoutElementParcelable.desc.endsWith(CryptUtil.AESCRYPT_EXTENSION)) {
+                || layoutElementParcelable.desc.endsWith(CryptUtil.AESCRYPT_EXTENSION)) {
           // decrypt the file
           mainFragmentViewModel.setEncryptOpen(true);
           mainFragmentViewModel.initEncryptBaseFile(
-              getActivity().getExternalCacheDir().getPath()
-                  + "/"
-                  + layoutElementParcelable
-                      .generateBaseFile()
-                      .getName(getMainActivity())
-                      .replace(CryptUtil.CRYPT_EXTENSION, "")
-                      .replace(CryptUtil.AESCRYPT_EXTENSION, ""));
+                  getActivity().getExternalCacheDir().getPath()
+                          + "/"
+                          + layoutElementParcelable
+                          .generateBaseFile()
+                          .getName(getMainActivity())
+                          .replace(CryptUtil.CRYPT_EXTENSION, "")
+                          .replace(CryptUtil.AESCRYPT_EXTENSION, ""));
 
           EncryptDecryptUtils.decryptFile(
-              requireContext(),
-              requireMainActivity(),
-              this,
-              mainFragmentViewModel.getOpenMode(),
-              layoutElementParcelable.generateBaseFile(),
-              getActivity().getExternalCacheDir().getPath(),
-              utilsProvider,
-              true);
+                  requireContext(),
+                  requireMainActivity(),
+                  this,
+                  mainFragmentViewModel.getOpenMode(),
+                  layoutElementParcelable.generateBaseFile(),
+                  getActivity().getExternalCacheDir().getPath(),
+                  utilsProvider,
+                  true);
         } else {
           if (getMainActivity().mReturnIntent) {
             // are we here to return an intent to another app
             returnIntentResults(
-                new HybridFileParcelable[] {layoutElementParcelable.generateBaseFile()});
+                    new HybridFileParcelable[]{layoutElementParcelable.generateBaseFile()});
           } else {
             layoutElementParcelable.generateBaseFile().openFile(getMainActivity(), false);
             DataUtils.getInstance().addHistoryFile(layoutElementParcelable.desc);
@@ -519,7 +522,7 @@ public class MainFragment extends Fragment
   public void registerListItemChecked(int position, AppCompatImageView imageView) {
     MainActivity mainActivity = requireMainActivity();
     if (mainActivity.mReturnIntent
-        && !mainActivity.getIntent().getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE, false)) {
+            && !mainActivity.getIntent().getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE, false)) {
       // Only one item should be checked
       ArrayList<Integer> checkedItemsIndex = adapter.getCheckedItemsIndex();
       if (checkedItemsIndex.contains(position)) {
@@ -556,7 +559,7 @@ public class MainFragment extends Fragment
       if (resultUri != null) {
         resultUris.put(baseFile, resultUri);
         LOG.debug(
-            resultUri + "\t" + MimeTypes.getMimeType(baseFile.getPath(), baseFile.isDirectory()));
+                resultUri + "\t" + MimeTypes.getMimeType(baseFile.getPath(), baseFile.isDirectory()));
       } else {
         failedPaths.add(baseFile.getPath());
       }
@@ -573,8 +576,8 @@ public class MainFragment extends Fragment
 
         if (requireMainActivity().mRingtonePickerIntent) {
           intent.setDataAndType(
-              resultUri,
-              MimeTypes.getMimeType(resultBaseFile.getPath(), resultBaseFile.isDirectory()));
+                  resultUri,
+                  MimeTypes.getMimeType(resultBaseFile.getPath(), resultBaseFile.isDirectory()));
           intent.putExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI, resultUri);
         } else {
           LOG.debug("pickup file");
@@ -593,10 +596,10 @@ public class MainFragment extends Fragment
           uriDataClipItems.add(new ClipData.Item(uri));
         }
         ClipData clipData =
-            new ClipData(
-                ClipDescription.MIMETYPE_TEXT_URILIST,
-                mimeTypes.toArray(new String[0]),
-                uriDataClipItems.remove(0));
+                new ClipData(
+                        ClipDescription.MIMETYPE_TEXT_URILIST,
+                        mimeTypes.toArray(new String[0]),
+                        uriDataClipItems.remove(0));
         for (ClipData.Item item : uriDataClipItems) {
           clipData.addItem(item);
         }
@@ -604,7 +607,7 @@ public class MainFragment extends Fragment
         intent.setClipData(clipData);
         intent.setAction(Intent.ACTION_SEND_MULTIPLE);
         intent.putParcelableArrayListExtra(
-            Intent.EXTRA_STREAM, new ArrayList<>(resultUris.values()));
+                Intent.EXTRA_STREAM, new ArrayList<>(resultUris.values()));
       }
 
       requireActivity().setResult(FragmentActivity.RESULT_OK, intent);
@@ -620,24 +623,24 @@ public class MainFragment extends Fragment
   /**
    * This loads a path into the MainFragment.
    *
-   * @param providedPath the path to be loaded
-   * @param back if we're coming back from any directory and want the scroll to be restored
+   * @param providedPath     the path to be loaded
+   * @param back             if we're coming back from any directory and want the scroll to be restored
    * @param providedOpenMode the mode in which the directory should be opened
-   * @param forceReload whether use cached list or force reload the list items
+   * @param forceReload      whether use cached list or force reload the list items
    */
   public void loadlist(
-      final String providedPath,
-      final boolean back,
-      final OpenMode providedOpenMode,
-      boolean forceReload) {
+          final String providedPath,
+          final boolean back,
+          final OpenMode providedOpenMode,
+          boolean forceReload) {
     if (mainFragmentViewModel == null) {
       LOG.warn("Viewmodel not available to load the data");
       return;
     }
 
     if (getMainActivity() != null
-        && getMainActivity().getActionModeHelper() != null
-        && getMainActivity().getActionModeHelper().getActionMode() != null) {
+            && getMainActivity().getActionModeHelper() != null
+            && getMainActivity().getActionModeHelper().getActionMode() != null) {
       getMainActivity().getActionModeHelper().getActionMode().finish();
     }
 
@@ -657,30 +660,30 @@ public class MainFragment extends Fragment
     // Monkeypatch :( to fix problems with unexpected non content URI path while openMode is still
     // OpenMode.DOCUMENT_FILE
     else if (actualPath.startsWith("/")
-        && (OpenMode.DOCUMENT_FILE.equals(openMode) || OpenMode.ANDROID_DATA.equals(openMode))) {
+            && (OpenMode.DOCUMENT_FILE.equals(openMode) || OpenMode.ANDROID_DATA.equals(openMode))) {
       openMode = OpenMode.FILE;
     }
 
     loadFilesListTask =
-        new LoadFilesListTask(
-            getActivity(),
-            actualPath,
-            this,
-            openMode,
-            getBoolean(PREFERENCE_SHOW_THUMB),
-            getBoolean(PREFERENCE_SHOW_HIDDENFILES),
-            forceReload,
-            (data) -> {
-              mSwipeRefreshLayout.setRefreshing(false);
-              if (data != null && data.second != null) {
-                boolean isPathLayoutGrid =
-                    DataUtils.getInstance().getListOrGridForPath(providedPath, DataUtils.LIST)
-                        == DataUtils.GRID;
-                setListElements(data.second, back, providedPath, data.first, isPathLayoutGrid);
-              } else {
-                LOG.warn("Load list operation cancelled");
-              }
-            });
+            new LoadFilesListTask(
+                    getActivity(),
+                    actualPath,
+                    this,
+                    openMode,
+                    getBoolean(PREFERENCE_SHOW_THUMB),
+                    getBoolean(PREFERENCE_SHOW_HIDDENFILES),
+                    forceReload,
+                    (data) -> {
+                      mSwipeRefreshLayout.setRefreshing(false);
+                      if (data != null && data.second != null) {
+                        boolean isPathLayoutGrid =
+                                DataUtils.getInstance().getListOrGridForPath(providedPath, DataUtils.LIST)
+                                        == DataUtils.GRID;
+                        setListElements(data.second, back, providedPath, data.first, isPathLayoutGrid);
+                      } else {
+                        LOG.warn("Load list operation cancelled");
+                      }
+                    });
     loadFilesListTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
   }
 
@@ -688,7 +691,7 @@ public class MainFragment extends Fragment
   private OpenMode loadPathInQ(String actualPath, String providedPath, OpenMode providedMode) {
 
     if (GenericExtKt.containsPath(ANDROID_DEVICE_DATA_DIRS, providedPath)
-        && !OpenMode.ANDROID_DATA.equals(providedMode)) {
+            && !OpenMode.ANDROID_DATA.equals(providedMode)) {
       return OpenMode.ANDROID_DATA;
     } else if (actualPath.startsWith("/")) {
       return OpenMode.FILE;
@@ -697,7 +700,7 @@ public class MainFragment extends Fragment
     } else {
       boolean hasAccessToSpecialFolder = false;
       List<UriPermission> uriPermissions =
-          requireContext().getContentResolver().getPersistedUriPermissions();
+              requireContext().getContentResolver().getPersistedUriPermissions();
 
       if (uriPermissions != null && uriPermissions.size() > 0) {
         for (UriPermission p : uriPermissions) {
@@ -711,28 +714,20 @@ public class MainFragment extends Fragment
 
       if (!hasAccessToSpecialFolder) {
         Intent intent =
-            new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                .putExtra(
-                    DocumentsContract.EXTRA_INITIAL_URI,
-                    Uri.parse(FileProperties.remapPathForApi30OrAbove(providedPath, true)));
-        MaterialDialog d =
-            GeneralDialogCreation.showBasicDialog(
+                new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                        .putExtra(
+                                DocumentsContract.EXTRA_INITIAL_URI,
+                                Uri.parse(FileProperties.remapPathForApi30OrAbove(providedPath, true)));
+
+        GeneralDialogCreation.showBasicDialog(
                 requireMainActivity(),
                 R.string.android_data_prompt_saf_access,
                 R.string.android_data_prompt_saf_access_title,
                 android.R.string.ok,
-                android.R.string.cancel);
-        d.getActionButton(DialogAction.POSITIVE)
-            .setOnClickListener(
-                v -> {
-                  ExtensionsKt.runIfDocumentsUIExists(
-                      intent,
-                      requireMainActivity(),
-                      () -> handleDocumentUriForRestrictedDirectories.launch(intent));
-
-                  d.dismiss();
-                });
-        d.show();
+                android.R.string.cancel, (dialog, which) -> ExtensionsKt.runIfDocumentsUIExists(
+                        intent,
+                        requireMainActivity(),
+                        () -> handleDocumentUriForRestrictedDirectories.launch(intent)), null).show();
         // At this point LoadFilesListTask will be triggered.
         // No harm even give OpenMode.FILE here, it loads blank when it doesn't; and after the
         // UriPermission is granted loadlist will be called again
@@ -747,32 +742,32 @@ public class MainFragment extends Fragment
     nofilesview = rootView.findViewById(R.id.nofilelayout);
     nofilesview.setColorSchemeColors(mainFragmentViewModel.getAccentColor());
     nofilesview.setOnRefreshListener(
-        () -> {
-          loadlist(
-              (mainFragmentViewModel.getCurrentPath()),
-              false,
-              mainFragmentViewModel.getOpenMode(),
-              false);
-          nofilesview.setRefreshing(false);
-        });
-    nofilesview
-        .findViewById(R.id.no_files_relative)
-        .setOnKeyListener(
-            (v, keyCode, event) -> {
-              if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                if (event.getKeyCode() == KeyEvent.KEYCODE_DPAD_RIGHT) {
-                  requireMainActivity().getFAB().requestFocus();
-                } else if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-                  requireMainActivity().onBackPressed();
-                } else {
-                  return false;
-                }
-              }
-              return true;
+            () -> {
+              loadlist(
+                      (mainFragmentViewModel.getCurrentPath()),
+                      false,
+                      mainFragmentViewModel.getOpenMode(),
+                      false);
+              nofilesview.setRefreshing(false);
             });
+    nofilesview
+            .findViewById(R.id.no_files_relative)
+            .setOnKeyListener(
+                    (v, keyCode, event) -> {
+                      if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                        if (event.getKeyCode() == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                          requireMainActivity().getFAB().requestFocus();
+                        } else if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                          requireMainActivity().onBackPressed();
+                        } else {
+                          return false;
+                        }
+                      }
+                      return true;
+                    });
     if (utilsProvider.getAppTheme().equals(AppTheme.LIGHT)) {
       ((AppCompatImageView) nofilesview.findViewById(R.id.image))
-          .setColorFilter(Color.parseColor("#666666"));
+              .setColorFilter(Color.parseColor("#666666"));
     } else if (utilsProvider.getAppTheme().equals(AppTheme.BLACK)) {
       nofilesview.setBackgroundColor(Utils.getColor(getContext(), android.R.color.black));
       ((AppCompatTextView) nofilesview.findViewById(R.id.nofiletext)).setTextColor(Color.WHITE);
@@ -785,19 +780,19 @@ public class MainFragment extends Fragment
   /**
    * Loading adapter after getting a list of elements
    *
-   * @param bitmap the list of objects for the adapter
-   * @param back if we're coming back from any directory and want the scroll to be restored
-   * @param path the path for the adapter
+   * @param bitmap   the list of objects for the adapter
+   * @param back     if we're coming back from any directory and want the scroll to be restored
+   * @param path     the path for the adapter
    * @param openMode the type of file being created
-   * @param results is the list of elements a result from search
-   * @param grid whether to set grid view or list view
+   * @param results  is the list of elements a result from search
+   * @param grid     whether to set grid view or list view
    */
   public void setListElements(
-      List<LayoutElementParcelable> bitmap,
-      boolean back,
-      String path,
-      final OpenMode openMode,
-      boolean grid) {
+          List<LayoutElementParcelable> bitmap,
+          boolean back,
+          String path,
+          final OpenMode openMode,
+          boolean grid) {
     if (bitmap != null) {
       mainFragmentViewModel.setListElements(bitmap);
       mainFragmentViewModel.setCurrentPath(path);
@@ -815,18 +810,18 @@ public class MainFragment extends Fragment
       boolean isOtg = (OTGUtil.PREFIX_OTG + "/").equals(mainFragmentViewModel.getCurrentPath());
 
       if (getBoolean(PREFERENCE_SHOW_GOBACK_BUTTON)
-          && !"/".equals(mainFragmentViewModel.getCurrentPath())
-          && (mainFragmentViewModel.getOpenMode() == OpenMode.FILE
+              && !"/".equals(mainFragmentViewModel.getCurrentPath())
+              && (mainFragmentViewModel.getOpenMode() == OpenMode.FILE
               || mainFragmentViewModel.getOpenMode() == OpenMode.ROOT
               || (mainFragmentViewModel.getIsCloudOpenMode()
-                  && !mainFragmentViewModel.getIsOnCloudRoot()))
-          && !isOtg
-          && (mainFragmentViewModel.getListElements().size() == 0
+              && !mainFragmentViewModel.getIsOnCloudRoot()))
+              && !isOtg
+              && (mainFragmentViewModel.getListElements().size() == 0
               || !mainFragmentViewModel
-                  .getListElements()
-                  .get(0)
-                  .size
-                  .equals(getString(R.string.goback)))) {
+              .getListElements()
+              .get(0)
+              .size
+              .equals(getString(R.string.goback)))) {
         mainFragmentViewModel.getListElements().add(0, getBackElement());
       }
 
@@ -850,15 +845,15 @@ public class MainFragment extends Fragment
         final List<LayoutElementParcelable> listElements = mainFragmentViewModel.getListElements();
 
         adapter =
-            new RecyclerAdapter(
-                requireMainActivity(),
-                this,
-                utilsProvider,
-                sharedPref,
-                listView,
-                listElements,
-                requireContext(),
-                grid);
+                new RecyclerAdapter(
+                        requireMainActivity(),
+                        this,
+                        utilsProvider,
+                        sharedPref,
+                        listView,
+                        listElements,
+                        requireContext(),
+                        grid);
       } else {
         adapter.setItems(listView, mainFragmentViewModel.getListElements());
       }
@@ -866,7 +861,7 @@ public class MainFragment extends Fragment
       mainFragmentViewModel.setStopAnims(true);
 
       if (mainFragmentViewModel.getOpenMode() != OpenMode.CUSTOM
-          && mainFragmentViewModel.getOpenMode() != OpenMode.TRASH_BIN) {
+              && mainFragmentViewModel.getOpenMode() != OpenMode.TRASH_BIN) {
         DataUtils.getInstance().addHistoryFile(mainFragmentViewModel.getCurrentPath());
       }
 
@@ -879,8 +874,8 @@ public class MainFragment extends Fragment
 
       if (mainFragmentViewModel.getAddHeader() && mainFragmentViewModel.isList()) {
         dividerItemDecoration =
-            new DividerItemDecoration(
-                requireMainActivity(), true, getBoolean(PREFERENCE_SHOW_DIVIDERS));
+                new DividerItemDecoration(
+                        requireMainActivity(), true, getBoolean(PREFERENCE_SHOW_DIVIDERS));
         listView.addItemDecoration(dividerItemDecoration);
         mainFragmentViewModel.setAddHeader(false);
       }
@@ -900,43 +895,43 @@ public class MainFragment extends Fragment
       requireMainActivity().getAppbar().getAppbarLayout().setExpanded(true);
       listView.stopScroll();
       fastScroller.setRecyclerView(
-          listView,
-          mainFragmentViewModel.isList()
-              ? 1
-              : (mainFragmentViewModel.getColumns() == 0
+              listView,
+              mainFragmentViewModel.isList()
+                      ? 1
+                      : (mainFragmentViewModel.getColumns() == 0
                       || mainFragmentViewModel.getColumns() == -1)
-                  ? 3
-                  : mainFragmentViewModel.getColumns());
+                      ? 3
+                      : mainFragmentViewModel.getColumns());
       mToolbarContainer.addOnOffsetChangedListener(
-          (appBarLayout, verticalOffset) -> {
-            fastScroller.updateHandlePosition(verticalOffset, 112);
-          });
+              (appBarLayout, verticalOffset) -> {
+                fastScroller.updateHandlePosition(verticalOffset, 112);
+              });
       fastScroller.registerOnTouchListener(
-          () -> {
-            if (mainFragmentViewModel.getStopAnims() && adapter != null) {
-              stopAnimation();
-              mainFragmentViewModel.setStopAnims(false);
-            }
-          });
+              () -> {
+                if (mainFragmentViewModel.getStopAnims() && adapter != null) {
+                  stopAnimation();
+                  mainFragmentViewModel.setStopAnims(false);
+                }
+              });
 
       startFileObserver();
 
       listView.post(
-          () -> {
-            String fileName = requireMainActivity().getScrollToFileName();
+              () -> {
+                String fileName = requireMainActivity().getScrollToFileName();
 
-            if (fileName != null)
-              mainFragmentViewModel
-                  .getScrollPosition(fileName)
-                  .observe(
-                      getViewLifecycleOwner(),
-                      scrollPosition -> {
-                        if (scrollPosition != -1)
-                          listView.scrollToPosition(
-                              Math.min(scrollPosition + 4, adapter.getItemCount() - 1));
-                        adapter.notifyItemChanged(scrollPosition);
-                      });
-          });
+                if (fileName != null)
+                  mainFragmentViewModel
+                          .getScrollPosition(fileName)
+                          .observe(
+                                  getViewLifecycleOwner(),
+                                  scrollPosition -> {
+                                    if (scrollPosition != -1)
+                                      listView.scrollToPosition(
+                                              Math.min(scrollPosition + 4, adapter.getItemCount() - 1));
+                                    adapter.notifyItemChanged(scrollPosition);
+                                  });
+              });
 
     } else {
       // fragment not added
@@ -947,11 +942,11 @@ public class MainFragment extends Fragment
   private LayoutElementParcelable getBackElement() {
     if (mainFragmentViewModel.getBack() == null) {
       mainFragmentViewModel.setBack(
-          new LayoutElementParcelable(
-              requireContext(),
-              true,
-              getString(R.string.goback),
-              getBoolean(PREFERENCE_SHOW_THUMB)));
+              new LayoutElementParcelable(
+                      requireContext(),
+                      true,
+                      getString(R.string.goback),
+                      getBoolean(PREFERENCE_SHOW_THUMB)));
     }
     return mainFragmentViewModel.getBack();
   }
@@ -963,13 +958,13 @@ public class MainFragment extends Fragment
   private void resumeDecryptOperations() {
     if (SDK_INT >= JELLY_BEAN_MR2) {
       (requireMainActivity())
-          .registerReceiver(
-              decryptReceiver, new IntentFilter(EncryptDecryptUtils.DECRYPT_BROADCAST));
+              .registerReceiver(
+                      decryptReceiver, new IntentFilter(EncryptDecryptUtils.DECRYPT_BROADCAST));
       if (!mainFragmentViewModel.isEncryptOpen()
-          && !Utils.isNullOrEmpty(mainFragmentViewModel.getEncryptBaseFiles())) {
+              && !Utils.isNullOrEmpty(mainFragmentViewModel.getEncryptBaseFiles())) {
         // we've opened the file and are ready to delete it
         new DeleteTask(requireMainActivity(), true)
-            .execute(mainFragmentViewModel.getEncryptBaseFiles());
+                .execute(mainFragmentViewModel.getEncryptBaseFiles());
         mainFragmentViewModel.setEncryptBaseFiles(new ArrayList<>());
       }
     }
@@ -980,8 +975,8 @@ public class MainFragment extends Fragment
       case ROOT:
       case FILE:
         if (customFileObserver != null
-            && !customFileObserver.wasStopped()
-            && customFileObserver.getPath().equals(getCurrentPath())) {
+                && !customFileObserver.wasStopped()
+                && customFileObserver.getPath().equals(getCurrentPath())) {
           return;
         }
 
@@ -996,9 +991,9 @@ public class MainFragment extends Fragment
           }
 
           customFileObserver =
-              new CustomFileObserver(
-                  mainFragmentViewModel.getCurrentPath(),
-                  new FileHandler(this, listView, getBoolean(PREFERENCE_SHOW_THUMB)));
+                  new CustomFileObserver(
+                          mainFragmentViewModel.getCurrentPath(),
+                          new FileHandler(this, listView, getBoolean(PREFERENCE_SHOW_THUMB)));
           customFileObserver.startWatching();
         }
         break;
@@ -1014,55 +1009,55 @@ public class MainFragment extends Fragment
    */
   public void rename(final HybridFileParcelable f) {
     MaterialDialog renameDialog =
-        GeneralDialogCreation.showNameDialog(
-            getMainActivity(),
-            "",
-            f.getName(getMainActivity()),
-            getResources().getString(R.string.rename),
-            getResources().getString(R.string.save),
-            null,
-            getResources().getString(R.string.cancel),
-            (dialog, which) -> {
-              AppCompatEditText textfield =
-                  dialog.getCustomView().findViewById(R.id.singleedittext_input);
-              String name1 = textfield.getText().toString().trim();
+            GeneralDialogCreation.showNameDialog(
+                    getMainActivity(),
+                    "",
+                    f.getName(getMainActivity()),
+                    getResources().getString(R.string.rename),
+                    getResources().getString(R.string.save),
+                    null,
+                    getResources().getString(R.string.cancel),
+                    (dialog, which) -> {
+                      AppCompatEditText textfield =
+                              dialog.getCustomView().findViewById(R.id.singleedittext_input);
+                      String name1 = textfield.getText().toString().trim();
 
-              getMainActivity()
-                  .mainActivityHelper
-                  .rename(
-                      mainFragmentViewModel.getOpenMode(),
-                      f.getPath(),
-                      mainFragmentViewModel.getCurrentPath(),
-                      name1,
-                      f.isDirectory(),
-                      getActivity(),
-                      getMainActivity().isRootExplorer());
-            },
-            (text) -> {
-              boolean isValidFilename = FileProperties.isValidFilename(text);
+                      getMainActivity()
+                              .mainActivityHelper
+                              .rename(
+                                      mainFragmentViewModel.getOpenMode(),
+                                      f.getPath(),
+                                      mainFragmentViewModel.getCurrentPath(),
+                                      name1,
+                                      f.isDirectory(),
+                                      getActivity(),
+                                      getMainActivity().isRootExplorer());
+                    },
+                    (text) -> {
+                      boolean isValidFilename = FileProperties.isValidFilename(text);
 
-              if (!isValidFilename || text.startsWith(" ")) {
-                return new WarnableTextInputValidator.ReturnState(
-                    WarnableTextInputValidator.ReturnState.STATE_ERROR, R.string.invalid_name);
-              } else if (text.length() < 1) {
-                return new WarnableTextInputValidator.ReturnState(
-                    WarnableTextInputValidator.ReturnState.STATE_ERROR, R.string.field_empty);
-              }
+                      if (!isValidFilename || text.startsWith(" ")) {
+                        return new WarnableTextInputValidator.ReturnState(
+                                WarnableTextInputValidator.ReturnState.STATE_ERROR, R.string.invalid_name);
+                      } else if (text.length() < 1) {
+                        return new WarnableTextInputValidator.ReturnState(
+                                WarnableTextInputValidator.ReturnState.STATE_ERROR, R.string.field_empty);
+                      }
 
-              return new WarnableTextInputValidator.ReturnState();
-            });
+                      return new WarnableTextInputValidator.ReturnState();
+                    });
 
     // place cursor at the starting of edit text by posting a runnable to edit text
     // this is done because in case android has not populated the edit text layouts yet, it'll
     // reset calls to selection if not posted in message queue
     AppCompatEditText textfield =
-        renameDialog.getCustomView().findViewById(R.id.singleedittext_input);
+            renameDialog.getCustomView().findViewById(R.id.singleedittext_input);
     textfield.post(
-        () -> {
-          if (!f.isDirectory()) {
-            textfield.setSelection(f.getNameString(getContext()).length());
-          }
-        });
+            () -> {
+              if (!f.isDirectory()) {
+                textfield.setSelection(f.getNameString(getContext()).length());
+              }
+            });
   }
 
   public void computeScroll() {
@@ -1084,33 +1079,33 @@ public class MainFragment extends Fragment
 
   public void goBack() {
     if (mainFragmentViewModel.getOpenMode() == OpenMode.CUSTOM
-        || mainFragmentViewModel.getOpenMode() == OpenMode.TRASH_BIN) {
+            || mainFragmentViewModel.getOpenMode() == OpenMode.TRASH_BIN) {
       loadlist(mainFragmentViewModel.getHome(), false, OpenMode.FILE, false);
       setHideFab(false);
       return;
     }
 
     HybridFile currentFile =
-        new HybridFile(mainFragmentViewModel.getOpenMode(), mainFragmentViewModel.getCurrentPath());
+            new HybridFile(mainFragmentViewModel.getOpenMode(), mainFragmentViewModel.getCurrentPath());
     if (requireMainActivity().getListItemSelected()) {
       adapter.toggleChecked(false);
     } else {
       setHideFab(false);
       if (OpenMode.SMB.equals(mainFragmentViewModel.getOpenMode())) {
         if (mainFragmentViewModel.getSmbPath() != null
-            && !mainFragmentViewModel.getSmbPath().equals(mainFragmentViewModel.getCurrentPath())) {
+                && !mainFragmentViewModel.getSmbPath().equals(mainFragmentViewModel.getCurrentPath())) {
           StringBuilder path = new StringBuilder(currentFile.getSmbFile().getParent());
           if (mainFragmentViewModel.getCurrentPath() != null
-              && mainFragmentViewModel.getCurrentPath().indexOf('?') > 0)
+                  && mainFragmentViewModel.getCurrentPath().indexOf('?') > 0)
             path.append(
-                mainFragmentViewModel
-                    .getCurrentPath()
-                    .substring(mainFragmentViewModel.getCurrentPath().indexOf('?')));
+                    mainFragmentViewModel
+                            .getCurrentPath()
+                            .substring(mainFragmentViewModel.getCurrentPath().indexOf('?')));
           loadlist(
-              path.toString().replace("%3D", "="),
-              true,
-              mainFragmentViewModel.getOpenMode(),
-              false);
+                  path.toString().replace("%3D", "="),
+                  true,
+                  mainFragmentViewModel.getOpenMode(),
+                  false);
         } else loadlist(mainFragmentViewModel.getHome(), false, OpenMode.FILE, false);
       } else if (OpenMode.SFTP.equals(mainFragmentViewModel.getOpenMode())) {
         if (currentFile.getParent(requireContext()) == null) {
@@ -1139,24 +1134,24 @@ public class MainFragment extends Fragment
           loadlist(mainFragmentViewModel.getHome(), false, OpenMode.FILE, false);
         }
       } else if (("/").equals(mainFragmentViewModel.getCurrentPath())
-          || (mainFragmentViewModel.getHome() != null
+              || (mainFragmentViewModel.getHome() != null
               && mainFragmentViewModel.getHome().equals(mainFragmentViewModel.getCurrentPath()))
-          || mainFragmentViewModel.getIsOnCloudRoot()) {
+              || mainFragmentViewModel.getIsOnCloudRoot()) {
         getMainActivity().exit();
       } else if (OpenMode.DOCUMENT_FILE.equals(mainFragmentViewModel.getOpenMode())
-          && !currentFile.getPath().startsWith("content://")) {
+              && !currentFile.getPath().startsWith("content://")) {
         if (CollectionsKt.contains(ANDROID_DEVICE_DATA_DIRS, currentFile.getParent(getContext()))) {
           loadlist(currentFile.getParent(getContext()), false, OpenMode.ANDROID_DATA, false);
         } else {
           loadlist(
-              currentFile.getParent(getContext()),
-              true,
-              mainFragmentViewModel.getOpenMode(),
-              false);
+                  currentFile.getParent(getContext()),
+                  true,
+                  mainFragmentViewModel.getOpenMode(),
+                  false);
         }
       } else if (FileUtils.canGoBack(getContext(), currentFile)) {
         loadlist(
-            currentFile.getParent(getContext()), true, mainFragmentViewModel.getOpenMode(), false);
+                currentFile.getParent(getContext()), true, mainFragmentViewModel.getOpenMode(), false);
       } else {
         requireMainActivity().exit();
       }
@@ -1167,21 +1162,21 @@ public class MainFragment extends Fragment
     if (mainFragmentViewModel.getSmbPath() != null) {
       try {
         requireMainActivity()
-            .runOnUiThread(
-                () -> {
-                  int i;
-                  AppConfig.toast(requireContext(), getString(R.string.unknown_error));
-                  if ((i =
-                          DataUtils.getInstance()
-                              .containsServer(mainFragmentViewModel.getSmbPath()))
-                      != -1) {
-                    requireMainActivity()
-                        .showSMBDialog(
-                            DataUtils.getInstance().getServers().get(i)[0],
-                            mainFragmentViewModel.getSmbPath(),
-                            true);
-                  }
-                });
+                .runOnUiThread(
+                        () -> {
+                          int i;
+                          AppConfig.toast(requireContext(), getString(R.string.unknown_error));
+                          if ((i =
+                                  DataUtils.getInstance()
+                                          .containsServer(mainFragmentViewModel.getSmbPath()))
+                                  != -1) {
+                            requireMainActivity()
+                                    .showSMBDialog(
+                                            DataUtils.getInstance().getServers().get(i)[0],
+                                            mainFragmentViewModel.getSmbPath(),
+                                            true);
+                          }
+                        });
       } catch (Exception e) {
         LOG.warn("failure when reauthenticating smb connection", e);
       }
@@ -1190,32 +1185,32 @@ public class MainFragment extends Fragment
 
   public void goBackItemClick() {
     if (mainFragmentViewModel.getOpenMode() == OpenMode.CUSTOM
-        || mainFragmentViewModel.getOpenMode() == OpenMode.TRASH_BIN) {
+            || mainFragmentViewModel.getOpenMode() == OpenMode.TRASH_BIN) {
       loadlist(mainFragmentViewModel.getHome(), false, OpenMode.FILE, false);
       return;
     }
     HybridFile currentFile =
-        new HybridFile(mainFragmentViewModel.getOpenMode(), mainFragmentViewModel.getCurrentPath());
+            new HybridFile(mainFragmentViewModel.getOpenMode(), mainFragmentViewModel.getCurrentPath());
     if (requireMainActivity().getListItemSelected()) {
       adapter.toggleChecked(false);
     } else {
       if (mainFragmentViewModel.getOpenMode() == OpenMode.SMB) {
         if (mainFragmentViewModel.getCurrentPath() != null
-            && !mainFragmentViewModel.getCurrentPath().equals(mainFragmentViewModel.getSmbPath())) {
+                && !mainFragmentViewModel.getCurrentPath().equals(mainFragmentViewModel.getSmbPath())) {
           StringBuilder path = new StringBuilder(currentFile.getSmbFile().getParent());
           if (mainFragmentViewModel.getCurrentPath().indexOf('?') > 0)
             path.append(
-                mainFragmentViewModel
-                    .getCurrentPath()
-                    .substring(mainFragmentViewModel.getCurrentPath().indexOf('?')));
+                    mainFragmentViewModel
+                            .getCurrentPath()
+                            .substring(mainFragmentViewModel.getCurrentPath().indexOf('?')));
           loadlist(path.toString(), true, OpenMode.SMB, false);
         } else loadlist(mainFragmentViewModel.getHome(), false, OpenMode.FILE, false);
       } else if (("/").equals(mainFragmentViewModel.getCurrentPath())
-          || mainFragmentViewModel.getIsOnCloudRoot()) {
+              || mainFragmentViewModel.getIsOnCloudRoot()) {
         requireMainActivity().exit();
       } else if (FileUtils.canGoBack(getContext(), currentFile)) {
         loadlist(
-            currentFile.getParent(getContext()), true, mainFragmentViewModel.getOpenMode(), false);
+                currentFile.getParent(getContext()), true, mainFragmentViewModel.getOpenMode(), false);
       } else requireMainActivity().exit();
     }
   }
@@ -1223,17 +1218,17 @@ public class MainFragment extends Fragment
   public void updateList(boolean forceReload) {
     computeScroll();
     loadlist(
-        mainFragmentViewModel.getCurrentPath(),
-        true,
-        mainFragmentViewModel.getOpenMode(),
-        forceReload);
+            mainFragmentViewModel.getCurrentPath(),
+            true,
+            mainFragmentViewModel.getOpenMode(),
+            forceReload);
   }
 
   @Override
   public void onResume() {
     super.onResume();
     (requireActivity())
-        .registerReceiver(receiver2, new IntentFilter(MainActivity.KEY_INTENT_LOAD_LIST));
+            .registerReceiver(receiver2, new IntentFilter(MainActivity.KEY_INTENT_LOAD_LIST));
 
     resumeDecryptOperations();
     startFileObserver();
@@ -1253,7 +1248,7 @@ public class MainFragment extends Fragment
   }
 
   public ArrayList<LayoutElementParcelable> addToSmb(
-      @NonNull SmbFile[] mFile, @NonNull String path, boolean showHiddenFiles) throws SmbException {
+          @NonNull SmbFile[] mFile, @NonNull String path, boolean showHiddenFiles) throws SmbException {
     ArrayList<LayoutElementParcelable> smbFileList = new ArrayList<>();
     String extraParams = Uri.parse(path).getQuery();
 
@@ -1262,14 +1257,14 @@ public class MainFragment extends Fragment
     }
     for (SmbFile aMFile : mFile) {
       if ((DataUtils.getInstance().isFileHidden(aMFile.getPath()) || aMFile.isHidden())
-          && !showHiddenFiles) {
+              && !showHiddenFiles) {
         continue;
       }
       String name = aMFile.getName();
       name =
-          (aMFile.isDirectory() && name.endsWith("/"))
-              ? name.substring(0, name.length() - 1)
-              : name;
+              (aMFile.isDirectory() && name.endsWith("/"))
+                      ? name.substring(0, name.length() - 1)
+                      : name;
       if (path.equals(mainFragmentViewModel.getSmbPath())) {
         if (name.endsWith("$")) continue;
       }
@@ -1280,19 +1275,19 @@ public class MainFragment extends Fragment
         if (!TextUtils.isEmpty(extraParams)) aMFilePathBuilder.query(extraParams);
 
         LayoutElementParcelable layoutElement =
-            new LayoutElementParcelable(
-                requireContext(),
-                name,
-                aMFilePathBuilder.build().toString(),
-                "",
-                "",
-                "",
-                0,
-                false,
-                aMFile.lastModified() + "",
-                true,
-                getBoolean(PREFERENCE_SHOW_THUMB),
-                OpenMode.SMB);
+                new LayoutElementParcelable(
+                        requireContext(),
+                        name,
+                        aMFilePathBuilder.build().toString(),
+                        "",
+                        "",
+                        "",
+                        0,
+                        false,
+                        aMFile.lastModified() + "",
+                        true,
+                        getBoolean(PREFERENCE_SHOW_THUMB),
+                        OpenMode.SMB);
 
         mainFragmentViewModel.getSearchHelper().add(layoutElement.generateBaseFile());
         smbFileList.add(layoutElement);
@@ -1300,19 +1295,19 @@ public class MainFragment extends Fragment
       } else {
         mainFragmentViewModel.setFileCount(mainFragmentViewModel.getFileCount() + 1);
         LayoutElementParcelable layoutElement =
-            new LayoutElementParcelable(
-                requireContext(),
-                name,
-                aMFile.getPath(),
-                "",
-                "",
-                Formatter.formatFileSize(getContext(), aMFile.length()),
-                aMFile.length(),
-                false,
-                aMFile.lastModified() + "",
-                false,
-                getBoolean(PREFERENCE_SHOW_THUMB),
-                OpenMode.SMB);
+                new LayoutElementParcelable(
+                        requireContext(),
+                        name,
+                        aMFile.getPath(),
+                        "",
+                        "",
+                        Formatter.formatFileSize(getContext(), aMFile.length()),
+                        aMFile.length(),
+                        false,
+                        aMFile.lastModified() + "",
+                        false,
+                        getBoolean(PREFERENCE_SHOW_THUMB),
+                        OpenMode.SMB);
         layoutElement.setMode(OpenMode.SMB);
         mainFragmentViewModel.getSearchHelper().add(layoutElement.generateBaseFile());
         smbFileList.add(layoutElement);
@@ -1337,17 +1332,17 @@ public class MainFragment extends Fragment
       if (!f1.exists()) {
         try {
           requireMainActivity()
-              .mainActivityHelper
-              .mkFile(
-                  new HybridFile(OpenMode.FILE, path),
-                  new HybridFile(OpenMode.FILE, f1.getPath()),
-                  this);
+                  .mainActivityHelper
+                  .mkFile(
+                          new HybridFile(OpenMode.FILE, path),
+                          new HybridFile(OpenMode.FILE, f1.getPath()),
+                          this);
         } catch (Exception e) {
           LOG.warn("failure when hiding file", e);
         }
       }
       MediaConnectionUtils.scanFile(
-          requireMainActivity(), new HybridFile[] {new HybridFile(OpenMode.FILE, path)});
+              requireMainActivity(), new HybridFile[]{new HybridFile(OpenMode.FILE, path)});
     }
   }
 
@@ -1358,10 +1353,10 @@ public class MainFragment extends Fragment
 
     if (!ShortcutManagerCompat.isRequestPinShortcutSupported(requireContext())) {
       Toast.makeText(
-              getActivity(),
-              getString(R.string.add_shortcut_not_supported_by_launcher),
-              Toast.LENGTH_SHORT)
-          .show();
+                      getActivity(),
+                      getString(R.string.add_shortcut_not_supported_by_launcher),
+                      Toast.LENGTH_SHORT)
+              .show();
       return;
     }
 
@@ -1372,13 +1367,13 @@ public class MainFragment extends Fragment
 
     // Using file path as shortcut id.
     ShortcutInfoCompat info =
-        new ShortcutInfoCompat.Builder(ctx, path.desc)
-            .setActivity(requireMainActivity().getComponentName())
-            .setIcon(IconCompat.createWithResource(ctx, R.mipmap.ic_launcher))
-            .setIntent(shortcutIntent)
-            .setLongLabel(path.desc)
-            .setShortLabel(new File(path.desc).getName())
-            .build();
+            new ShortcutInfoCompat.Builder(ctx, path.desc)
+                    .setActivity(requireMainActivity().getComponentName())
+                    .setIcon(IconCompat.createWithResource(ctx, R.mipmap.ic_launcher))
+                    .setIntent(shortcutIntent)
+                    .setLongLabel(path.desc)
+                    .setShortLabel(new File(path.desc).getName())
+                    .build();
 
     ShortcutManagerCompat.requestPinShortcut(ctx, info, null);
   }
@@ -1411,21 +1406,21 @@ public class MainFragment extends Fragment
       nofilesview.setOnDragListener(null);
     } else {
       mToolbarContainer.setOnDragListener(
-          new TabFragmentBottomDragListener(
-              () -> {
-                smoothScrollListView(true);
-                return null;
-              },
-              () -> {
-                stopSmoothScrollListView();
-                return null;
-              }));
+              new TabFragmentBottomDragListener(
+                      () -> {
+                        smoothScrollListView(true);
+                        return null;
+                      },
+                      () -> {
+                        stopSmoothScrollListView();
+                        return null;
+                      }));
       listView.setOnDragListener(
-          new RecyclerAdapterDragListener(
-              adapter, null, mainFragmentViewModel.getDragAndDropPreference(), this));
+              new RecyclerAdapterDragListener(
+                      adapter, null, mainFragmentViewModel.getDragAndDropPreference(), this));
       nofilesview.setOnDragListener(
-          new RecyclerAdapterDragListener(
-              adapter, null, mainFragmentViewModel.getDragAndDropPreference(), this));
+              new RecyclerAdapterDragListener(
+                      adapter, null, mainFragmentViewModel.getDragAndDropPreference(), this));
     }
   }
 
@@ -1515,7 +1510,7 @@ public class MainFragment extends Fragment
     if (isAdded()) {
       if (mainActivityViewModel == null) {
         mainActivityViewModel =
-            new ViewModelProvider(requireMainActivity()).get(MainActivityViewModel.class);
+                new ViewModelProvider(requireMainActivity()).get(MainActivityViewModel.class);
       }
       return mainActivityViewModel;
     } else {
@@ -1526,7 +1521,7 @@ public class MainFragment extends Fragment
 
   @Override
   public void adjustListViewForTv(
-      @NonNull ItemViewHolder viewHolder, @NonNull MainActivity mainActivity) {
+          @NonNull ItemViewHolder viewHolder, @NonNull MainActivity mainActivity) {
     try {
       int[] location = new int[2];
       viewHolder.baseItemView.getLocationOnScreen(location);
@@ -1534,21 +1529,25 @@ public class MainFragment extends Fragment
       if (location[1] < requireMainActivity().getAppbar().getAppbarLayout().getHeight()) {
         listView.scrollToPosition(Math.max(viewHolder.getAdapterPosition() - 5, 0));
       } else if (location[1] + viewHolder.baseItemView.getHeight()
-          > requireContext().getResources().getDisplayMetrics().heightPixels) {
+              > requireContext().getResources().getDisplayMetrics().heightPixels) {
         listView.scrollToPosition(
-            Math.min(viewHolder.getAdapterPosition() + 5, adapter.getItemCount() - 1));
+                Math.min(viewHolder.getAdapterPosition() + 5, adapter.getItemCount() - 1));
       }
     } catch (IndexOutOfBoundsException e) {
       LOG.warn("Failed to adjust scrollview for tv", e);
     }
   }
 
-  /** Whether the FAB should be hidden when this MainFragment is shown */
+  /**
+   * Whether the FAB should be hidden when this MainFragment is shown
+   */
   public boolean getHideFab() {
     return this.hideFab;
   }
 
-  /** Set whether the FAB should be hidden when this MainFragment is shown */
+  /**
+   * Set whether the FAB should be hidden when this MainFragment is shown
+   */
   public void setHideFab(boolean hideFab) {
     this.hideFab = hideFab;
   }

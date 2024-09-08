@@ -49,7 +49,7 @@ enum class AppThemePreference(val id: Int, val canBeLight: Boolean) {
      * Returns the correct [Theme] associated with this [AppThemePreference] based on [context].
      */
     fun getMaterialDialogTheme(context: Context): Theme {
-        return getSimpleTheme(context).getMaterialDialogTheme()
+        return getSimpleTheme(context).materialDialogTheme
     }
 
     /**
