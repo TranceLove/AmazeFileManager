@@ -196,8 +196,6 @@ dependencies {
     implementation libs.apache.ftpserver.ftplet.api
     implementation libs.apache.ftpserver.core
 
-    implementation libs.eventbus
-
     implementation libs.libsu.core
     implementation libs.libsu.io
 

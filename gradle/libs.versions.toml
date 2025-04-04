@@ -35,8 +35,8 @@ androidXTestExt = "1.2.1"
 androidXArchCoreTest = "2.2.0"
 androidXMultidex = "2.0.1"
 autoService = "1.0-rc4"
-kotlinxCoroutineTest = "1.7.3"
-kotlinStdlibJdk8 = "1.9.20"
+kotlinxCoroutines = "1.7.3"
+kotlinStdlibJdk8 = "1.9.25"
 uiAutomator = "2.3.0"
 junit = "4.13.2"
 slf4j = "2.0.13"
@@ -115,14 +115,13 @@ google-play-billing = { module = "com.android.billingclient:billing", version.re
 
 cloudrail-si-android = { module = "com.cloudrail:cloudrail-si-android", version.ref = "cloudrailSiAndroid" }
 
-eventbus = { module = "org.greenrobot:eventbus", version.ref = "eventbus" }
 concurrent-trees = { module = "com.github.npgall:concurrent-trees", version.ref = "concurrentTrees" }
 
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlinStdlibJdk8" }
-kotlin-coroutine-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutineTest" }
+kotlin-coroutine-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 
 libsu-core = { module = "com.github.topjohnwu.libsu:core", version.ref = "libsu" }
 libsu-io = { module = "com.github.topjohnwu.libsu:io", version.ref = "libsu" }

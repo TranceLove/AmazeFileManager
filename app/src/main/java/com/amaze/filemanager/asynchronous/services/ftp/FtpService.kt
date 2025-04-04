@@ -52,6 +52,10 @@ import com.amaze.filemanager.ui.notifications.FtpNotification
 import com.amaze.filemanager.ui.notifications.NotificationConstants
 import com.amaze.filemanager.utils.ObtainableServiceBinder
 import com.amaze.filemanager.utils.PasswordUtil
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.apache.ftpserver.ConnectionConfigFactory
 import org.apache.ftpserver.FtpServer
 import org.apache.ftpserver.FtpServerFactory
@@ -61,7 +65,7 @@ import org.apache.ftpserver.ssl.ClientAuth
 import org.apache.ftpserver.ssl.impl.DefaultSslConfiguration
 import org.apache.ftpserver.usermanager.impl.BaseUser
 import org.apache.ftpserver.usermanager.impl.WritePermission
-import org.greenrobot.eventbus.EventBus
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -79,6 +83,8 @@ import kotlin.concurrent.thread
  * Edited by zent-co on 30-07-2019 Edited by bowiechen on 2019-10-19.
  */
 class FtpService : Service(), Runnable {
+
+    private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val binder: IBinder = ObtainableServiceBinder(this)
 
     // Service will broadcast via event bus when server start/stop
@@ -94,6 +100,12 @@ class FtpService : Service(), Runnable {
     private var isPasswordProtected = false
     private var isStartedByTile = false
     private lateinit var wakeLock: PowerManager.WakeLock
+
+    private fun publishEvent(event: FtpReceiverActions) {
+        serviceScope.launch {
+            FtpEventBus.emit(event)
+        }
+    }
 
     override fun onStartCommand(
         intent: Intent?,
@@ -237,17 +249,16 @@ class FtpService : Service(), Runnable {
                 server =
                     createServer().apply {
                         start()
-                        EventBus.getDefault()
-                            .post(
-                                if (isStartedByTile) {
-                                    FtpReceiverActions.STARTED_FROM_TILE
-                                } else {
-                                    FtpReceiverActions.STARTED
-                                },
-                            )
+                        publishEvent(
+                            if (isStartedByTile) {
+                                FtpReceiverActions.STARTED_FROM_TILE
+                            } else {
+                                FtpReceiverActions.STARTED
+                            },
+                        )
                     }
             }.onFailure {
-                EventBus.getDefault().post(FtpReceiverActions.FAILED_TO_START)
+                publishEvent(FtpReceiverActions.FAILED_TO_START)
             }
         }
     }
@@ -263,7 +274,7 @@ class FtpService : Service(), Runnable {
                 Companion.serverThread = null
             }
             server?.stop().also {
-                EventBus.getDefault().post(FtpReceiverActions.STOPPED)
+                publishEvent(FtpReceiverActions.STOPPED)
             }
         }
     }

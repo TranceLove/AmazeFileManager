@@ -17,77 +17,95 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package com.amaze.filemanager.asynchronous.services.ftp
 
-package com.amaze.filemanager.asynchronous.services.ftp;
+import android.content.Intent
+import android.graphics.drawable.Icon
+import android.os.Build
+import android.service.quicksettings.Tile
+import android.service.quicksettings.TileService
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import com.amaze.filemanager.R
+import com.amaze.filemanager.asynchronous.services.ftp.FtpService.Companion.isRunning
+import com.amaze.filemanager.utils.NetworkUtil.isConnectedToLocalNetwork
+import com.amaze.filemanager.utils.NetworkUtil.isConnectedToWifi
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
+/**
+ * [FtpService] tile service to start and stop the FTP server.
+ *
+ * Created by vishal on 1/1/17.  */
+@RequiresApi(Build.VERSION_CODES.N)
+class FtpTileService : TileService() {
 
-import com.amaze.filemanager.R;
-import com.amaze.filemanager.utils.NetworkUtil;
+    private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
 
-import android.annotation.TargetApi;
-import android.content.Intent;
-import android.graphics.drawable.Icon;
-import android.os.Build;
-import android.service.quicksettings.Tile;
-import android.service.quicksettings.TileService;
-import android.widget.Toast;
-
-/** Created by vishal on 1/1/17. */
-@TargetApi(Build.VERSION_CODES.N)
-public class FtpTileService extends TileService {
-
-  @Subscribe
-  public void onFtpReceiverActions(FtpService.FtpReceiverActions signal) {
-    updateTileState();
-  }
-
-  @Override
-  public void onStartListening() {
-    super.onStartListening();
-    EventBus.getDefault().register(this);
-    updateTileState();
-  }
-
-  @Override
-  public void onStopListening() {
-    super.onStopListening();
-    EventBus.getDefault().unregister(this);
-  }
-
-  @Override
-  public void onClick() {
-    unlockAndRun(
-        () -> {
-          if (FtpService.isRunning()) {
-            getApplicationContext()
-                .sendBroadcast(
-                    new Intent(FtpService.ACTION_STOP_FTPSERVER).setPackage(getPackageName()));
-          } else {
-            if (NetworkUtil.isConnectedToWifi(getApplicationContext())
-                || NetworkUtil.isConnectedToLocalNetwork(getApplicationContext())) {
-              Intent i = new Intent(FtpService.ACTION_START_FTPSERVER).setPackage(getPackageName());
-              i.putExtra(FtpService.TAG_STARTED_BY_TILE, true);
-              getApplicationContext().sendBroadcast(i);
-            } else {
-              Toast.makeText(
-                      getApplicationContext(), getString(R.string.ftp_no_wifi), Toast.LENGTH_LONG)
-                  .show();
+    override fun onCreate() {
+        super.onCreate()
+        serviceScope.launch {
+            FtpEventBus.events.collect { _ ->
+                onFtpReceiverActions()
             }
-          }
-        });
-  }
-
-  private void updateTileState() {
-    Tile tile = getQsTile();
-    if (FtpService.isRunning()) {
-      tile.setState(Tile.STATE_ACTIVE);
-      tile.setIcon(Icon.createWithResource(this, R.drawable.ic_ftp_dark));
-    } else {
-      tile.setState(Tile.STATE_INACTIVE);
-      tile.setIcon(Icon.createWithResource(this, R.drawable.ic_ftp_light));
+        }
     }
-    tile.updateTile();
-  }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceScope.cancel()
+    }
+
+    override fun onStartListening() {
+        super.onStartListening()
+        updateTileState()
+    }
+
+    override fun onClick() {
+        unlockAndRun {
+            if (isRunning()) {
+                applicationContext
+                    .sendBroadcast(
+                        Intent(FtpService.ACTION_STOP_FTPSERVER).setPackage(packageName)
+                    )
+            } else {
+                if (isConnectedToWifi(applicationContext)
+                    || isConnectedToLocalNetwork(applicationContext)
+                ) {
+                    val i = Intent(FtpService.ACTION_START_FTPSERVER).setPackage(packageName)
+                    i.putExtra(FtpService.TAG_STARTED_BY_TILE, true)
+                    applicationContext.sendBroadcast(i)
+                } else {
+                    Toast.makeText(
+                        applicationContext, getString(R.string.ftp_no_wifi), Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun updateTileState() {
+        val tile = qsTile
+        if (isRunning()) {
+            tile.state = Tile.STATE_ACTIVE
+            tile.icon = Icon.createWithResource(
+                this,
+                R.drawable.ic_ftp_dark
+            )
+        } else {
+            tile.state = Tile.STATE_INACTIVE
+            tile.icon = Icon.createWithResource(
+                this,
+                R.drawable.ic_ftp_light
+            )
+        }
+        tile.updateTile()
+    }
+
+    private fun onFtpReceiverActions() {
+        updateTileState()
+    }
 }
