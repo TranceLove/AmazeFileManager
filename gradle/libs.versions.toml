@@ -1,6 +1,6 @@
 [versions]
 compileSdk = "34"
-minSdk = "21"
+minSdk = "26"
 targetSdk = "34"
 kotlin = "1.9.25"
 
@@ -40,8 +40,8 @@ kotlinStdlibJdk8 = "1.9.25"
 uiAutomator = "2.3.0"
 junit = "4.13.2"
 slf4j = "2.0.13"
-apacheSshd = "1.7.0"
-apacheMina = "2.0.16"
+apacheSshd = "2.15.0"
+apacheMina = "2.0.23"
 mockito = "4.11.0"
 mockitoInline = "4.11.0"
 mockitoKotlin = "4.1.0"
@@ -107,7 +107,10 @@ bcpkix-jdk18on = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bo
 bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncyCastle" }
 
 apache-mina-core = { module = "org.apache.mina:mina-core", version.ref = "apacheMina" }
-apache-sshd = { module = "org.apache.sshd:sshd-core", version.ref = "apacheSshd" }
+apache-sshd-core = { module = "org.apache.sshd:sshd-core", version.ref = "apacheSshd" }
+apache-sshd-scp = { module = "org.apache.sshd:sshd-scp", version.ref = "apacheSshd" }
+apache-sshd-sftp = { module = "org.apache.sshd:sshd-sftp", version.ref = "apacheSshd" }
+apache-sshd-mina = { module = "org.apache.sshd:sshd-mina", version.ref = "apacheSshd" }
 apache-ftpserver-ftplet-api = { module = "org.apache.ftpserver:ftplet-api", version.ref = "ftpserver" }
 apache-ftpserver-core = { module = "org.apache.ftpserver:ftpserver-core", version.ref = "ftpserver" }
 

@@ -163,7 +163,10 @@ dependencies {
     testImplementation libs.mockito.core
     testImplementation libs.mockito.inline
     testImplementation libs.mockito.kotlin
-    testImplementation libs.apache.sshd
+    testImplementation libs.apache.sshd.core
+    testImplementation libs.apache.sshd.scp
+    testImplementation libs.apache.sshd.sftp
+    testImplementation libs.apache.sshd.mina
     testImplementation libs.awaitility
     testImplementation libs.jsoup
     testImplementation libs.room.migration

@@ -103,7 +103,10 @@ dependencies {
     testImplementation libs.androidX.test.ext.junit
     //testImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
     testImplementation libs.mockito.core
-    testImplementation libs.apache.sshd
+    testImplementation libs.apache.sshd.core
+    testImplementation libs.apache.sshd.scp
+    testImplementation libs.apache.sshd.sftp
+    testImplementation libs.apache.sshd.mina
     testImplementation libs.awaitility
     testImplementation libs.jsoup
     kspTest libs.auto.service

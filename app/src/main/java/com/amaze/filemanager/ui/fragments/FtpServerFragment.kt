@@ -620,7 +620,7 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
                     ResourcesCompat.getDrawable(
                         resources,
                         R.drawable.ic_eye_off_grey600_24dp,
-                        mainActivity.theme
+                        mainActivity.theme,
                     ),
                 )
             } else {
@@ -630,7 +630,7 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
                     ResourcesCompat.getDrawable(
                         resources,
                         R.drawable.ic_eye_grey600_24dp,
-                        mainActivity.theme
+                        mainActivity.theme,
                     ),
                 )
             }
@@ -943,7 +943,7 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
                 .prefs
                 .getInt(FtpService.KEY_PREFERENCE_TIMEOUT, FtpService.DEFAULT_TIMEOUT)
         private set(seconds) {
-            mainActivity.prefs.edit { putInt(FtpService.KEY_PREFERENCE_TIMEOUT, seconds)}
+            mainActivity.prefs.edit { putInt(FtpService.KEY_PREFERENCE_TIMEOUT, seconds) }
         }
 
     private var securePreference: Boolean

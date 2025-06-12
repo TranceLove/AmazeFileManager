@@ -1,8 +1,8 @@
 package com.amaze.filemanager.asynchronous.services.ftp
 
+import com.amaze.filemanager.ui.fragments.FtpServerFragment
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import com.amaze.filemanager.ui.fragments.FtpServerFragment
 
 /**
  * Replacement event bus to handle [FtpService] events using Kotlin's Flow.
@@ -14,7 +14,6 @@ import com.amaze.filemanager.ui.fragments.FtpServerFragment
  * @see [FtpServerFragment]
  */
 object FtpEventBus {
-
     private val _events = MutableSharedFlow<FtpService.FtpReceiverActions>(replay = 0)
     val events = _events.asSharedFlow()
 

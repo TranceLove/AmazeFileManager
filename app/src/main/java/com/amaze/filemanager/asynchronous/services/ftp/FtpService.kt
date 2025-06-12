@@ -65,7 +65,6 @@ import org.apache.ftpserver.ssl.ClientAuth
 import org.apache.ftpserver.ssl.impl.DefaultSslConfiguration
 import org.apache.ftpserver.usermanager.impl.BaseUser
 import org.apache.ftpserver.usermanager.impl.WritePermission
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -83,7 +82,6 @@ import kotlin.concurrent.thread
  * Edited by zent-co on 30-07-2019 Edited by bowiechen on 2019-10-19.
  */
 class FtpService : Service(), Runnable {
-
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val binder: IBinder = ObtainableServiceBinder(this)
 

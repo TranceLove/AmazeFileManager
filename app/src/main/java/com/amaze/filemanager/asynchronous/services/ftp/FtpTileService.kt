@@ -42,7 +42,6 @@ import kotlinx.coroutines.launch
  * Created by vishal on 1/1/17.  */
 @RequiresApi(Build.VERSION_CODES.N)
 class FtpTileService : TileService() {
-
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
 
     override fun onCreate() {
@@ -69,18 +68,20 @@ class FtpTileService : TileService() {
             if (isRunning()) {
                 applicationContext
                     .sendBroadcast(
-                        Intent(FtpService.ACTION_STOP_FTPSERVER).setPackage(packageName)
+                        Intent(FtpService.ACTION_STOP_FTPSERVER).setPackage(packageName),
                     )
             } else {
-                if (isConnectedToWifi(applicationContext)
-                    || isConnectedToLocalNetwork(applicationContext)
+                if (isConnectedToWifi(applicationContext) ||
+                    isConnectedToLocalNetwork(applicationContext)
                 ) {
                     val i = Intent(FtpService.ACTION_START_FTPSERVER).setPackage(packageName)
                     i.putExtra(FtpService.TAG_STARTED_BY_TILE, true)
                     applicationContext.sendBroadcast(i)
                 } else {
                     Toast.makeText(
-                        applicationContext, getString(R.string.ftp_no_wifi), Toast.LENGTH_LONG
+                        applicationContext,
+                        getString(R.string.ftp_no_wifi),
+                        Toast.LENGTH_LONG,
                     ).show()
                 }
             }
@@ -91,16 +92,18 @@ class FtpTileService : TileService() {
         val tile = qsTile
         if (isRunning()) {
             tile.state = Tile.STATE_ACTIVE
-            tile.icon = Icon.createWithResource(
-                this,
-                R.drawable.ic_ftp_dark
-            )
+            tile.icon =
+                Icon.createWithResource(
+                    this,
+                    R.drawable.ic_ftp_dark,
+                )
         } else {
             tile.state = Tile.STATE_INACTIVE
-            tile.icon = Icon.createWithResource(
-                this,
-                R.drawable.ic_ftp_light
-            )
+            tile.icon =
+                Icon.createWithResource(
+                    this,
+                    R.drawable.ic_ftp_light,
+                )
         }
         tile.updateTile()
     }
