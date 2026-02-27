@@ -18,109 +18,258 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.amaze.filemanager.filesystem.files;
+package com.amaze.filemanager.filesystem.files
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.amaze.filemanager.fileoperations.utils.UpdatePosition
+import com.amaze.filemanager.test.DummyFileGenerator
+import com.amaze.filemanager.utils.ProgressHandler
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.nio.channels.Channels
+import java.security.DigestInputStream
+import java.security.MessageDigest
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.channels.Channels;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+/**
+ * Instrumented tests for [GenericCopyUtil] to verify the correctness of file copying
+ * and progress updates.
+ */
+@Suppress("StringLiteralDuplication")
+@RunWith(AndroidJUnit4::class)
+class GenericCopyUtilEspressoTest {
+    private lateinit var progressHandler: ProgressHandler
+    private lateinit var copyUtil: GenericCopyUtil
+    private lateinit var file1: File
+    private lateinit var file2: File
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+    /**
+     * Pre-test setup.
+     */
+    @Before
+    fun setUp() {
+        progressHandler = ProgressHandler()
+        copyUtil =
+            GenericCopyUtil(
+                InstrumentationRegistry.getInstrumentation().targetContext,
+                progressHandler,
+            )
+        file1 = File.createTempFile("test", "bin").also { it.deleteOnExit() }
+        file2 = File.createTempFile("test", "bin").also { it.deleteOnExit() }
+    }
 
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil;
-import com.amaze.filemanager.test.DummyFileGenerator;
-import com.amaze.filemanager.utils.ProgressHandler;
+    /**
+     * Test doCopy with small file
+     */
+    @Test
+    fun testDoCopySmallFile() {
+        verifyDoCopy(512)
+    }
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.platform.app.InstrumentationRegistry;
+    /**
+     * Test doCopy with large file
+     */
+    @Test
+    fun testDoCopyLargeFile() {
+        verifyDoCopy(10 * 1024 * 1024)
+    }
 
-@RunWith(AndroidJUnit4.class)
-public class GenericCopyUtilEspressoTest {
+    /**
+     * Test doCopy with empty file
+     */
+    @Test
+    fun testDoCopyEmptyFile() {
+        verifyDoCopy(0)
+    }
 
-  private GenericCopyUtil copyUtil;
+    private fun verifyDoCopy(size: Int) {
+        val checksum = DummyFileGenerator.createFile(file1, size)
+        val progressUpdates = mutableListOf<Long>()
+        val updatePosition = UpdatePosition { progressUpdates.add(it) }
+        copyUtil.doCopy(
+            FileInputStream(file1).channel,
+            Channels.newChannel(FileOutputStream(file2)),
+            updatePosition,
+        )
+        assertEquals(file1.length(), file2.length())
+        if (size > 0) {
+            assertSha1Equals(checksum, file2)
+        }
+        assertEquals("Progress sum should equal file size", file1.length(), progressUpdates.sum())
+    }
 
-  private File file1, file2;
+    /**
+     * Test copyFile(FileChannel, FileChannel) with small file
+     */
+    @Test
+    fun testCopyFileChannelSmallFile() {
+        verifyCopyFileChannel(512)
+    }
 
-  @Before
-  public void setUp() throws IOException {
-    copyUtil =
-        new GenericCopyUtil(
-            InstrumentationRegistry.getInstrumentation().getTargetContext(), new ProgressHandler());
-    file1 = File.createTempFile("test", "bin");
-    file2 = File.createTempFile("test", "bin");
-    file1.deleteOnExit();
-    file2.deleteOnExit();
-  }
+    /**
+     * Test copyFile(FileChannel, FileChannel) with large file
+     */
+    @Test
+    fun testCopyFileChannelLargeFile() {
+        verifyCopyFileChannel(10 * 1024 * 1024)
+    }
 
-  @Test
-  public void testCopyFile1() throws IOException, NoSuchAlgorithmException {
-    doTestCopyFile1(512);
-    doTestCopyFile1(10 * 1024 * 1024);
-  }
+    /**
+     * Test copyFile(FileChannel, FileChannel) with empty file
+     */
+    @Test
+    fun testCopyFileChannelEmptyFile() {
+        verifyCopyFileChannel(0)
+    }
 
-  @Test
-  public void testCopyFile2() throws IOException, NoSuchAlgorithmException {
-    doTestCopyFile2(512);
-    doTestCopyFile2(10 * 1024 * 1024);
-  }
+    private fun verifyCopyFileChannel(size: Int) {
+        val checksum = DummyFileGenerator.createFile(file1, size)
+        val progressUpdates = mutableListOf<Long>()
+        val updatePosition = UpdatePosition { progressUpdates.add(it) }
+        copyUtil.copyFile(
+            FileInputStream(file1).channel,
+            FileOutputStream(file2).channel,
+            updatePosition,
+        )
+        assertEquals(file1.length(), file2.length())
+        if (size > 0) {
+            assertSha1Equals(checksum, file2)
+        }
+        assertEquals("Progress sum should equal file size", file1.length(), progressUpdates.sum())
+    }
 
-  @Test
-  public void testCopyFile3() throws IOException, NoSuchAlgorithmException {
-    doTestCopyFile3(512);
-    doTestCopyFile3(10 * 1024 * 1024);
-  }
+    /**
+     * Test copyFile(BufferedInputStream, BufferedOutputStream) with small file
+     */
+    @Test
+    fun testCopyBufferedStreamsSmallFile() {
+        verifyCopyBufferedStreams(512)
+    }
 
-  // doCopy(ReadableByteChannel in, WritableByteChannel out)
-  private void doTestCopyFile1(int size) throws IOException, NoSuchAlgorithmException {
-    byte[] checksum = DummyFileGenerator.createFile(file1, size);
-    copyUtil.doCopy(
-        new FileInputStream(file1).getChannel(),
-        Channels.newChannel(new FileOutputStream(file2)),
-        ServiceWatcherUtil.UPDATE_POSITION);
-    assertEquals(file1.length(), file2.length());
-    assertSha1Equals(checksum, file2);
-  }
+    /**
+     * Test copyFile(BufferedInputStream, BufferedOutputStream) with large file
+     */
+    @Test
+    fun testCopyBufferedStreamsLargeFile() {
+        verifyCopyBufferedStreams(10 * 1024 * 1024)
+    }
 
-  // copy(FileChannel in, FileChannel out)
-  private void doTestCopyFile2(int size) throws IOException, NoSuchAlgorithmException {
-    byte[] checksum = DummyFileGenerator.createFile(file1, size);
-    copyUtil.copyFile(
-        new FileInputStream(file1).getChannel(),
-        new FileOutputStream(file2).getChannel(),
-        ServiceWatcherUtil.UPDATE_POSITION);
-    assertEquals(file1.length(), file2.length());
-    assertSha1Equals(checksum, file2);
-  }
+    /**
+     * Test copyFile(BufferedInputStream, BufferedOutputStream) with empty file
+     */
+    @Test
+    fun testCopyBufferedStreamsEmptyFile() {
+        verifyCopyBufferedStreams(0)
+    }
 
-  // copy(BufferedInputStream in, BufferedOutputStream out)
-  private void doTestCopyFile3(int size) throws IOException, NoSuchAlgorithmException {
-    byte[] checksum = DummyFileGenerator.createFile(file1, size);
-    copyUtil.copyFile(
-        new BufferedInputStream(new FileInputStream(file1)),
-        new BufferedOutputStream(new FileOutputStream(file2)),
-        ServiceWatcherUtil.UPDATE_POSITION);
-    assertEquals(file1.length(), file2.length());
-    assertSha1Equals(checksum, file2);
-  }
+    private fun verifyCopyBufferedStreams(size: Int) {
+        val checksum = DummyFileGenerator.createFile(file1, size)
+        val progressUpdates = mutableListOf<Long>()
+        val updatePosition = UpdatePosition { progressUpdates.add(it) }
+        copyUtil.copyFile(
+            BufferedInputStream(FileInputStream(file1)),
+            BufferedOutputStream(FileOutputStream(file2)),
+            updatePosition,
+        )
+        assertEquals(file1.length(), file2.length())
+        if (size > 0) {
+            assertSha1Equals(checksum, file2)
+        }
+        assertEquals("Progress sum should equal file size", file1.length(), progressUpdates.sum())
+    }
 
-  private void assertSha1Equals(byte[] expected, File file)
-      throws NoSuchAlgorithmException, IOException {
-    MessageDigest md = MessageDigest.getInstance("SHA-1");
-    DigestInputStream in = new DigestInputStream(new FileInputStream(file), md);
-    byte[] buffer = new byte[GenericCopyUtil.DEFAULT_BUFFER_SIZE];
-    while (in.read(buffer) > -1) {}
-    in.close();
-    assertArrayEquals(expected, md.digest());
-  }
+    /**
+     * Test copyFile(FileChannel, BufferedOutputStream) for small files
+     */
+    @Test
+    fun testCopyFileChannelToBufferedOutputStreamSmallFile() {
+        verifyCopyFileChannelToBufferedOutputStream(512)
+    }
+
+    /**
+     * Test copyFile(FileChannel, BufferedOutputStream) for large files
+     */
+    @Test
+    fun testCopyFileChannelToBufferedOutputStreamLargeFile() {
+        verifyCopyFileChannelToBufferedOutputStream(10 * 1024 * 1024)
+    }
+
+    private fun verifyCopyFileChannelToBufferedOutputStream(size: Int) {
+        val checksum = DummyFileGenerator.createFile(file1, size)
+        val progressUpdates = mutableListOf<Long>()
+        val updatePosition = UpdatePosition { progressUpdates.add(it) }
+        copyUtil.copyFile(
+            FileInputStream(file1).channel,
+            BufferedOutputStream(FileOutputStream(file2)),
+            updatePosition,
+        )
+        assertEquals(file1.length(), file2.length())
+        if (size > 0) {
+            assertSha1Equals(checksum, file2)
+        }
+        assertEquals("Progress sum should equal file size", file1.length(), progressUpdates.sum())
+    }
+
+    /**
+     * Test copy cancelled
+     */
+    @Test
+    fun testCancellation() {
+        val size = 10 * 1024 * 1024
+        DummyFileGenerator.createFile(file1, size)
+        progressHandler.setCancelled(true)
+        val progressUpdates = mutableListOf<Long>()
+        val updatePosition = UpdatePosition { progressUpdates.add(it) }
+        copyUtil.doCopy(
+            FileInputStream(file1).channel,
+            Channels.newChannel(FileOutputStream(file2)),
+            updatePosition,
+        )
+        assertTrue(
+            "Cancelled copy should write less than full size",
+            file2.length() < file1.length(),
+        )
+    }
+
+    /**
+     * Test when copying a large file using the transferTo path, progress updates are batched
+     */
+    @Test
+    fun testBatchedProgress_transferToPath() {
+        val size = 10 * 1024 * 1024
+        DummyFileGenerator.createFile(file1, size)
+        val progressUpdates = mutableListOf<Long>()
+        val updatePosition = UpdatePosition { progressUpdates.add(it) }
+        copyUtil.copyFile(
+            FileInputStream(file1).channel,
+            FileOutputStream(file2).channel,
+            updatePosition,
+        )
+        assertEquals("Progress sum should equal file size", file1.length(), progressUpdates.sum())
+        assertTrue(
+            "Batched progress should have fewer callbacks (got ${progressUpdates.size})",
+            progressUpdates.size <= 5,
+        )
+    }
+
+    private fun assertSha1Equals(
+        expected: ByteArray,
+        file: File,
+    ) {
+        val md = MessageDigest.getInstance("SHA-1")
+        DigestInputStream(FileInputStream(file), md).use { din ->
+            val buffer = ByteArray(GenericCopyUtil.DEFAULT_BUFFER_SIZE)
+            while (din.read(buffer) > -1) { /* consume */ }
+        }
+        assertArrayEquals(expected, md.digest())
+    }
 }

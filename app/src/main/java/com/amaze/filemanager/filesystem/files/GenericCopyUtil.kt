@@ -18,396 +18,448 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.amaze.filemanager.filesystem.files;
+package com.amaze.filemanager.filesystem.files
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
-import java.util.Objects;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.amaze.filemanager.fileoperations.filesystem.OpenMode;
-import com.amaze.filemanager.fileoperations.utils.OnLowMemory;
-import com.amaze.filemanager.fileoperations.utils.UpdatePosition;
-import com.amaze.filemanager.filesystem.ExternalSdCardOperation;
-import com.amaze.filemanager.filesystem.FileProperties;
-import com.amaze.filemanager.filesystem.HybridFile;
-import com.amaze.filemanager.filesystem.HybridFileParcelable;
-import com.amaze.filemanager.filesystem.MediaStoreHack;
-import com.amaze.filemanager.filesystem.SafRootHolder;
-import com.amaze.filemanager.filesystem.cloud.CloudUtil;
-import com.amaze.filemanager.utils.DataUtils;
-import com.amaze.filemanager.utils.OTGUtil;
-import com.amaze.filemanager.utils.ProgressHandler;
-import com.cloudrail.si.interfaces.CloudStorage;
-
-import android.content.ContentResolver;
-import android.content.Context;
-import android.os.Build;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
-import androidx.documentfile.provider.DocumentFile;
+import android.content.Context
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.KITKAT
+import android.os.Build.VERSION_CODES.LOLLIPOP
+import androidx.annotation.VisibleForTesting
+import com.amaze.filemanager.fileoperations.filesystem.OpenMode
+import com.amaze.filemanager.fileoperations.utils.OnLowMemory
+import com.amaze.filemanager.fileoperations.utils.UpdatePosition
+import com.amaze.filemanager.filesystem.ExternalSdCardOperation
+import com.amaze.filemanager.filesystem.FileProperties
+import com.amaze.filemanager.filesystem.HybridFile
+import com.amaze.filemanager.filesystem.HybridFileParcelable
+import com.amaze.filemanager.filesystem.MediaStoreHack
+import com.amaze.filemanager.filesystem.SafRootHolder
+import com.amaze.filemanager.filesystem.cloud.CloudUtil
+import com.amaze.filemanager.utils.DataUtils
+import com.amaze.filemanager.utils.OTGUtil
+import com.amaze.filemanager.utils.ProgressHandler
+import org.slf4j.LoggerFactory
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.RandomAccessFile
+import java.nio.ByteBuffer
+import java.nio.channels.Channels
+import java.nio.channels.FileChannel
+import java.nio.channels.ReadableByteChannel
+import java.nio.channels.WritableByteChannel
 
 /** Base class to handle file copy. */
-public class GenericCopyUtil {
-  private final Logger LOG = LoggerFactory.getLogger(GenericCopyUtil.class);
+@Suppress("ComplexMethod", "LongMethod")
+class GenericCopyUtil(
+    private val mContext: Context,
+    private val progressHandler: ProgressHandler,
+) {
+    private var mSourceFile: HybridFileParcelable? = null
+    private var mTargetFile: HybridFile? = null
+    private val dataUtils = DataUtils.getInstance()
 
-  private HybridFileParcelable mSourceFile;
-  private HybridFile mTargetFile;
-  private final Context mContext; // context needed to find the DocumentFile in otg/sd card
-  private final DataUtils dataUtils = DataUtils.getInstance();
-  private final ProgressHandler progressHandler;
+    companion object {
+        @JvmStatic
+        private val LOG = LoggerFactory.getLogger(GenericCopyUtil::class.java)
 
-  public static final int DEFAULT_BUFFER_SIZE = 8192;
+        const val DEFAULT_BUFFER_SIZE = 8192
 
-  /*
-     Defines the block size per transfer over NIO channels.
-
-     Cannot modify DEFAULT_BUFFER_SIZE since it's used by other classes, will have undesired
-     effect on other functions
-  */
-  private static final int DEFAULT_TRANSFER_QUANTUM = 1024 * 1024;
-
-  public GenericCopyUtil(Context context, ProgressHandler progressHandler) {
-    this.mContext = context;
-    this.progressHandler = progressHandler;
-  }
-
-  /**
-   * Starts copy of file Supports : {@link File}, {@link jcifs.smb.SmbFile}, {@link DocumentFile},
-   * {@link CloudStorage}
-   *
-   * @param lowOnMemory defines whether system is running low on memory, in which case we'll switch
-   *     to using streams instead of channel which maps the who buffer in memory. TODO: Use buffers
-   *     even on low memory but don't map the whole file to memory but parts of it, and transfer
-   *     each part instead.
-   */
-  private void startCopy(
-      boolean lowOnMemory, @NonNull OnLowMemory onLowMemory, @NonNull UpdatePosition updatePosition)
-      throws IOException {
-
-    ReadableByteChannel inChannel = null;
-    WritableByteChannel outChannel = null;
-    BufferedInputStream bufferedInputStream = null;
-    BufferedOutputStream bufferedOutputStream = null;
-
-    try {
-      // initializing the input channels based on file types
-      if (mSourceFile.isOtgFile() || mSourceFile.isDocumentFile()) {
-        // source is in otg
-        ContentResolver contentResolver = mContext.getContentResolver();
-        DocumentFile documentSourceFile =
-            mSourceFile.isDocumentFile()
-                ? OTGUtil.getDocumentFile(
-                    mSourceFile.getPath(),
-                    SafRootHolder.getUriRoot(),
-                    mContext,
-                    mSourceFile.isOtgFile() ? OpenMode.OTG : OpenMode.DOCUMENT_FILE,
-                    false)
-                : OTGUtil.getDocumentFile(mSourceFile.getPath(), mContext, false);
-
-        bufferedInputStream =
-            new BufferedInputStream(
-                contentResolver.openInputStream(documentSourceFile.getUri()), DEFAULT_BUFFER_SIZE);
-      } else if (mSourceFile.isSmb() || mSourceFile.isSftp() || mSourceFile.isFtp()) {
-        bufferedInputStream =
-            new BufferedInputStream(mSourceFile.getInputStream(mContext), DEFAULT_TRANSFER_QUANTUM);
-      } else if (mSourceFile.isDropBoxFile()
-          || mSourceFile.isBoxFile()
-          || mSourceFile.isGoogleDriveFile()
-          || mSourceFile.isOneDriveFile()) {
-        OpenMode openMode = mSourceFile.getMode();
-
-        CloudStorage cloudStorage = dataUtils.getAccount(openMode);
-        bufferedInputStream =
-            new BufferedInputStream(
-                cloudStorage.download(CloudUtil.stripPath(openMode, mSourceFile.getPath())));
-      } else {
-
-        // source file is neither smb nor otg; getting a channel from direct file instead of stream
-        File file = new File(mSourceFile.getPath());
-        if (FileProperties.isReadable(file)) {
-
-          if (mTargetFile.isOneDriveFile()
-              || mTargetFile.isDropBoxFile()
-              || mTargetFile.isGoogleDriveFile()
-              || mTargetFile.isBoxFile()
-              || lowOnMemory) {
-            // our target is cloud, we need a stream not channel
-            bufferedInputStream = new BufferedInputStream(new FileInputStream(file));
-          } else {
-
-            inChannel = new RandomAccessFile(file, "r").getChannel();
-          }
-        } else {
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            ContentResolver contentResolver = mContext.getContentResolver();
-            DocumentFile documentSourceFile =
-                ExternalSdCardOperation.getDocumentFile(file, mSourceFile.isDirectory(), mContext);
-
-            bufferedInputStream =
-                new BufferedInputStream(
-                    contentResolver.openInputStream(documentSourceFile.getUri()),
-                    DEFAULT_BUFFER_SIZE);
-          } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
-            InputStream inputStream1 =
-                MediaStoreHack.getInputStream(mContext, file, mSourceFile.getSize());
-            bufferedInputStream = new BufferedInputStream(inputStream1);
-          }
-        }
-      }
-
-      // initializing the output channels based on file types
-      if (mTargetFile.isOtgFile() || mTargetFile.isDocumentFile()) {
-        // target in OTG, obtain streams from DocumentFile Uri's
-        ContentResolver contentResolver = mContext.getContentResolver();
-        DocumentFile documentTargetFile =
-            mTargetFile.isDocumentFile()
-                ? OTGUtil.getDocumentFile(
-                    mTargetFile.getPath(),
-                    SafRootHolder.getUriRoot(),
-                    mContext,
-                    mTargetFile.isOtgFile() ? OpenMode.OTG : OpenMode.DOCUMENT_FILE,
-                    true)
-                : OTGUtil.getDocumentFile(mTargetFile.getPath(), mContext, true);
-
-        bufferedOutputStream =
-            new BufferedOutputStream(
-                contentResolver.openOutputStream(documentTargetFile.getUri()), DEFAULT_BUFFER_SIZE);
-      } else if (mTargetFile.isFtp() || mTargetFile.isSftp() || mTargetFile.isSmb()) {
-        bufferedOutputStream =
-            new BufferedOutputStream(
-                mTargetFile.getOutputStream(mContext), DEFAULT_TRANSFER_QUANTUM);
-      } else if (mTargetFile.isDropBoxFile()
-          || mTargetFile.isBoxFile()
-          || mTargetFile.isGoogleDriveFile()
-          || mTargetFile.isOneDriveFile()) {
-        cloudCopy(mTargetFile.getMode(), bufferedInputStream);
-        return;
-      } else {
-        // copying normal file, target not in OTG
-        File file = new File(mTargetFile.getPath());
-        if (FileProperties.isWritable(file)) {
-
-          if (lowOnMemory) {
-            bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(file));
-          } else {
-
-            outChannel = new RandomAccessFile(file, "rw").getChannel();
-          }
-        } else {
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            ContentResolver contentResolver = mContext.getContentResolver();
-            DocumentFile documentTargetFile =
-                ExternalSdCardOperation.getDocumentFile(
-                    file, mTargetFile.isDirectory(mContext), mContext);
-
-            bufferedOutputStream =
-                new BufferedOutputStream(
-                    contentResolver.openOutputStream(documentTargetFile.getUri()),
-                    DEFAULT_BUFFER_SIZE);
-          } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
-            // Workaround for Kitkat ext SD card
-            bufferedOutputStream =
-                new BufferedOutputStream(MediaStoreHack.getOutputStream(mContext, file.getPath()));
-          }
-        }
-      }
-
-      if (bufferedInputStream != null) {
-        inChannel = Channels.newChannel(bufferedInputStream);
-      }
-
-      if (bufferedOutputStream != null) {
-        outChannel = Channels.newChannel(bufferedOutputStream);
-      }
-
-      Objects.requireNonNull(inChannel);
-      Objects.requireNonNull(outChannel);
-
-      doCopy(inChannel, outChannel, updatePosition);
-    } catch (IOException e) {
-      LOG.error("I/O Error copy {} to {}: {}", mSourceFile, mTargetFile, e);
-      throw new IOException(e);
-    } catch (OutOfMemoryError e) {
-      LOG.warn("low memory while copying {} to {}: {}", mSourceFile, mTargetFile, e);
-
-      onLowMemory.onLowMemory();
-
-      startCopy(true, onLowMemory, updatePosition);
-    } finally {
-
-      try {
-        if (inChannel != null && inChannel.isOpen()) inChannel.close();
-        if (outChannel != null && outChannel.isOpen()) outChannel.close();
         /*
-         * It does seems closing the inChannel/outChannel is already sufficient closing the below
-         * bufferedInputStream and bufferedOutputStream instances. These 2 lines prevented FTP
-         * copy from working, especially on Android 9 - TranceLove
+         * Defines the block size per transfer over NIO channels.
+         *
+         * Cannot modify DEFAULT_BUFFER_SIZE since it's used by other classes, will have undesired
+         * effect on other functions
          */
-        //        if (bufferedInputStream != null) bufferedInputStream.close();
-        //        if (bufferedOutputStream != null) bufferedOutputStream.close();
-      } catch (IOException e) {
-        LOG.warn("failed to close stream after copying", e);
-        // failure in closing stream
-      }
+        @JvmStatic
+        private val DEFAULT_TRANSFER_QUANTUM = 1024 * 1024
 
-      // If target file is copied onto the device and copy was successful, trigger media store
-      // rescan
-      if (mTargetFile != null) {
-        MediaConnectionUtils.scanFile(mContext, new HybridFile[] {mTargetFile});
-      }
-    }
-  }
-
-  private void cloudCopy(
-      @NonNull OpenMode openMode, @NonNull BufferedInputStream bufferedInputStream)
-      throws IOException {
-    DataUtils dataUtils = DataUtils.getInstance();
-    // API doesn't support output stream, we'll upload the file directly
-    CloudStorage cloudStorage = dataUtils.getAccount(openMode);
-
-    if (mSourceFile.getMode() == openMode) {
-      // we're in the same provider, use api method
-      cloudStorage.copy(
-          CloudUtil.stripPath(openMode, mSourceFile.getPath()),
-          CloudUtil.stripPath(openMode, mTargetFile.getPath()));
-    } else {
-      cloudStorage.upload(
-          CloudUtil.stripPath(openMode, mTargetFile.getPath()),
-          bufferedInputStream,
-          mSourceFile.getSize(),
-          true);
-      bufferedInputStream.close();
-    }
-  }
-
-  /**
-   * Method exposes this class to initiate copy
-   *
-   * @param sourceFile the source file, which is to be copied
-   * @param targetFile the target file
-   */
-  public void copy(
-      HybridFileParcelable sourceFile,
-      HybridFile targetFile,
-      @NonNull OnLowMemory onLowMemory,
-      @NonNull UpdatePosition updatePosition)
-      throws IOException {
-    this.mSourceFile = sourceFile;
-    this.mTargetFile = targetFile;
-
-    startCopy(false, onLowMemory, updatePosition);
-  }
-
-  /**
-   * Calls {@link #doCopy(ReadableByteChannel, WritableByteChannel, UpdatePosition)}.
-   *
-   * @see Channels#newChannel(InputStream)
-   * @param bufferedInputStream source
-   * @param outChannel target
-   * @throws IOException
-   */
-  @VisibleForTesting
-  void copyFile(
-      @NonNull BufferedInputStream bufferedInputStream,
-      @NonNull FileChannel outChannel,
-      @NonNull UpdatePosition updatePosition)
-      throws IOException {
-    doCopy(Channels.newChannel(bufferedInputStream), outChannel, updatePosition);
-  }
-
-  /**
-   * Calls {@link #doCopy(ReadableByteChannel, WritableByteChannel, UpdatePosition)}.
-   *
-   * @param inChannel source
-   * @param outChannel target
-   * @throws IOException
-   */
-  @VisibleForTesting
-  void copyFile(
-      @NonNull FileChannel inChannel,
-      @NonNull FileChannel outChannel,
-      @NonNull UpdatePosition updatePosition)
-      throws IOException {
-    // MappedByteBuffer inByteBuffer = inChannel.map(FileChannel.MapMode.READ_ONLY, 0,
-    // inChannel.size());
-    // MappedByteBuffer outByteBuffer = outChannel.map(FileChannel.MapMode.READ_WRITE, 0,
-    // inChannel.size());
-    doCopy(inChannel, outChannel, updatePosition);
-  }
-
-  /**
-   * Calls {@link #doCopy(ReadableByteChannel, WritableByteChannel, UpdatePosition)}.
-   *
-   * @see Channels#newChannel(InputStream)
-   * @see Channels#newChannel(OutputStream)
-   * @param bufferedInputStream source
-   * @param bufferedOutputStream target
-   * @throws IOException
-   */
-  @VisibleForTesting
-  void copyFile(
-      @NonNull BufferedInputStream bufferedInputStream,
-      @NonNull BufferedOutputStream bufferedOutputStream,
-      @NonNull UpdatePosition updatePosition)
-      throws IOException {
-    doCopy(
-        Channels.newChannel(bufferedInputStream),
-        Channels.newChannel(bufferedOutputStream),
-        updatePosition);
-  }
-
-  /**
-   * Calls {@link #doCopy(ReadableByteChannel, WritableByteChannel, UpdatePosition)}.
-   *
-   * @see Channels#newChannel(OutputStream)
-   * @param inChannel source
-   * @param bufferedOutputStream target
-   * @throws IOException
-   */
-  @VisibleForTesting
-  void copyFile(
-      @NonNull FileChannel inChannel,
-      @NonNull BufferedOutputStream bufferedOutputStream,
-      @NonNull UpdatePosition updatePosition)
-      throws IOException {
-    doCopy(inChannel, Channels.newChannel(bufferedOutputStream), updatePosition);
-  }
-
-  @VisibleForTesting
-  void doCopy(
-      @NonNull ReadableByteChannel from,
-      @NonNull WritableByteChannel to,
-      @NonNull UpdatePosition updatePosition)
-      throws IOException {
-    ByteBuffer buffer = ByteBuffer.allocateDirect(DEFAULT_TRANSFER_QUANTUM);
-    long count;
-    while ((from.read(buffer) != -1 || buffer.position() > 0) && !progressHandler.getCancelled()) {
-      buffer.flip();
-      count = to.write(buffer);
-      updatePosition.updatePosition(count);
-      buffer.compact();
+        /**
+         * Threshold for batched progress updates (4 MB).
+         * Reduces callback frequency for large files, improving performance
+         * while keeping UI responsive.
+         */
+        @JvmStatic
+        private val PROGRESS_UPDATE_THRESHOLD = 4L * 1024 * 1024
     }
 
-    buffer.flip();
-    while (buffer.hasRemaining()) to.write(buffer);
+    /**
+     * Starts copy of file Supports : [File], [jcifs.smb.SmbFile], [DocumentFile],
+     * [CloudStorage]
+     *
+     * @param lowOnMemory defines whether system is running low on memory, in which case we'll switch
+     *     to using streams instead of channel which maps the whole buffer in memory.
+     */
+    @Throws(IOException::class)
+    private fun startCopy(
+        lowOnMemory: Boolean,
+        onLowMemory: OnLowMemory,
+        updatePosition: UpdatePosition,
+    ) {
+        var inChannel: ReadableByteChannel? = null
+        var outChannel: WritableByteChannel? = null
+        var bufferedInputStream: BufferedInputStream? = null
+        var bufferedOutputStream: BufferedOutputStream? = null
 
-    from.close();
-    to.close();
-  }
+        try {
+            val sourceFile = requireNotNull(mSourceFile)
+            val targetFile = requireNotNull(mTargetFile)
+
+            // initializing the input channels based on file types
+            when {
+                sourceFile.isOtgFile || sourceFile.isDocumentFile -> {
+                    val contentResolver = mContext.contentResolver
+                    val documentSourceFile =
+                        if (sourceFile.isDocumentFile) {
+                            OTGUtil.getDocumentFile(
+                                sourceFile.path,
+                                SafRootHolder.uriRoot!!,
+                                mContext,
+                                if (sourceFile.isOtgFile) OpenMode.OTG else OpenMode.DOCUMENT_FILE,
+                                false,
+                            )
+                        } else {
+                            OTGUtil.getDocumentFile(sourceFile.path, mContext, false)
+                        }
+                    bufferedInputStream =
+                        BufferedInputStream(
+                            contentResolver.openInputStream(documentSourceFile!!.uri),
+                            DEFAULT_TRANSFER_QUANTUM,
+                        )
+                }
+                sourceFile.isSmb || sourceFile.isSftp || sourceFile.isFtp -> {
+                    bufferedInputStream =
+                        BufferedInputStream(
+                            sourceFile.getInputStream(mContext),
+                            DEFAULT_TRANSFER_QUANTUM,
+                        )
+                }
+                sourceFile.isDropBoxFile || sourceFile.isBoxFile ||
+                    sourceFile.isGoogleDriveFile || sourceFile.isOneDriveFile -> {
+                    val openMode = sourceFile.mode
+                    val cloudStorage = dataUtils.getAccount(openMode)
+                    bufferedInputStream =
+                        BufferedInputStream(
+                            cloudStorage.download(CloudUtil.stripPath(openMode, sourceFile.path)),
+                        )
+                }
+                else -> {
+                    // source file is neither smb nor otg; getting a channel from direct file
+                    val file = File(sourceFile.path)
+                    if (FileProperties.isReadable(file)) {
+                        if (targetFile.isOneDriveFile || targetFile.isDropBoxFile ||
+                            targetFile.isGoogleDriveFile || targetFile.isBoxFile || lowOnMemory
+                        ) {
+                            bufferedInputStream = BufferedInputStream(FileInputStream(file))
+                        } else {
+                            inChannel = RandomAccessFile(file, "r").channel
+                        }
+                    } else {
+                        if (SDK_INT >= LOLLIPOP) {
+                            val contentResolver = mContext.contentResolver
+                            val documentSourceFile =
+                                ExternalSdCardOperation.getDocumentFile(
+                                    file,
+                                    sourceFile.isDirectory,
+                                    mContext,
+                                )
+                            bufferedInputStream =
+                                BufferedInputStream(
+                                    contentResolver.openInputStream(documentSourceFile!!.uri),
+                                    DEFAULT_TRANSFER_QUANTUM,
+                                )
+                        } else if (SDK_INT == KITKAT) {
+                            val inputStream =
+                                MediaStoreHack.getInputStream(
+                                    mContext,
+                                    file,
+                                    sourceFile.getSize(),
+                                )
+                            bufferedInputStream = BufferedInputStream(inputStream)
+                        }
+                    }
+                }
+            }
+
+            // initializing the output channels based on file types
+            when {
+                targetFile.isOtgFile || targetFile.isDocumentFile -> {
+                    val contentResolver = mContext.contentResolver
+                    val documentTargetFile =
+                        if (targetFile.isDocumentFile) {
+                            OTGUtil.getDocumentFile(
+                                targetFile.path,
+                                SafRootHolder.uriRoot!!,
+                                mContext,
+                                if (targetFile.isOtgFile) OpenMode.OTG else OpenMode.DOCUMENT_FILE,
+                                true,
+                            )
+                        } else {
+                            OTGUtil.getDocumentFile(targetFile.path, mContext, true)
+                        }
+                    bufferedOutputStream =
+                        BufferedOutputStream(
+                            contentResolver.openOutputStream(documentTargetFile!!.uri),
+                            DEFAULT_TRANSFER_QUANTUM,
+                        )
+                }
+                targetFile.isFtp || targetFile.isSftp || targetFile.isSmb -> {
+                    bufferedOutputStream =
+                        BufferedOutputStream(
+                            targetFile.getOutputStream(mContext),
+                            DEFAULT_TRANSFER_QUANTUM,
+                        )
+                }
+                targetFile.isDropBoxFile || targetFile.isBoxFile ||
+                    targetFile.isGoogleDriveFile || targetFile.isOneDriveFile -> {
+                    cloudCopy(targetFile.mode, requireNotNull(bufferedInputStream))
+                    return
+                }
+                else -> {
+                    val file = File(targetFile.path)
+                    if (FileProperties.isWritable(file)) {
+                        if (lowOnMemory) {
+                            bufferedOutputStream = BufferedOutputStream(FileOutputStream(file))
+                        } else {
+                            outChannel = RandomAccessFile(file, "rw").channel
+                        }
+                    } else {
+                        if (SDK_INT >= LOLLIPOP) {
+                            val contentResolver = mContext.contentResolver
+                            val documentTargetFile =
+                                ExternalSdCardOperation.getDocumentFile(
+                                    file,
+                                    targetFile.isDirectory(mContext),
+                                    mContext,
+                                )
+                            bufferedOutputStream =
+                                BufferedOutputStream(
+                                    contentResolver.openOutputStream(documentTargetFile!!.uri),
+                                    DEFAULT_TRANSFER_QUANTUM,
+                                )
+                        } else if (SDK_INT == KITKAT) {
+                            bufferedOutputStream =
+                                BufferedOutputStream(
+                                    MediaStoreHack.getOutputStream(mContext, file.path),
+                                )
+                        }
+                    }
+                }
+            }
+
+            if (bufferedInputStream != null) {
+                inChannel = Channels.newChannel(bufferedInputStream)
+            }
+            if (bufferedOutputStream != null) {
+                outChannel = Channels.newChannel(bufferedOutputStream)
+            }
+
+            requireNotNull(inChannel) { "Input channel must not be null" }
+            requireNotNull(outChannel) { "Output channel must not be null" }
+
+            doCopy(inChannel, outChannel, updatePosition)
+        } catch (e: IOException) {
+            LOG.error("I/O Error copy {} to {}: {}", mSourceFile, mTargetFile, e)
+            throw IOException(e)
+        } catch (e: OutOfMemoryError) {
+            LOG.warn("low memory while copying {} to {}: {}", mSourceFile, mTargetFile, e)
+            onLowMemory.onLowMemory()
+            startCopy(true, onLowMemory, updatePosition)
+        } finally {
+            try {
+                if (inChannel != null && inChannel.isOpen) inChannel.close()
+                if (outChannel != null && outChannel.isOpen) outChannel.close()
+                /*
+                 * It does seem closing the inChannel/outChannel is already sufficient closing the below
+                 * bufferedInputStream and bufferedOutputStream instances. These 2 lines prevented FTP
+                 * copy from working, especially on Android 9 - TranceLove
+                 */
+            } catch (e: IOException) {
+                LOG.warn("failed to close stream after copying", e)
+            }
+
+            // If target file is copied onto the device and copy was successful, trigger media store
+            // rescan
+            mTargetFile?.let {
+                MediaConnectionUtils.scanFile(mContext, arrayOf(it))
+            }
+        }
+    }
+
+    @Throws(IOException::class)
+    private fun cloudCopy(
+        openMode: OpenMode,
+        bufferedInputStream: BufferedInputStream,
+    ) {
+        val dataUtils = DataUtils.getInstance()
+        val cloudStorage = dataUtils.getAccount(openMode)
+
+        if (mSourceFile?.mode == openMode) {
+            cloudStorage.copy(
+                CloudUtil.stripPath(openMode, mSourceFile!!.path),
+                CloudUtil.stripPath(openMode, mTargetFile!!.path),
+            )
+        } else {
+            cloudStorage.upload(
+                CloudUtil.stripPath(openMode, mTargetFile!!.path),
+                bufferedInputStream,
+                mSourceFile!!.getSize(),
+                true,
+            )
+            bufferedInputStream.close()
+        }
+    }
+
+    /**
+     * Method exposes this class to initiate copy
+     *
+     * @param sourceFile the source file, which is to be copied
+     * @param targetFile the target file
+     */
+    @Throws(IOException::class)
+    fun copy(
+        sourceFile: HybridFileParcelable,
+        targetFile: HybridFile,
+        onLowMemory: OnLowMemory,
+        updatePosition: UpdatePosition,
+    ) {
+        mSourceFile = sourceFile
+        mTargetFile = targetFile
+        startCopy(false, onLowMemory, updatePosition)
+    }
+
+    /**
+     * Calls [doCopy].
+     *
+     * @see Channels.newChannel
+     * @param bufferedInputStream source
+     * @param outChannel target
+     */
+    @VisibleForTesting
+    @Throws(IOException::class)
+    fun copyFile(
+        bufferedInputStream: BufferedInputStream,
+        outChannel: FileChannel,
+        updatePosition: UpdatePosition,
+    ) {
+        doCopy(Channels.newChannel(bufferedInputStream), outChannel, updatePosition)
+    }
+
+    /**
+     * Calls [doCopy].
+     *
+     * @param inChannel source
+     * @param outChannel target
+     */
+    @VisibleForTesting
+    @Throws(IOException::class)
+    fun copyFile(
+        inChannel: FileChannel,
+        outChannel: FileChannel,
+        updatePosition: UpdatePosition,
+    ) {
+        doCopy(inChannel, outChannel, updatePosition)
+    }
+
+    /**
+     * Calls [doCopy].
+     *
+     * @see Channels.newChannel
+     * @param bufferedInputStream source
+     * @param bufferedOutputStream target
+     */
+    @VisibleForTesting
+    @Throws(IOException::class)
+    fun copyFile(
+        bufferedInputStream: BufferedInputStream,
+        bufferedOutputStream: BufferedOutputStream,
+        updatePosition: UpdatePosition,
+    ) {
+        doCopy(
+            Channels.newChannel(bufferedInputStream),
+            Channels.newChannel(bufferedOutputStream),
+            updatePosition,
+        )
+    }
+
+    /**
+     * Calls [doCopy].
+     *
+     * @see Channels.newChannel
+     * @param inChannel source
+     * @param bufferedOutputStream target
+     */
+    @VisibleForTesting
+    @Throws(IOException::class)
+    fun copyFile(
+        inChannel: FileChannel,
+        bufferedOutputStream: BufferedOutputStream,
+        updatePosition: UpdatePosition,
+    ) {
+        doCopy(inChannel, Channels.newChannel(bufferedOutputStream), updatePosition)
+    }
+
+    /**
+     * Core copy method. Uses [FileChannel.transferTo] for file-to-file copies (zero-copy
+     * optimization on Linux/Android via sendfile syscall), falls back to a [ByteBuffer] loop
+     * for other channel types. Progress updates are batched to reduce callback overhead.
+     */
+    @VisibleForTesting
+    @Throws(IOException::class)
+    fun doCopy(
+        from: ReadableByteChannel,
+        to: WritableByteChannel,
+        updatePosition: UpdatePosition,
+    ) {
+        if (from is FileChannel && to is FileChannel) {
+            // Use transferTo for zero-copy file-to-file optimization
+            val size = from.size()
+            var position = 0L
+            var pendingProgress = 0L
+            while (position < size && !progressHandler.cancelled) {
+                val transferred = from.transferTo(position, DEFAULT_TRANSFER_QUANTUM.toLong(), to)
+                position += transferred
+                pendingProgress += transferred
+                if (pendingProgress >= PROGRESS_UPDATE_THRESHOLD) {
+                    updatePosition.updatePosition(pendingProgress)
+                    pendingProgress = 0L
+                }
+            }
+            // Flush remaining progress
+            if (pendingProgress > 0L) {
+                updatePosition.updatePosition(pendingProgress)
+            }
+        } else {
+            // ByteBuffer loop for non-FileChannel types
+            val buffer = ByteBuffer.allocateDirect(DEFAULT_TRANSFER_QUANTUM)
+            var pendingProgress = 0L
+            while ((from.read(buffer) != -1 || buffer.position() > 0) && !progressHandler.cancelled) {
+                buffer.flip()
+                val count = to.write(buffer).toLong()
+                pendingProgress += count
+                if (pendingProgress >= PROGRESS_UPDATE_THRESHOLD) {
+                    updatePosition.updatePosition(pendingProgress)
+                    pendingProgress = 0L
+                }
+                buffer.compact()
+            }
+
+            buffer.flip()
+            while (buffer.hasRemaining()) {
+                val count = to.write(buffer).toLong()
+                pendingProgress += count
+            }
+
+            // Flush remaining progress
+            if (pendingProgress > 0L) {
+                updatePosition.updatePosition(pendingProgress)
+            }
+
+            from.close()
+            to.close()
+        }
+    }
 }
