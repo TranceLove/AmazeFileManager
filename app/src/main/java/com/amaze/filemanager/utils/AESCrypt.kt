@@ -21,7 +21,7 @@
 package com.amaze.filemanager.utils
 
 import android.util.Log
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
+import com.amaze.filemanager.fileoperations.utils.UpdatePosition
 import com.amaze.filemanager.utils.AESCrypt.DecryptFailureException
 import com.amaze.filemanager.utils.AESCrypt.IncorrectEncryptedDataException
 import java.io.IOException
@@ -220,6 +220,7 @@ class AESCrypt(password: String) {
         `in`: InputStream,
         out: OutputStream,
         progressHandler: ProgressHandler,
+        updatePosition: UpdatePosition = UpdatePosition { },
     ) {
         var text: ByteArray?
         ivSpec1 = IvParameterSpec(generateIv1())
@@ -259,7 +260,7 @@ class AESCrypt(password: String) {
                 hmac.update(text)
                 out.write(text) // Crypted file data block.
                 last = len
-                ServiceWatcherUtil.position += len
+                updatePosition.updatePosition(len.toLong())
             }
         }
         last = last and 0x0f

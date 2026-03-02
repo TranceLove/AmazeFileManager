@@ -76,12 +76,10 @@ import com.amaze.filemanager.ui.views.WarnableTextInputValidator;
 import com.amaze.filemanager.utils.Utils;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.formatter.IValueFormatter;
-import com.github.mikephil.charting.utils.ViewPortHandler;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 
 import android.content.Context;
 import android.content.Intent;
@@ -922,7 +920,7 @@ public class GeneralDialogCreation {
     */
   }
 
-  public static class SizeFormatter implements IValueFormatter {
+  public static class SizeFormatter extends ValueFormatter {
 
     private Context context;
 
@@ -931,14 +929,8 @@ public class GeneralDialogCreation {
     }
 
     @Override
-    public String getFormattedValue(
-        float value, Entry entry, int dataSetIndex, ViewPortHandler viewPortHandler) {
-      String prefix =
-          entry.getData() != null && entry.getData() instanceof String
-              ? (String) entry.getData()
-              : "";
-
-      return prefix + Formatter.formatFileSize(context, (long) value);
+    public String getFormattedValue(float value) {
+      return Formatter.formatFileSize(context, (long) value);
     }
   }
 

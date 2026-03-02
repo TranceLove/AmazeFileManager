@@ -27,7 +27,6 @@ import android.os.Build.VERSION_CODES.P
 import android.os.Environment
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
 import com.amaze.filemanager.fileoperations.filesystem.compressed.ArchivePasswordCache
 import com.amaze.filemanager.fileoperations.utils.UpdatePosition
 import com.amaze.filemanager.shadows.ShadowMultiDex
@@ -125,7 +124,7 @@ abstract class AbstractExtractorTest {
 
                         override fun onFinish() = Unit
                     },
-                    ServiceWatcherUtil.UPDATE_POSITION,
+                    UpdatePosition { },
                 )
         try {
             extractor.extractEverything()

@@ -20,17 +20,13 @@
 
 package com.amaze.filemanager.ui.fragments
 
-import android.content.ComponentName
 import android.content.ContentResolver
-import android.content.Intent
-import android.content.ServiceConnection
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.KITKAT
 import android.os.Build.VERSION_CODES.LOLLIPOP
 import android.os.Bundle
-import android.os.IBinder
 import android.provider.MediaStore
 import android.util.Log
 import android.view.ActionMode
@@ -60,7 +56,7 @@ import com.amaze.filemanager.adapters.CompressedExplorerAdapter
 import com.amaze.filemanager.adapters.data.CompressedObjectParcelable
 import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.asynchronous.asynctasks.DeleteTask
-import com.amaze.filemanager.asynchronous.services.ExtractService
+import com.amaze.filemanager.asynchronous.workers.AbstractProgressiveWorker
 import com.amaze.filemanager.databinding.ActionmodeBinding
 import com.amaze.filemanager.databinding.MainFragBinding
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode
@@ -567,42 +563,42 @@ class CompressedExplorerFragment : Fragment(), BottomBarButtonPath {
     override fun onResume() {
         super.onResume()
         requireMainActivity().hideFab()
-        val intent = Intent(activity, ExtractService::class.java)
-        requireActivity().bindService(intent, mServiceConnection, 0)
+        observeExtractWork()
     }
 
     override fun onPause() {
         super.onPause()
-        requireActivity().unbindService(mServiceConnection)
     }
 
-    private val mServiceConnection: ServiceConnection =
-        object : ServiceConnection {
-            override fun onServiceConnected(
-                name: ComponentName,
-                service: IBinder,
-            ) = Unit
-
-            override fun onServiceDisconnected(name: ComponentName) {
-                // open file if pending
-                if (isOpen) {
+    /**
+     * Observes WorkManager for extract work completion.
+     * When the worker finishes, opens any pending cached file.
+     */
+    private fun observeExtractWork() {
+        androidx.work.WorkManager.getInstance(requireContext())
+            .getWorkInfosByTagLiveData(AbstractProgressiveWorker.TAG_PROGRESSIVE_WORK)
+            .observe(viewLifecycleOwner) { workInfos ->
+                val allDone =
+                    workInfos.isNullOrEmpty() ||
+                        workInfos.all { it.state.isFinished }
+                if (allDone && isOpen) {
                     files?.let { cachedFiles ->
-                        // open most recent entry added to files to be deleted from cache
-                        val cacheFile = File(cachedFiles[cachedFiles.size - 1].path)
-                        if (cacheFile.exists()) {
-                            FileUtils.openFile(
-                                cacheFile,
-                                requireMainActivity(),
-                                requireMainActivity().prefs,
-                            )
+                        if (cachedFiles.isNotEmpty()) {
+                            val cacheFile = java.io.File(cachedFiles[cachedFiles.size - 1].path)
+                            if (cacheFile.exists()) {
+                                FileUtils.openFile(
+                                    cacheFile,
+                                    requireMainActivity(),
+                                    requireMainActivity().prefs,
+                                )
+                            }
+                            isOpen = false
+                            cachedFiles.removeAt(cachedFiles.size - 1)
                         }
-                        // reset the flag and cache file, as it's root is already in the list for deletion
-                        isOpen = false
-                        cachedFiles.removeAt(cachedFiles.size - 1)
                     }
                 }
             }
-        }
+    }
 
     override fun changePath(path: String) {
         var folder = path

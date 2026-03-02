@@ -34,7 +34,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
 
 import com.amaze.filemanager.BuildConfig;
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil;
 import com.amaze.filemanager.fileoperations.utils.UpdatePosition;
 import com.amaze.filemanager.filesystem.compressed.extractcontents.Extractor;
 import com.amaze.filemanager.filesystem.compressed.extractcontents.helpers.RarExtractor;
@@ -99,7 +98,7 @@ public class CompressedHelperTest {
    */
   @Test
   public void getExtractorInstance() {
-    UpdatePosition updatePosition = ServiceWatcherUtil.UPDATE_POSITION;
+    UpdatePosition updatePosition = toAdd -> {};
 
     File file = new File("/test/test.zip"); // .zip used by ZipExtractor
     Extractor result =

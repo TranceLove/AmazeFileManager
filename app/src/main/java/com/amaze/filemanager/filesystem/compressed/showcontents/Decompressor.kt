@@ -21,10 +21,13 @@
 package com.amaze.filemanager.filesystem.compressed.showcontents
 
 import android.content.Context
-import android.content.Intent
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.amaze.filemanager.asynchronous.asynctasks.compress.CompressedHelperCallable
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
-import com.amaze.filemanager.asynchronous.services.ExtractService
+import com.amaze.filemanager.asynchronous.workers.AbstractProgressiveWorker
+import com.amaze.filemanager.asynchronous.workers.ExtractWorker
 
 /** @author Emmanuel on 20/11/2017, at 17:14.
  */
@@ -43,13 +46,19 @@ abstract class Decompressor(protected var context: Context) {
 
     /** Decompress a file somewhere  */
     fun decompress(whereToDecompress: String) {
-        val intent =
-            Intent(context, ExtractService::class.java).also {
-                it.putExtra(ExtractService.KEY_PATH_ZIP, filePath)
-                it.putExtra(ExtractService.KEY_ENTRIES_ZIP, arrayOfNulls<String>(0))
-                it.putExtra(ExtractService.KEY_PATH_EXTRACT, whereToDecompress)
-            }
-        ServiceWatcherUtil.runService(context, intent)
+        val inputData =
+            Data.Builder()
+                .putString(ExtractWorker.KEY_PATH_ZIP, filePath)
+                .putStringArray(ExtractWorker.KEY_ENTRIES_ZIP, arrayOfNulls<String>(0))
+                .putString(ExtractWorker.KEY_PATH_EXTRACT, whereToDecompress)
+                .build()
+        val workRequest =
+            OneTimeWorkRequestBuilder<ExtractWorker>()
+                .setInputData(inputData)
+                .addTag(AbstractProgressiveWorker.TAG_PROGRESSIVE_WORK)
+                .build()
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork("extract_work", ExistingWorkPolicy.APPEND, workRequest)
     }
 
     /**
@@ -65,13 +74,19 @@ abstract class Decompressor(protected var context: Context) {
         subDirectories.filterNotNull().map {
             realRelativeDirectory(it)
         }.run {
-            val intent =
-                Intent(context, ExtractService::class.java).also {
-                    it.putExtra(ExtractService.KEY_PATH_ZIP, filePath)
-                    it.putExtra(ExtractService.KEY_ENTRIES_ZIP, subDirectories)
-                    it.putExtra(ExtractService.KEY_PATH_EXTRACT, whereToDecompress)
-                }
-            ServiceWatcherUtil.runService(context, intent)
+            val inputData =
+                Data.Builder()
+                    .putString(ExtractWorker.KEY_PATH_ZIP, filePath)
+                    .putStringArray(ExtractWorker.KEY_ENTRIES_ZIP, subDirectories)
+                    .putString(ExtractWorker.KEY_PATH_EXTRACT, whereToDecompress)
+                    .build()
+            val workRequest =
+                OneTimeWorkRequestBuilder<ExtractWorker>()
+                    .setInputData(inputData)
+                    .addTag(AbstractProgressiveWorker.TAG_PROGRESSIVE_WORK)
+                    .build()
+            WorkManager.getInstance(context)
+                .enqueueUniqueWork("extract_work", ExistingWorkPolicy.APPEND, workRequest)
         }
     }
 

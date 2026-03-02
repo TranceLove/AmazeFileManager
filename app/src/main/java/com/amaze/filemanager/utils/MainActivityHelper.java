@@ -40,8 +40,8 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.amaze.filemanager.R;
 import com.amaze.filemanager.application.AppConfig;
 import com.amaze.filemanager.asynchronous.asynctasks.DeleteTask;
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil;
-import com.amaze.filemanager.asynchronous.services.ZipService;
+import com.amaze.filemanager.asynchronous.workers.AbstractProgressiveWorker;
+import com.amaze.filemanager.asynchronous.workers.CompressWorker;
 import com.amaze.filemanager.database.CloudHandler;
 import com.amaze.filemanager.database.CryptHandler;
 import com.amaze.filemanager.database.models.explorer.EncryptedEntry;
@@ -85,6 +85,10 @@ import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.preference.PreferenceManager;
+import androidx.work.Data;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 public class MainActivityHelper {
 
@@ -498,10 +502,28 @@ public class MainActivityHelper {
       mainActivity.operation = COMPRESS;
       mainActivity.oparrayList = baseFiles;
     } else if (mode == 1) {
-      Intent intent2 = new Intent(mainActivity, ZipService.class);
-      intent2.putExtra(ZipService.KEY_COMPRESS_PATH, file.getPath());
-      intent2.putExtra(ZipService.KEY_COMPRESS_FILES, baseFiles);
-      ServiceWatcherUtil.runService(mainActivity, intent2);
+      String[] filePaths = new String[baseFiles.size()];
+      for (int i = 0; i < baseFiles.size(); i++) {
+        filePaths[i] = baseFiles.get(i).getPath();
+      }
+
+      Data data =
+          new Data.Builder()
+              .putString(CompressWorker.KEY_COMPRESS_PATH, file.getPath())
+              .putStringArray(CompressWorker.KEY_COMPRESS_FILES, filePaths)
+              .putInt(
+                  AbstractProgressiveWorker.KEY_SERVICE_TYPE,
+                  AbstractProgressiveWorker.SERVICE_COMPRESS)
+              .build();
+
+      OneTimeWorkRequest request =
+          new OneTimeWorkRequest.Builder(CompressWorker.class)
+              .setInputData(data)
+              .addTag(AbstractProgressiveWorker.TAG_PROGRESSIVE_WORK)
+              .build();
+
+      WorkManager.getInstance(mainActivity)
+          .enqueueUniqueWork("compress_work", ExistingWorkPolicy.APPEND, request);
     } else Toast.makeText(mainActivity, R.string.not_allowed, Toast.LENGTH_SHORT).show();
   }
 

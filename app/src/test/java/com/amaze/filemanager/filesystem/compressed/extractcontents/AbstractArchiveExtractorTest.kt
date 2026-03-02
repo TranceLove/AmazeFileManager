@@ -23,7 +23,6 @@ package com.amaze.filemanager.filesystem.compressed.extractcontents
 import android.content.Context
 import android.os.Environment
 import androidx.test.core.app.ApplicationProvider
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
 import com.amaze.filemanager.fileoperations.utils.UpdatePosition
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -88,7 +87,7 @@ abstract class AbstractArchiveExtractorTest : AbstractExtractorTest() {
 
                         override fun onFinish() = Unit
                     },
-                    ServiceWatcherUtil.UPDATE_POSITION,
+                    UpdatePosition { },
                 )
         assertEquals("test.txt", extractor.fixEntryName("test.txt"))
         assertEquals("test.txt", extractor.fixEntryName("/test.txt"))
@@ -144,7 +143,7 @@ abstract class AbstractArchiveExtractorTest : AbstractExtractorTest() {
                             }
                         }
                     },
-                    ServiceWatcherUtil.UPDATE_POSITION,
+                    UpdatePosition { },
                 )
         extractor.extractEverything()
         latch.await()

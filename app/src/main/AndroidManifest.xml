@@ -260,25 +260,6 @@
             </intent-filter>
         </activity-alias>
 
-        <service android:name=".asynchronous.services.ExtractService"
-            android:label="Extracting"
-            android:foregroundServiceType="dataSync" />
-
-        <service android:name=".asynchronous.services.ZipService"
-            android:label="Compressing"
-            android:foregroundServiceType="dataSync" />
-
-        <service android:name=".asynchronous.services.CopyService"
-            android:label="Copying"
-            android:foregroundServiceType="dataSync" />
-
-        <service android:name=".asynchronous.services.EncryptService"
-            android:label="@string/crypt_encrypting"
-            android:foregroundServiceType="dataSync" />
-
-        <service android:name=".asynchronous.services.DecryptService"
-            android:label="@string/crypt_decrypting"
-            android:foregroundServiceType="dataSync" />
 
         <service
             android:name=".asynchronous.services.ftp.FtpService"

@@ -27,7 +27,6 @@ import java.util.ArrayList;
 
 import com.amaze.filemanager.R;
 import com.amaze.filemanager.adapters.data.LayoutElementParcelable;
-import com.amaze.filemanager.asynchronous.services.EncryptService;
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode;
 import com.amaze.filemanager.filesystem.HybridFileParcelable;
 import com.amaze.filemanager.filesystem.PasteHelper;
@@ -185,9 +184,8 @@ public class ItemPopupMenu extends PopupMenu implements PopupMenu.OnMenuItemClic
 
       return true;
     } else if (item.getItemId() == R.id.encrypt) {
-      final Intent encryptIntent = new Intent(context, EncryptService.class);
-      encryptIntent.putExtra(EncryptService.TAG_OPEN_MODE, rowItem.getMode().ordinal());
-      encryptIntent.putExtra(EncryptService.TAG_SOURCE, rowItem.generateBaseFile());
+      final Intent encryptIntent = new Intent(); // data carrier only, no service target
+      encryptIntent.putExtra(EncryptDecryptUtils.INTENT_TAG_SOURCE, rowItem.generateBaseFile());
 
       final EncryptDecryptUtils.EncryptButtonCallbackInterface
           encryptButtonCallbackInterfaceAuthenticate =

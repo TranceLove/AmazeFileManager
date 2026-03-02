@@ -21,7 +21,7 @@
 package com.amaze.filemanager.ui.notifications;
 
 import static android.app.PendingIntent.FLAG_ONE_SHOT;
-import static com.amaze.filemanager.asynchronous.services.AbstractProgressiveService.getPendingIntentFlag;
+import static com.amaze.filemanager.asynchronous.workers.AbstractProgressiveWorker.getPendingIntentFlag;
 
 import java.net.InetAddress;
 

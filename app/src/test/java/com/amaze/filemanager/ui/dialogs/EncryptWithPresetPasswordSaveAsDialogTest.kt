@@ -33,13 +33,13 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.internal.MDButton
 import com.amaze.filemanager.R
 import com.amaze.filemanager.application.AppConfig
-import com.amaze.filemanager.asynchronous.services.EncryptService
-import com.amaze.filemanager.asynchronous.services.EncryptService.TAG_SOURCE
+import com.amaze.filemanager.asynchronous.workers.EncryptWorker
 import com.amaze.filemanager.filesystem.HybridFileParcelable
 import com.amaze.filemanager.filesystem.RandomPathGenerator
 import com.amaze.filemanager.filesystem.files.CryptUtil.AESCRYPT_EXTENSION
 import com.amaze.filemanager.filesystem.files.CryptUtil.CRYPT_EXTENSION
 import com.amaze.filemanager.filesystem.files.EncryptDecryptUtils
+import com.amaze.filemanager.filesystem.files.EncryptDecryptUtils.INTENT_TAG_SOURCE
 import com.amaze.filemanager.test.getString
 import com.amaze.filemanager.ui.activities.MainActivity
 import com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants
@@ -123,11 +123,11 @@ class EncryptWithPresetPasswordSaveAsDialogTest : AbstractEncryptDialogTests() {
                         password: String,
                     ) {
                         assertEquals(ENCRYPT_PASSWORD_FINGERPRINT, password)
-                        assertEquals(file.absolutePath, intent.getStringExtra(TAG_SOURCE))
-                        assertFalse(intent.getBooleanExtra(EncryptService.TAG_AESCRYPT, true))
+                        assertEquals(file.absolutePath, intent.getStringExtra(INTENT_TAG_SOURCE))
+                        assertFalse(intent.getBooleanExtra(EncryptWorker.TAG_AESCRYPT, true))
                         assertEquals(
                             "${file.name}$CRYPT_EXTENSION",
-                            intent.getStringExtra(EncryptService.TAG_ENCRYPT_TARGET),
+                            intent.getStringExtra(EncryptWorker.TAG_ENCRYPT_TARGET),
                         )
                     }
                 },
@@ -218,11 +218,11 @@ class EncryptWithPresetPasswordSaveAsDialogTest : AbstractEncryptDialogTests() {
                         password: String,
                     ) {
                         assertEquals(ENCRYPT_PASSWORD_MASTER, password)
-                        assertEquals(file.absolutePath, intent.getStringExtra(TAG_SOURCE))
-                        assertTrue(intent.getBooleanExtra(EncryptService.TAG_AESCRYPT, false))
+                        assertEquals(file.absolutePath, intent.getStringExtra(INTENT_TAG_SOURCE))
+                        assertTrue(intent.getBooleanExtra(EncryptWorker.TAG_AESCRYPT, false))
                         assertEquals(
                             "${file.name}$AESCRYPT_EXTENSION",
-                            intent.getStringExtra(EncryptService.TAG_ENCRYPT_TARGET),
+                            intent.getStringExtra(EncryptWorker.TAG_ENCRYPT_TARGET),
                         )
                     }
                 },
@@ -329,7 +329,7 @@ class EncryptWithPresetPasswordSaveAsDialogTest : AbstractEncryptDialogTests() {
             object : EncryptDecryptUtils.EncryptButtonCallbackInterface {},
     ) {
         scenario.onActivity { activity ->
-            Intent().putExtra(TAG_SOURCE, HybridFileParcelable(file.absolutePath)).let { intent ->
+            Intent().putExtra(INTENT_TAG_SOURCE, HybridFileParcelable(file.absolutePath)).let { intent ->
                 EncryptWithPresetPasswordSaveAsDialog.show(
                     activity,
                     intent,

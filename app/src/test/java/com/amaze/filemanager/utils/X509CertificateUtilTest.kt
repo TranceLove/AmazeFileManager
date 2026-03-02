@@ -65,12 +65,12 @@ class X509CertificateUtilTest {
         assertTrue(verify.containsKey(SUBJECT))
         assertEquals(
             "C=in,O=Team Amaze,CN=test.ftpsd.local",
-            verify[SUBJECT],
+            verify[SUBJECT]?.replace(",\\s+".toRegex(), ","),
         )
         assertTrue(verify.containsKey(ISSUER))
         assertEquals(
             "C=in,O=Team Amaze,CN=test.ftpsd.local",
-            verify[ISSUER],
+            verify[ISSUER]?.replace(",\\s+".toRegex(), ","),
         )
         assertTrue(verify.containsKey(SERIAL))
         assertEquals(

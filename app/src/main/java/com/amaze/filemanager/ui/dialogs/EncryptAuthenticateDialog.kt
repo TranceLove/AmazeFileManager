@@ -41,14 +41,14 @@ import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.internal.MDButton
 import com.amaze.filemanager.R
-import com.amaze.filemanager.asynchronous.services.EncryptService
-import com.amaze.filemanager.asynchronous.services.EncryptService.TAG_AESCRYPT
-import com.amaze.filemanager.asynchronous.services.EncryptService.TAG_ENCRYPT_TARGET
-import com.amaze.filemanager.asynchronous.services.EncryptService.TAG_PASSWORD
+import com.amaze.filemanager.asynchronous.workers.EncryptWorker.Companion.TAG_AESCRYPT
+import com.amaze.filemanager.asynchronous.workers.EncryptWorker.Companion.TAG_ENCRYPT_TARGET
+import com.amaze.filemanager.asynchronous.workers.EncryptWorker.Companion.TAG_PASSWORD
 import com.amaze.filemanager.databinding.DialogEncryptAuthenticateBinding
 import com.amaze.filemanager.filesystem.HybridFileParcelable
 import com.amaze.filemanager.filesystem.files.CryptUtil.AESCRYPT_EXTENSION
 import com.amaze.filemanager.filesystem.files.CryptUtil.CRYPT_EXTENSION
+import com.amaze.filemanager.filesystem.files.EncryptDecryptUtils
 import com.amaze.filemanager.filesystem.files.EncryptDecryptUtils.EncryptButtonCallbackInterface
 import com.amaze.filemanager.ui.activities.MainActivity
 import com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_CRYPT_WARNING_REMEMBER
@@ -81,7 +81,7 @@ object EncryptAuthenticateDialog {
         appTheme: AppTheme,
         encryptButtonCallbackInterface: EncryptButtonCallbackInterface,
     ) {
-        intent.getParcelableExtra<HybridFileParcelable>(EncryptService.TAG_SOURCE)?.run {
+        intent.getParcelableExtra<HybridFileParcelable>(EncryptDecryptUtils.INTENT_TAG_SOURCE)?.run {
             val preferences = PreferenceManager.getDefaultSharedPreferences(c)
             val accentColor = main.accent
             val builder = MaterialDialog.Builder(c)

@@ -22,7 +22,6 @@ package com.amaze.filemanager.filesystem.compressed.extractcontents.helpers
 
 import android.content.Context
 import android.os.Build
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
 import com.amaze.filemanager.fileoperations.filesystem.compressed.ArchivePasswordCache
 import com.amaze.filemanager.fileoperations.utils.UpdatePosition
 import com.amaze.filemanager.filesystem.FileUtil
@@ -174,7 +173,7 @@ class RarExtractor(
             while (inputStream.read(buf).also { len = it } != -1) {
                 if (!listener.isCancelled) {
                     outputStream.write(buf, 0, len)
-                    ServiceWatcherUtil.position += len.toLong()
+                    updatePosition.updatePosition(len.toLong())
                 } else {
                     break
                 }

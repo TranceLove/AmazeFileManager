@@ -29,14 +29,14 @@ import android.os.Environment
 import androidx.test.filters.SdkSuppress
 import com.afollestad.materialdialogs.MaterialDialog
 import com.amaze.filemanager.application.AppConfig
-import com.amaze.filemanager.asynchronous.services.DecryptService.TAG_DECRYPT_PATH
-import com.amaze.filemanager.asynchronous.services.DecryptService.TAG_OPEN_MODE
-import com.amaze.filemanager.asynchronous.services.DecryptService.TAG_SOURCE
+import com.amaze.filemanager.asynchronous.workers.DecryptWorker.Companion.TAG_DECRYPT_PATH
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode
 import com.amaze.filemanager.filesystem.HybridFileParcelable
 import com.amaze.filemanager.filesystem.RandomPathGenerator
 import com.amaze.filemanager.filesystem.files.CryptUtil.CRYPT_EXTENSION
 import com.amaze.filemanager.filesystem.files.EncryptDecryptUtils
+import com.amaze.filemanager.filesystem.files.EncryptDecryptUtils.INTENT_TAG_OPEN_MODE
+import com.amaze.filemanager.filesystem.files.EncryptDecryptUtils.INTENT_TAG_SOURCE
 import com.amaze.filemanager.shadows.ShadowFileUtils
 import com.amaze.filemanager.shadows.ShadowMultiDex
 import com.amaze.filemanager.test.ShadowTabHandler
@@ -147,8 +147,8 @@ class DecryptFingerprintDialogTest : AbstractEncryptDialogTests() {
             DecryptFingerprintDialog.show(
                 activity,
                 activity,
-                Intent().putExtra(TAG_SOURCE, HybridFileParcelable(file.absolutePath))
-                    .putExtra(TAG_OPEN_MODE, OpenMode.FILE)
+                Intent().putExtra(INTENT_TAG_SOURCE, HybridFileParcelable(file.absolutePath))
+                    .putExtra(INTENT_TAG_OPEN_MODE, OpenMode.FILE)
                     .putExtra(
                         TAG_DECRYPT_PATH,
                         Environment.getExternalStorageDirectory().absolutePath,

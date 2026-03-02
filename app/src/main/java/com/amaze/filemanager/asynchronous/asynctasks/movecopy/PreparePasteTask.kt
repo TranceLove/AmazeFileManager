@@ -22,7 +22,6 @@ package com.amaze.filemanager.asynchronous.asynctasks.movecopy
 
 import android.app.ProgressDialog
 import android.content.Context
-import android.content.Intent
 import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatCheckBox
@@ -31,8 +30,7 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.amaze.filemanager.R
 import com.amaze.filemanager.asynchronous.asynctasks.fromTask
 import com.amaze.filemanager.asynchronous.asynctasks.movecopy.PreparePasteTask.CopyNode
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
-import com.amaze.filemanager.asynchronous.services.CopyService
+import com.amaze.filemanager.asynchronous.workers.CopyWorker
 import com.amaze.filemanager.databinding.CopyDialogBinding
 import com.amaze.filemanager.fileoperations.filesystem.CAN_CREATE_FILES
 import com.amaze.filemanager.fileoperations.filesystem.COPY
@@ -95,13 +93,16 @@ class PreparePasteTask(strongRefMain: MainActivity) {
         isMove: Boolean,
         isRootMode: Boolean,
     ) {
-        val intent = Intent(context.get(), CopyService::class.java)
-        intent.putParcelableArrayListExtra(CopyService.TAG_COPY_SOURCES, sourceFiles)
-        intent.putExtra(CopyService.TAG_COPY_TARGET, target)
-        intent.putExtra(CopyService.TAG_COPY_OPEN_MODE, openMode.ordinal)
-        intent.putExtra(CopyService.TAG_COPY_MOVE, isMove)
-        intent.putExtra(CopyService.TAG_IS_ROOT_EXPLORER, isRootMode)
-        ServiceWatcherUtil.runService(context.get(), intent)
+        context.get()?.let { ctx ->
+            CopyWorker.enqueue(
+                ctx,
+                sourceFiles,
+                target,
+                openMode.ordinal,
+                isMove,
+                isRootMode,
+            )
+        }
     }
 
     /**

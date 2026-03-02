@@ -49,8 +49,7 @@ import com.amaze.filemanager.adapters.holders.AppHolder
 import com.amaze.filemanager.adapters.holders.EmptyViewHolder
 import com.amaze.filemanager.adapters.holders.SpecialViewHolder
 import com.amaze.filemanager.asynchronous.asynctasks.DeleteTask
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
-import com.amaze.filemanager.asynchronous.services.CopyService
+import com.amaze.filemanager.asynchronous.workers.CopyWorker
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode
 import com.amaze.filemanager.filesystem.HybridFileParcelable
 import com.amaze.filemanager.filesystem.RootHelper
@@ -458,11 +457,6 @@ class AppsRecyclerAdapter(
                     .path + "/app_backup",
             )
         if (!dst.exists() || !dst.isDirectory) dst.mkdirs()
-        val intent =
-            Intent(
-                fragment.context,
-                CopyService::class.java,
-            )
         val mainApkFile = RootHelper.generateBaseFile(baseApkFile, true)
         val startIndex = appDataParcelable.packageName.indexOf("_")
         val subString = appDataParcelable.packageName.substring(startIndex + 1)
@@ -485,9 +479,6 @@ class AppsRecyclerAdapter(
                 filesToCopyList.add(splitParcelableFile)
             }
         }
-        intent.putParcelableArrayListExtra(CopyService.TAG_COPY_SOURCES, filesToCopyList)
-        intent.putExtra(CopyService.TAG_COPY_TARGET, dst.path)
-        intent.putExtra(CopyService.TAG_COPY_OPEN_MODE, 0)
 
         Toast.makeText(
             fragment.context,
@@ -496,7 +487,16 @@ class AppsRecyclerAdapter(
         )
             .show()
 
-        ServiceWatcherUtil.runService(fragment.context, intent)
+        fragment.context?.let { ctx ->
+            CopyWorker.enqueue(
+                ctx,
+                filesToCopyList,
+                dst.path,
+                0,
+                move = false,
+                isRootExplorer = false,
+            )
+        }
     }
 
     private fun showDeleteSystemAppDialog(

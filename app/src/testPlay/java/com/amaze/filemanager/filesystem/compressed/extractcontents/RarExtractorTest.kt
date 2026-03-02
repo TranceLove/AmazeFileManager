@@ -23,7 +23,7 @@ package com.amaze.filemanager.filesystem.compressed.extractcontents
 import android.content.Context
 import android.os.Environment
 import androidx.test.core.app.ApplicationProvider
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
+import com.amaze.filemanager.fileoperations.utils.UpdatePosition
 import com.amaze.filemanager.filesystem.compressed.extractcontents.helpers.RarExtractor
 import com.github.junrar.Archive
 import org.junit.Assert.assertEquals
@@ -63,7 +63,7 @@ class RarExtractorTest : AbstractArchiveExtractorTest() {
 
                     override fun onFinish() = Unit
                 },
-                ServiceWatcherUtil.UPDATE_POSITION,
+                UpdatePosition { },
             )
         val verify =
             RarExtractor::class.java.getDeclaredMethod(

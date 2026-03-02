@@ -27,12 +27,16 @@ import android.util.Base64
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.preference.PreferenceManager
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
 import com.amaze.filemanager.R
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
-import com.amaze.filemanager.asynchronous.services.DecryptService
-import com.amaze.filemanager.asynchronous.services.EncryptService
+import com.amaze.filemanager.asynchronous.workers.AbstractProgressiveWorker
+import com.amaze.filemanager.asynchronous.workers.DecryptWorker
+import com.amaze.filemanager.asynchronous.workers.EncryptWorker
 import com.amaze.filemanager.database.CryptHandler
 import com.amaze.filemanager.database.CryptHandler.addEntry
 import com.amaze.filemanager.database.models.explorer.EncryptedEntry
@@ -58,6 +62,12 @@ import java.security.GeneralSecurityException
 object EncryptDecryptUtils {
     const val DECRYPT_BROADCAST: String = "decrypt_broadcast"
 
+    // Intent data-carrier key for source Parcelable (matches legacy EncryptService.TAG_SOURCE)
+    const val INTENT_TAG_SOURCE = "crypt_source"
+
+    // Intent data-carrier key for open mode (not used by workers, only for data carrying)
+    const val INTENT_TAG_OPEN_MODE = "open_mode"
+
     private val LOG: Logger = LoggerFactory.getLogger(EncryptDecryptUtils::class.java)
 
     /**
@@ -76,19 +86,45 @@ object EncryptDecryptUtils {
         password: String?,
         intent: Intent,
     ) {
-        val destPath =
-            path.substring(
-                0,
-                path.lastIndexOf('/') + 1,
-            ) + intent.getStringExtra(EncryptService.TAG_ENCRYPT_TARGET)
+        val encryptTarget = intent.getStringExtra(EncryptWorker.TAG_ENCRYPT_TARGET) ?: ""
+        val destPath = path.substring(0, path.lastIndexOf('/') + 1) + encryptTarget
+        val useAesCrypt = intent.getBooleanExtra(EncryptWorker.TAG_AESCRYPT, false)
 
-        // EncryptService.TAG_ENCRYPT_TARGET already has the .aze extension, no need to append again
-        if (!intent.getBooleanExtra(EncryptService.TAG_AESCRYPT, false)) {
+        if (!useAesCrypt) {
             val encryptedEntry = EncryptedEntry(destPath, password)
             addEntry(encryptedEntry)
         }
-        // start the encryption process
-        ServiceWatcherUtil.runService(c, intent)
+
+        @Suppress("DEPRECATION")
+        val sourceFile: HybridFileParcelable? = intent.getParcelableExtra(INTENT_TAG_SOURCE)
+
+        val data =
+            Data.Builder()
+                .putString(EncryptWorker.TAG_SOURCE_PATH, sourceFile?.path ?: path)
+                .putString(EncryptWorker.TAG_SOURCE_NAME, sourceFile?.name ?: "")
+                .putLong(EncryptWorker.TAG_SOURCE_SIZE, sourceFile?.getSize() ?: 0L)
+                .putBoolean(EncryptWorker.TAG_SOURCE_DIRECTORY, sourceFile?.isDirectory ?: false)
+                .putInt(
+                    EncryptWorker.TAG_SOURCE_MODE,
+                    sourceFile?.mode?.ordinal ?: OpenMode.FILE.ordinal,
+                )
+                .putString(EncryptWorker.TAG_ENCRYPT_TARGET, encryptTarget)
+                .putBoolean(EncryptWorker.TAG_AESCRYPT, useAesCrypt)
+                .putString(EncryptWorker.TAG_PASSWORD, password ?: "")
+                .putInt(
+                    AbstractProgressiveWorker.KEY_SERVICE_TYPE,
+                    AbstractProgressiveWorker.SERVICE_ENCRYPT,
+                )
+                .build()
+
+        val request =
+            OneTimeWorkRequestBuilder<EncryptWorker>()
+                .setInputData(data)
+                .addTag(AbstractProgressiveWorker.TAG_PROGRESSIVE_WORK)
+                .build()
+
+        WorkManager.getInstance(c!!)
+            .enqueueUniqueWork("encrypt_work", ExistingWorkPolicy.APPEND, request)
     }
 
     /**
@@ -105,10 +141,11 @@ object EncryptDecryptUtils {
         utilsProvider: UtilitiesProvider,
         broadcastResult: Boolean,
     ) {
-        val decryptIntent = Intent(main.context, DecryptService::class.java)
-        decryptIntent.putExtra(EncryptService.TAG_OPEN_MODE, openMode.ordinal)
-        decryptIntent.putExtra(EncryptService.TAG_SOURCE, sourceFile)
-        decryptIntent.putExtra(EncryptService.TAG_DECRYPT_PATH, decryptPath)
+        // Use a plain Intent as a data carrier (no target service)
+        val decryptIntent = Intent()
+        decryptIntent.putExtra(INTENT_TAG_OPEN_MODE, openMode.ordinal)
+        decryptIntent.putExtra(INTENT_TAG_SOURCE, sourceFile)
+        decryptIntent.putExtra(DecryptWorker.TAG_DECRYPT_PATH, decryptPath)
         val preferences = PreferenceManager.getDefaultSharedPreferences(main.requireContext())
 
         if (sourceFile.path.endsWith(CryptUtil.AESCRYPT_EXTENSION)) {
@@ -230,11 +267,11 @@ object EncryptDecryptUtils {
             utilsProvider.appTheme,
             R.string.crypt_decrypt,
             R.string.authenticate_password,
-            { dialog: MaterialDialog, which: DialogAction? ->
+            { dialog: MaterialDialog, _: DialogAction? ->
                 val editText =
                     dialog.view.findViewById<AppCompatEditText>(R.id.singleedittext_input)
-                decryptIntent.putExtra(EncryptService.TAG_PASSWORD, editText.text.toString())
-                ServiceWatcherUtil.runService(main.context, decryptIntent)
+                decryptIntent.putExtra(DecryptWorker.TAG_PASSWORD, editText.text.toString())
+                enqueueDecryptWorker(main.requireContext(), decryptIntent)
                 dialog.dismiss()
             },
             null,
@@ -244,7 +281,7 @@ object EncryptDecryptUtils {
     private fun createCallback(main: MainFragment): DecryptButtonCallbackInterface {
         return object : DecryptButtonCallbackInterface {
             override fun confirm(intent: Intent) {
-                ServiceWatcherUtil.runService(main.context, intent)
+                enqueueDecryptWorker(main.requireContext(), intent)
             }
 
             override fun failed() {
@@ -255,6 +292,46 @@ object EncryptDecryptUtils {
                 ).show()
             }
         }
+    }
+
+    /**
+     * Extracts data from a legacy Intent data-carrier and enqueues a [DecryptWorker].
+     */
+    private fun enqueueDecryptWorker(
+        context: Context,
+        intent: Intent,
+    ) {
+        @Suppress("DEPRECATION")
+        val sourceFile: HybridFileParcelable? = intent.getParcelableExtra(INTENT_TAG_SOURCE)
+        val decryptPath = intent.getStringExtra(DecryptWorker.TAG_DECRYPT_PATH) ?: ""
+        val password = intent.getStringExtra(DecryptWorker.TAG_PASSWORD) ?: ""
+
+        val data =
+            Data.Builder()
+                .putString(DecryptWorker.TAG_SOURCE_PATH, sourceFile?.path ?: "")
+                .putString(DecryptWorker.TAG_SOURCE_NAME, sourceFile?.name ?: "")
+                .putLong(DecryptWorker.TAG_SOURCE_SIZE, sourceFile?.getSize() ?: 0L)
+                .putBoolean(DecryptWorker.TAG_SOURCE_DIRECTORY, sourceFile?.isDirectory ?: false)
+                .putInt(
+                    DecryptWorker.TAG_SOURCE_MODE,
+                    sourceFile?.mode?.ordinal ?: OpenMode.FILE.ordinal,
+                )
+                .putString(DecryptWorker.TAG_DECRYPT_PATH, decryptPath)
+                .putString(DecryptWorker.TAG_PASSWORD, password)
+                .putInt(
+                    AbstractProgressiveWorker.KEY_SERVICE_TYPE,
+                    AbstractProgressiveWorker.SERVICE_DECRYPT,
+                )
+                .build()
+
+        val request =
+            OneTimeWorkRequestBuilder<DecryptWorker>()
+                .setInputData(data)
+                .addTag(AbstractProgressiveWorker.TAG_PROGRESSIVE_WORK)
+                .build()
+
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork("decrypt_work", ExistingWorkPolicy.APPEND, request)
     }
 
     private fun toastDecryptionFailure(main: MainFragment) {

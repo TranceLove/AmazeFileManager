@@ -42,8 +42,8 @@ import org.slf4j.LoggerFactory;
 
 import com.amaze.filemanager.BuildConfig;
 import com.amaze.filemanager.application.AppConfig;
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil;
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode;
+import com.amaze.filemanager.fileoperations.utils.UpdatePosition;
 import com.amaze.filemanager.filesystem.HybridFile;
 import com.amaze.filemanager.filesystem.HybridFileParcelable;
 import com.amaze.filemanager.filesystem.MakeDirectoryOperation;
@@ -82,8 +82,7 @@ import kotlin.io.ConstantsKt;
  * <p>We use buffered streams to process files, usage of NIO will probably mildly effect the
  * performance.
  *
- * <p>Be sure to use constructors to encrypt/decrypt files only, and to call service through {@link
- * ServiceWatcherUtil} and to initialize watchers beforehand
+ * <p>Be sure to use constructors to encrypt/decrypt files only.
  */
 public class CryptUtil {
 
@@ -102,6 +101,7 @@ public class CryptUtil {
 
   private final ProgressHandler progressHandler;
   private final ArrayList<HybridFile> failedOps;
+  private final UpdatePosition updatePosition;
 
   /**
    * Constructor will start encryption process serially. Make sure to call with background thread.
@@ -111,8 +111,7 @@ public class CryptUtil {
    * <p>Make sure you're done with encrypting password for this file and map it with this file in
    * database
    *
-   * <p>Be sure to use constructors to encrypt/decrypt files only, and to call service through
-   * {@link ServiceWatcherUtil} and to initialize watchers beforehand
+   * <p>Be sure to use constructors to encrypt/decrypt files only.
    *
    * @param sourceFile the file to encrypt
    */
@@ -125,9 +124,31 @@ public class CryptUtil {
       boolean useAesCrypt,
       @Nullable String password)
       throws GeneralSecurityException, IOException {
+    this(
+        context,
+        sourceFile,
+        progressHandler,
+        failedOps,
+        targetFilename,
+        useAesCrypt,
+        password,
+        toAdd -> {});
+  }
+
+  public CryptUtil(
+      @NonNull Context context,
+      @NonNull HybridFileParcelable sourceFile,
+      @NonNull ProgressHandler progressHandler,
+      @NonNull ArrayList<HybridFile> failedOps,
+      @NonNull String targetFilename,
+      boolean useAesCrypt,
+      @Nullable String password,
+      @NonNull UpdatePosition updatePosition)
+      throws GeneralSecurityException, IOException {
 
     this.progressHandler = progressHandler;
     this.failedOps = failedOps;
+    this.updatePosition = updatePosition;
 
     // target encrypted file
     HybridFile hFile = new HybridFile(sourceFile.getMode(), sourceFile.getParent(context));
@@ -139,8 +160,7 @@ public class CryptUtil {
    * decrypt the file in the same (or in a custom preference) directory Make sure to decrypt and
    * check user provided passwords beforehand from database
    *
-   * <p>Be sure to use constructors to encrypt/decrypt files only, and to call service through
-   * {@link ServiceWatcherUtil} and to initialize watchers beforehand
+   * <p>Be sure to use constructors to encrypt/decrypt files only.
    *
    * @param baseFile the encrypted file
    * @param targetPath the directory in which file is to be decrypted the source's parent in normal
@@ -154,9 +174,22 @@ public class CryptUtil {
       @NonNull ArrayList<HybridFile> failedOps,
       @Nullable String password)
       throws GeneralSecurityException, IOException {
+    this(context, baseFile, targetPath, progressHandler, failedOps, password, toAdd -> {});
+  }
+
+  public CryptUtil(
+      @NonNull Context context,
+      @NonNull HybridFileParcelable baseFile,
+      @NonNull String targetPath,
+      @NonNull ProgressHandler progressHandler,
+      @NonNull ArrayList<HybridFile> failedOps,
+      @Nullable String password,
+      @NonNull UpdatePosition updatePosition)
+      throws GeneralSecurityException, IOException {
 
     this.progressHandler = progressHandler;
     this.failedOps = failedOps;
+    this.updatePosition = updatePosition;
     boolean useAesCrypt = baseFile.getName().endsWith(AESCRYPT_EXTENSION);
 
     HybridFile targetDirectory = new HybridFile(OpenMode.FILE, targetPath);
@@ -317,7 +350,8 @@ public class CryptUtil {
                 AESCrypt.AESCRYPT_SPEC_VERSION,
                 sourceFile.getInputStream(AppConfig.getInstance()),
                 targetFile.getOutputStream(AppConfig.getInstance()),
-                progressHandler);
+                progressHandler,
+                updatePosition);
       } else {
         doEncrypt(inputStream, outputStream, Cipher.ENCRYPT_MODE);
       }
@@ -364,7 +398,7 @@ public class CryptUtil {
         while ((count = inputStream.read(buffer)) != -1) {
           if (!progressHandler.getCancelled()) {
             cipherOutputStream.write(buffer, 0, count);
-            ServiceWatcherUtil.position += count;
+            updatePosition.updatePosition(count);
           } else break;
         }
       } catch (Exception x) {

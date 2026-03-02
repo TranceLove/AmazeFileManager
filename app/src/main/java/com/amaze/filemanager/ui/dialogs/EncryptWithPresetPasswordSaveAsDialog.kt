@@ -33,12 +33,12 @@ import androidx.preference.PreferenceManager
 import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
 import com.amaze.filemanager.R
-import com.amaze.filemanager.asynchronous.services.EncryptService
-import com.amaze.filemanager.asynchronous.services.EncryptService.TAG_ENCRYPT_TARGET
-import com.amaze.filemanager.asynchronous.services.EncryptService.TAG_PASSWORD
+import com.amaze.filemanager.asynchronous.workers.EncryptWorker.Companion.TAG_ENCRYPT_TARGET
+import com.amaze.filemanager.asynchronous.workers.EncryptWorker.Companion.TAG_PASSWORD
 import com.amaze.filemanager.databinding.DialogEncryptWithMasterPasswordBinding
 import com.amaze.filemanager.filesystem.HybridFileParcelable
 import com.amaze.filemanager.filesystem.files.CryptUtil
+import com.amaze.filemanager.filesystem.files.EncryptDecryptUtils
 import com.amaze.filemanager.filesystem.files.EncryptDecryptUtils.EncryptButtonCallbackInterface
 import com.amaze.filemanager.ui.activities.MainActivity
 import com.amaze.filemanager.ui.dialogs.EncryptAuthenticateDialog.createFilenameValidator
@@ -64,7 +64,7 @@ object EncryptWithPresetPasswordSaveAsDialog {
         password: String,
         encryptButtonCallbackInterface: EncryptButtonCallbackInterface,
     ) {
-        intent.getParcelableExtra<HybridFileParcelable>(EncryptService.TAG_SOURCE)?.run {
+        intent.getParcelableExtra<HybridFileParcelable>(EncryptDecryptUtils.INTENT_TAG_SOURCE)?.run {
             val preferences = PreferenceManager.getDefaultSharedPreferences(c)
             val accentColor = main.accent
             val vb = DialogEncryptWithMasterPasswordBinding.inflate(LayoutInflater.from(c))

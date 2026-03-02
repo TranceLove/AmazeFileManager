@@ -84,8 +84,7 @@ import com.amaze.filemanager.asynchronous.asynctasks.CloudLoaderAsyncTask;
 import com.amaze.filemanager.asynchronous.asynctasks.DeleteTask;
 import com.amaze.filemanager.asynchronous.asynctasks.TaskKt;
 import com.amaze.filemanager.asynchronous.asynctasks.movecopy.MoveFilesTask;
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil;
-import com.amaze.filemanager.asynchronous.services.CopyService;
+import com.amaze.filemanager.asynchronous.workers.CopyWorker;
 import com.amaze.filemanager.database.CloudContract;
 import com.amaze.filemanager.database.CloudHandler;
 import com.amaze.filemanager.database.SortHandler;
@@ -1659,10 +1658,7 @@ public class MainActivity extends PermissionsActivity
                 }
                 for (int i = 0; i < oparrayListList.size(); i++) {
                   ArrayList<HybridFileParcelable> sourceList = oparrayListList.get(i);
-                  Intent intent1 = new Intent(this, CopyService.class);
-                  intent1.putExtra(CopyService.TAG_COPY_SOURCES, sourceList);
-                  intent1.putExtra(CopyService.TAG_COPY_TARGET, oppatheList.get(i));
-                  ServiceWatcherUtil.runService(this, intent1);
+                  CopyWorker.enqueue(this, sourceList, oppatheList.get(i), 0, false, false);
                 }
                 break;
               case MOVE: // moving
