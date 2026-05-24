@@ -49,7 +49,8 @@ import com.amaze.filemanager.adapters.holders.AppHolder
 import com.amaze.filemanager.adapters.holders.EmptyViewHolder
 import com.amaze.filemanager.adapters.holders.SpecialViewHolder
 import com.amaze.filemanager.asynchronous.asynctasks.DeleteTask
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
+import com.amaze.filemanager.asynchronous.management.IOOperation
+import com.amaze.filemanager.asynchronous.management.IOOperationQueue
 import com.amaze.filemanager.asynchronous.services.CopyService
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode
 import com.amaze.filemanager.filesystem.HybridFileParcelable
@@ -496,7 +497,7 @@ class AppsRecyclerAdapter(
         )
             .show()
 
-        ServiceWatcherUtil.runService(fragment.context, intent)
+        IOOperationQueue.enqueue(fragment.context, IOOperation.Copy(intent))
     }
 
     private fun showDeleteSystemAppDialog(

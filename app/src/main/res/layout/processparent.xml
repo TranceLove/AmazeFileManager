@@ -30,7 +30,7 @@
             xmlns:card_view="http://schemas.android.com/apk/res-auto"
             android:id="@+id/card_view"
             android:layout_width="match_parent"
-            android:layout_height="500dp"
+            android:layout_height="wrap_content"
             card_view:cardCornerRadius="4dp"
             card_view:cardUseCompatPadding="true"
             card_view:cardElevation="4dp">
@@ -48,6 +48,7 @@
                     />
 
                 <RelativeLayout
+                    android:id="@+id/process_details_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/progress_chart"
@@ -130,6 +131,31 @@
 
                     </LinearLayout>
                 </RelativeLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/process_details_container"
+                    android:orientation="vertical"
+                    android:padding="@dimen/material_generic">
+
+                    <com.amaze.filemanager.ui.views.ThemedTextView
+                        android:id="@+id/text_view_queue_header"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/queued_operations"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                        android:textStyle="bold" />
+
+                    <ListView
+                        android:id="@+id/list_view_queue_state"
+                        android:layout_width="match_parent"
+                        android:layout_height="170dp"
+                        android:divider="@android:color/transparent"
+                        android:dividerHeight="4dp"
+                        android:scrollbars="vertical" />
+                </LinearLayout>
             </RelativeLayout>
         </androidx.cardview.widget.CardView>
     </ScrollView>

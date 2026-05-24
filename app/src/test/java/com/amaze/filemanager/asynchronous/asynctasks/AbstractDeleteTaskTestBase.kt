@@ -47,9 +47,7 @@ import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -79,8 +77,7 @@ abstract class AbstractDeleteTaskTestBase {
     @JvmField
     @RequiresApi(Build.VERSION_CODES.R)
     val allFilesPermissionRule =
-        GrantPermissionRule
-            .grant(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+        GrantPermissionRule.grant(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
 
     /**
      * Test case setup.
@@ -105,12 +102,12 @@ abstract class AbstractDeleteTaskTestBase {
     }
 
     protected fun doTestDeleteFileOk(file: HybridFileParcelable) {
-        val task = DeleteTask(ctx!!, false)
-        val result = task.doInBackground(ArrayList(listOf(file)))
-        assertTrue(result.result)
-        assertNull(result.exception)
-
-        task.onPostExecute(result)
+        DeleteTask.runDeleteOperation(
+            ctx!!,
+            ArrayList(listOf(file)),
+            false,
+            null,
+        )
         shadowOf(Looper.getMainLooper()).idle()
         assertNotNull(ShadowToast.getLatestToast())
         assertEquals(ctx?.getString(R.string.done), ShadowToast.getTextOfLatestToast())
@@ -122,15 +119,12 @@ abstract class AbstractDeleteTaskTestBase {
         ActivityScenario.launch(MainActivity::class.java).also {
             shadowOf(Looper.getMainLooper()).idle()
         }.moveToState(Lifecycle.State.STARTED).onActivity { activity ->
-
-            val task = DeleteTask(ctx!!, false)
-            val result = task.doInBackground(ArrayList(listOf(file)))
-            if (result.result != null) {
-                assertFalse(result.result)
-            } else {
-                assertNotNull(result.exception)
-            }
-            task.onPostExecute(result)
+            DeleteTask.runDeleteOperation(
+                ctx!!,
+                ArrayList(listOf(file)),
+                false,
+                null,
+            )
             shadowOf(Looper.getMainLooper()).idle()
 
             shadowOf(activity).broadcastIntents.run {
@@ -139,13 +133,13 @@ abstract class AbstractDeleteTaskTestBase {
                     MainActivity.TAG_INTENT_FILTER_GENERAL.equals(it.action)
                 }!!.apply {
                     assertEquals(MainActivity.TAG_INTENT_FILTER_GENERAL, action)
+                    @Suppress("DEPRECATION")
                     getParcelableArrayListExtra<HybridFileParcelable>(
                         MainActivity.TAG_INTENT_FILTER_FAILED_OPS,
-                    )
-                        .run {
-                            assertTrue(size > 0)
-                            assertEquals(file.path, this!![0].path)
-                        }
+                    ).run {
+                        assertTrue(size > 0)
+                        assertEquals(file.path, this!![0].path)
+                    }
                 }
             }
         }.moveToState(Lifecycle.State.DESTROYED).close().run {

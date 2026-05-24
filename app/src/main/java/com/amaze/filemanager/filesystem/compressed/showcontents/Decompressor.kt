@@ -23,7 +23,8 @@ package com.amaze.filemanager.filesystem.compressed.showcontents
 import android.content.Context
 import android.content.Intent
 import com.amaze.filemanager.asynchronous.asynctasks.compress.CompressedHelperCallable
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
+import com.amaze.filemanager.asynchronous.management.IOOperation
+import com.amaze.filemanager.asynchronous.management.IOOperationQueue
 import com.amaze.filemanager.asynchronous.services.ExtractService
 
 /** @author Emmanuel on 20/11/2017, at 17:14.
@@ -49,7 +50,7 @@ abstract class Decompressor(protected var context: Context) {
                 it.putExtra(ExtractService.KEY_ENTRIES_ZIP, arrayOfNulls<String>(0))
                 it.putExtra(ExtractService.KEY_PATH_EXTRACT, whereToDecompress)
             }
-        ServiceWatcherUtil.runService(context, intent)
+        IOOperationQueue.enqueue(context, IOOperation.Extract(intent))
     }
 
     /**
@@ -71,7 +72,7 @@ abstract class Decompressor(protected var context: Context) {
                     it.putExtra(ExtractService.KEY_ENTRIES_ZIP, subDirectories)
                     it.putExtra(ExtractService.KEY_PATH_EXTRACT, whereToDecompress)
                 }
-            ServiceWatcherUtil.runService(context, intent)
+            IOOperationQueue.enqueue(context, IOOperation.Extract(intent))
         }
     }
 

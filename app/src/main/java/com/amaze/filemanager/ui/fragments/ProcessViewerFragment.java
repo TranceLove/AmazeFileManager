@@ -24,8 +24,11 @@ import static androidx.core.text.HtmlCompat.FROM_HTML_MODE_COMPACT;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.amaze.filemanager.R;
+import com.amaze.filemanager.asynchronous.management.IOOperation;
+import com.amaze.filemanager.asynchronous.management.IOOperationQueue;
 import com.amaze.filemanager.asynchronous.services.AbstractProgressiveService;
 import com.amaze.filemanager.asynchronous.services.CopyService;
 import com.amaze.filemanager.asynchronous.services.DecryptService;
@@ -61,6 +64,7 @@ import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -80,11 +84,23 @@ public class ProcessViewerFragment extends Fragment {
       SERVICE_ENCRYPT = 3,
       SERVICE_DECRYPT = 4;
 
+  private static final int MAX_VISIBLE_QUEUE_ROWS = 10;
+  private static final long COMPLETED_RETENTION_WINDOW_MS = 30_000L;
+
   private boolean isInitialized = false;
   private MainActivity mainActivity;
   private int accentColor;
   private final LineData lineData = new LineData();
   private ProcessparentBinding binding = null;
+  private final ArrayList<String> queueRows = new ArrayList<>();
+  private ArrayAdapter<String> queueAdapter;
+  private final IOOperationQueue.QueueStateListener queueStateListener =
+      queueEntries -> {
+        if (getActivity() == null) {
+          return;
+        }
+        getActivity().runOnUiThread(() -> updateQueueStateSection(queueEntries));
+      };
 
   /** Time in seconds just for showing to the user. No guarantees. */
   private long looseTimeInSeconds = 0L;
@@ -142,6 +158,11 @@ public class ProcessViewerFragment extends Fragment {
 
     mainActivity.updateViews(
         new ColorDrawable(MainActivity.currentTab == 1 ? skinTwoColor : skin_color));
+
+    queueAdapter =
+        new ArrayAdapter<>(
+            requireContext(), android.R.layout.simple_list_item_1, android.R.id.text1, queueRows);
+    binding.listViewQueueState.setAdapter(queueAdapter);
   }
 
   @Override
@@ -162,6 +183,7 @@ public class ProcessViewerFragment extends Fragment {
 
     Intent intent4 = new Intent(getActivity(), DecryptService.class);
     getActivity().bindService(intent4, mDecryptConnection, 0);
+    IOOperationQueue.addQueueStateListener(queueStateListener);
   }
 
   @Override
@@ -172,6 +194,7 @@ public class ProcessViewerFragment extends Fragment {
     getActivity().unbindService(mCompressConnection);
     getActivity().unbindService(mEncryptConnection);
     getActivity().unbindService(mDecryptConnection);
+    IOOperationQueue.removeQueueStateListener(queueStateListener);
   }
 
   @Override
@@ -261,6 +284,118 @@ public class ProcessViewerFragment extends Fragment {
 
       if (dataPackage.getCompleted()) binding.deleteButton.setVisibility(View.GONE);
     }
+  }
+
+  private void updateQueueStateSection(List<IOOperationQueue.QueueEntry> queueEntries) {
+    if (binding == null || queueAdapter == null) return;
+
+    List<IOOperationQueue.QueueEntry> visibleQueueEntries = getVisibleQueueEntries(queueEntries);
+
+    queueRows.clear();
+    if (visibleQueueEntries.isEmpty()) {
+      queueRows.add(getString(R.string.no_queued_operations));
+    } else {
+      for (IOOperationQueue.QueueEntry queueEntry : visibleQueueEntries) {
+        String row =
+            getString(
+                R.string.queue_item_format,
+                formatOperation(queueEntry.getOperation()),
+                formatStatus(queueEntry));
+        queueRows.add(row);
+      }
+    }
+    queueAdapter.notifyDataSetChanged();
+    binding.textViewQueueHeader.setText(
+        getString(R.string.queued_operations_count, visibleQueueEntries.size()));
+  }
+
+  private List<IOOperationQueue.QueueEntry> getVisibleQueueEntries(
+      @Nullable List<IOOperationQueue.QueueEntry> queueEntries) {
+    return filterQueueEntriesForDisplay(
+        queueEntries,
+        System.currentTimeMillis(),
+        MAX_VISIBLE_QUEUE_ROWS,
+        COMPLETED_RETENTION_WINDOW_MS);
+  }
+
+  static List<IOOperationQueue.QueueEntry> filterQueueEntriesForDisplay(
+      @Nullable List<IOOperationQueue.QueueEntry> queueEntries,
+      long now,
+      int maxVisibleRows,
+      long completedRetentionWindowMs) {
+    ArrayList<IOOperationQueue.QueueEntry> filteredEntries = new ArrayList<>();
+    if (queueEntries == null || queueEntries.isEmpty()) {
+      return filteredEntries;
+    }
+
+    for (IOOperationQueue.QueueEntry queueEntry : queueEntries) {
+      if (queueEntry.getStatus() == IOOperationQueue.Status.COMPLETED
+          && now - queueEntry.getLastUpdatedAtMillis() > completedRetentionWindowMs) {
+        continue;
+      }
+      filteredEntries.add(queueEntry);
+    }
+
+    int size = filteredEntries.size();
+    if (size > maxVisibleRows) {
+      return new ArrayList<>(filteredEntries.subList(size - maxVisibleRows, size));
+    }
+    return filteredEntries;
+  }
+
+  private String formatOperation(@NonNull IOOperation operation) {
+    if (operation instanceof IOOperation.Copy) {
+      return getString(R.string.queue_op_copy);
+    }
+    if (operation instanceof IOOperation.Move) {
+      return getString(R.string.queue_op_move);
+    }
+    if (operation instanceof IOOperation.Extract) {
+      return getString(R.string.queue_op_extract);
+    }
+    if (operation instanceof IOOperation.Compress) {
+      return getString(R.string.queue_op_compress);
+    }
+    if (operation instanceof IOOperation.Encrypt) {
+      return getString(R.string.queue_op_encrypt);
+    }
+    if (operation instanceof IOOperation.Decrypt) {
+      return getString(R.string.queue_op_decrypt);
+    }
+    if (operation instanceof IOOperation.Mkdir) {
+      return getString(R.string.queue_op_mkdir);
+    }
+    if (operation instanceof IOOperation.MkFile) {
+      return getString(R.string.queue_op_mkfile);
+    }
+    if (operation instanceof IOOperation.Rename) {
+      return getString(R.string.queue_op_rename);
+    }
+    if (operation instanceof IOOperation.Delete) {
+      return getString(R.string.queue_op_delete);
+    }
+    return operation.getClass().getSimpleName();
+  }
+
+  private String formatStatus(@NonNull IOOperationQueue.QueueEntry queueEntry) {
+    IOOperationQueue.Status status = queueEntry.getStatus();
+    if (status == IOOperationQueue.Status.PENDING) {
+      return getString(R.string.queue_status_pending);
+    }
+    if (status == IOOperationQueue.Status.RUNNING) {
+      return getString(R.string.queue_status_running);
+    }
+    if (status == IOOperationQueue.Status.COMPLETED) {
+      return getString(R.string.queue_status_completed);
+    }
+    if (status == IOOperationQueue.Status.FAILED) {
+      String error = queueEntry.getError();
+      if (error != null && !error.isEmpty()) {
+        return getString(R.string.queue_status_failed_with_reason, error);
+      }
+      return getString(R.string.queue_status_failed);
+    }
+    return status.name();
   }
 
   /** Setup drawables and click listeners based on the SERVICE_* constants */

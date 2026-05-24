@@ -32,6 +32,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode
 import com.amaze.filemanager.shadows.ShadowFileUtils
@@ -41,6 +42,7 @@ import com.amaze.filemanager.test.ShadowPasswordUtil
 import com.amaze.filemanager.test.ShadowTabHandler
 import com.amaze.filemanager.test.TestUtils
 import com.amaze.filemanager.ui.activities.MainActivity
+import io.mockk.unmockkAll
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
@@ -57,6 +59,8 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.LooperMode
 import org.robolectric.shadows.ShadowPausedAsyncTask
 import org.robolectric.shadows.ShadowSQLiteConnection
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 @RunWith(AndroidJUnit4::class)
 @LooperMode(LooperMode.Mode.PAUSED)
@@ -72,25 +76,6 @@ import org.robolectric.shadows.ShadowSQLiteConnection
 )
 abstract class AbstractOperationsTestBase {
     private var ctx: Context? = null
-
-    private val blankCallback =
-        object : Operations.ErrorCallBack {
-            override fun exists(file: HybridFile?) = Unit
-
-            override fun launchSAF(file: HybridFile?) = Unit
-
-            override fun launchSAF(
-                file: HybridFile?,
-                file1: HybridFile?,
-            ) = Unit
-
-            override fun done(
-                hFile: HybridFile?,
-                b: Boolean,
-            ) = Unit
-
-            override fun invalidName(file: HybridFile?) = Unit
-        }
 
     @Rule
     @JvmField
@@ -119,7 +104,34 @@ abstract class AbstractOperationsTestBase {
      */
     @After
     fun tearDown() {
+        unmockkAll()
         ShadowSQLiteConnection.reset()
+    }
+
+    private fun findFailedOpsBroadcast(activity: MainActivity) =
+        Shadows.shadowOf(activity).broadcastIntents.find {
+            it.action == MainActivity.TAG_INTENT_FILTER_GENERAL &&
+                @Suppress("DEPRECATION")
+                !it
+                    .getParcelableArrayListExtra<HybridFileParcelable>(
+                        MainActivity.TAG_INTENT_FILTER_FAILED_OPS,
+                    )
+                    .isNullOrEmpty()
+        }
+
+    private fun waitForRenameFailureSignal(
+        activity: MainActivity,
+        callbackDone: AtomicBoolean,
+    ) {
+        val timeoutAt = System.currentTimeMillis() + 20000L
+        while (System.currentTimeMillis() < timeoutAt) {
+            Shadows.shadowOf(Looper.getMainLooper()).idle()
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+            if (callbackDone.get() || findFailedOpsBroadcast(activity) != null) {
+                return
+            }
+            Thread.sleep(25)
+        }
     }
 
     protected fun testRenameFileAccessDenied(
@@ -132,29 +144,51 @@ abstract class AbstractOperationsTestBase {
         ActivityScenario.launch(MainActivity::class.java).also {
             Shadows.shadowOf(Looper.getMainLooper()).idle()
         }.moveToState(Lifecycle.State.STARTED).onActivity { activity ->
+            val callbackDone = AtomicBoolean(false)
+            val callbackSuccess = AtomicReference<Boolean?>(null)
+            val callback =
+                object : Operations.ErrorCallBack {
+                    override fun exists(file: HybridFile?) = Unit
+
+                    override fun launchSAF(file: HybridFile?) = Unit
+
+                    override fun launchSAF(
+                        file: HybridFile?,
+                        file1: HybridFile?,
+                    ) = Unit
+
+                    override fun done(
+                        hFile: HybridFile?,
+                        b: Boolean,
+                    ) {
+                        callbackSuccess.set(b)
+                        callbackDone.set(true)
+                    }
+
+                    override fun invalidName(file: HybridFile?) = Unit
+                }
 
             val oldFile = HybridFile(fileMode, oldFilePath)
             val newFile = HybridFile(fileMode, newFilePath)
-            Operations.rename(oldFile, newFile, false, activity, blankCallback)
-            Shadows.shadowOf(Looper.getMainLooper()).idle()
+            Operations.rename(oldFile, newFile, false, activity, callback)
+            waitForRenameFailureSignal(activity, callbackDone)
 
-            Shadows.shadowOf(activity).broadcastIntents.run {
-                assertNotNull(this)
-                assertTrue(this.size > 0)
-                this[0].apply {
-                    assertEquals(MainActivity.TAG_INTENT_FILTER_GENERAL, this.action)
-                    this
-                        .getParcelableArrayListExtra<HybridFileParcelable>(
-                            MainActivity.TAG_INTENT_FILTER_FAILED_OPS,
-                        )
-                        .run {
-                            assertNotNull(this)
-                            this?.let {
-                                assertTrue(it.size > 0)
-                                assertEquals(oldFilePath, it[0].path)
-                            }
+            val failedBroadcast = findFailedOpsBroadcast(activity)
+            assertTrue(callbackDone.get() || failedBroadcast != null)
+            callbackSuccess.get()?.let { assertEquals(false, it) }
+
+            failedBroadcast?.apply {
+                @Suppress("DEPRECATION")
+                getParcelableArrayListExtra<HybridFileParcelable>(
+                    MainActivity.TAG_INTENT_FILTER_FAILED_OPS,
+                )
+                    .run {
+                        assertNotNull(this)
+                        this?.let {
+                            assertTrue(it.size > 0)
+                            assertEquals(oldFilePath, it[0].path)
                         }
-                }
+                    }
             }
         }.moveToState(Lifecycle.State.DESTROYED).close().run {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

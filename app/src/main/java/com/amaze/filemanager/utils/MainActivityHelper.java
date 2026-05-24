@@ -40,7 +40,8 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.amaze.filemanager.R;
 import com.amaze.filemanager.application.AppConfig;
 import com.amaze.filemanager.asynchronous.asynctasks.DeleteTask;
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil;
+import com.amaze.filemanager.asynchronous.management.IOOperation;
+import com.amaze.filemanager.asynchronous.management.IOOperationQueue;
 import com.amaze.filemanager.asynchronous.services.ZipService;
 import com.amaze.filemanager.database.CloudHandler;
 import com.amaze.filemanager.database.CryptHandler;
@@ -507,7 +508,7 @@ public class MainActivityHelper {
       Intent intent2 = new Intent(mainActivity, ZipService.class);
       intent2.putExtra(ZipService.KEY_COMPRESS_PATH, file.getPath());
       intent2.putExtra(ZipService.KEY_COMPRESS_FILES, baseFiles);
-      ServiceWatcherUtil.runService(mainActivity, intent2);
+      IOOperationQueue.enqueue(mainActivity, new IOOperation.Compress(intent2));
     } else Toast.makeText(mainActivity, R.string.not_allowed, Toast.LENGTH_SHORT).show();
   }
 

@@ -30,6 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import com.amaze.filemanager.R;
 import com.amaze.filemanager.application.AppConfig;
+import com.amaze.filemanager.asynchronous.management.IOOperation;
+import com.amaze.filemanager.asynchronous.management.IOOperationQueue;
 import com.amaze.filemanager.database.CryptHandler;
 import com.amaze.filemanager.fileoperations.exceptions.ShellNotRunningException;
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode;
@@ -51,7 +53,6 @@ import com.cloudrail.si.interfaces.CloudStorage;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -60,57 +61,57 @@ import androidx.preference.PreferenceManager;
 
 import jcifs.smb.SmbException;
 
-public class DeleteTask
-    extends AsyncTask<ArrayList<HybridFileParcelable>, String, AsyncTaskResult<Boolean>> {
+public class DeleteTask {
 
   private static final Logger LOG = LoggerFactory.getLogger(DeleteTask.class);
 
-  private ArrayList<HybridFileParcelable> files;
   private final Context applicationContext;
-  private final boolean rootMode;
   private CompressedExplorerFragment compressedExplorerFragment;
 
   private boolean doDeletePermanently;
-  private final DataUtils dataUtils = DataUtils.getInstance();
 
   public DeleteTask(@NonNull Context applicationContext, @NonNull boolean doDeletePermanently) {
     this.applicationContext = applicationContext.getApplicationContext();
     this.doDeletePermanently = doDeletePermanently;
-    rootMode =
-        PreferenceManager.getDefaultSharedPreferences(applicationContext)
-            .getBoolean(PreferencesConstants.PREFERENCE_ROOTMODE, false);
   }
 
   public DeleteTask(
       @NonNull Context applicationContext, CompressedExplorerFragment compressedExplorerFragment) {
     this.applicationContext = applicationContext.getApplicationContext();
     this.doDeletePermanently = false;
-    rootMode =
-        PreferenceManager.getDefaultSharedPreferences(applicationContext)
-            .getBoolean(PreferencesConstants.PREFERENCE_ROOTMODE, false);
     this.compressedExplorerFragment = compressedExplorerFragment;
   }
 
-  @Override
-  protected void onProgressUpdate(String... values) {
-    super.onProgressUpdate(values);
-    Toast.makeText(applicationContext, values[0], Toast.LENGTH_SHORT).show();
+  @SafeVarargs
+  public final void execute(final ArrayList<HybridFileParcelable>... p1) {
+    if (p1 == null || p1.length == 0 || p1[0] == null) {
+      return;
+    }
+
+    IOOperationQueue.enqueue(
+        applicationContext,
+        new IOOperation.Delete(p1[0], doDeletePermanently, compressedExplorerFragment));
   }
 
-  @Override
-  @SafeVarargs
-  protected final AsyncTaskResult<Boolean> doInBackground(
-      final ArrayList<HybridFileParcelable>... p1) {
-    files = p1[0];
+  public static void runDeleteOperation(
+      @NonNull final Context applicationContext,
+      @NonNull final ArrayList<HybridFileParcelable> files,
+      final boolean doDeletePermanently,
+      final CompressedExplorerFragment compressedExplorerFragment) {
+    final boolean rootMode =
+        PreferenceManager.getDefaultSharedPreferences(applicationContext)
+            .getBoolean(PreferencesConstants.PREFERENCE_ROOTMODE, false);
+
     boolean wasDeleted = true;
-    if (files.size() == 0) return new AsyncTaskResult<>(true);
+    if (files.size() == 0) return;
 
     for (HybridFileParcelable file : files) {
       try {
-        wasDeleted = doDeleteFile(file);
+        wasDeleted = doDeleteFile(applicationContext, file, doDeletePermanently, rootMode);
         if (!wasDeleted) break;
       } catch (Exception e) {
-        return new AsyncTaskResult<>(e);
+        wasDeleted = false;
+        break;
       }
 
       // delete file from media database
@@ -129,12 +130,6 @@ public class DeleteTask
       }
     }
 
-    return new AsyncTaskResult<>(wasDeleted);
-  }
-
-  @Override
-  public void onPostExecute(AsyncTaskResult<Boolean> result) {
-
     if (files.size() > 0) {
       String path = files.get(0).getParent(applicationContext);
       Intent intent = new Intent(MainActivity.KEY_INTENT_LOAD_LIST);
@@ -143,16 +138,19 @@ public class DeleteTask
       applicationContext.sendBroadcast(intent);
     }
 
-    if (result.result == null || !result.result) {
+    if (!wasDeleted) {
       applicationContext.sendBroadcast(
           new Intent(TAG_INTENT_FILTER_GENERAL)
               .putParcelableArrayListExtra(TAG_INTENT_FILTER_FAILED_OPS, files));
     } else if (compressedExplorerFragment == null) {
-      AppConfig.toast(applicationContext, R.string.done);
+      AppConfig.getInstance()
+          .runInApplicationThread(
+              () -> Toast.makeText(applicationContext, R.string.done, Toast.LENGTH_SHORT).show());
     }
 
     if (compressedExplorerFragment != null) {
-      compressedExplorerFragment.files.clear();
+      AppConfig.getInstance()
+          .runInApplicationThread(() -> compressedExplorerFragment.files.clear());
     }
 
     // cancel any processing notification because of cut/paste operation
@@ -161,7 +159,12 @@ public class DeleteTask
     notificationManager.cancel(NotificationConstants.COPY_ID);
   }
 
-  private boolean doDeleteFile(@NonNull HybridFileParcelable file) throws Exception {
+  private static boolean doDeleteFile(
+      @NonNull Context applicationContext,
+      @NonNull HybridFileParcelable file,
+      boolean doDeletePermanently,
+      boolean rootMode)
+      throws Exception {
     switch (file.getMode()) {
       case OTG:
         DocumentFile documentFile =
@@ -180,7 +183,7 @@ public class DeleteTask
       case BOX:
       case GDRIVE:
       case ONEDRIVE:
-        CloudStorage cloudStorage = dataUtils.getAccount(file.getMode());
+        CloudStorage cloudStorage = DataUtils.getInstance().getAccount(file.getMode());
         try {
           cloudStorage.delete(CloudUtil.stripPath(file.getMode(), file.getPath()));
           return true;

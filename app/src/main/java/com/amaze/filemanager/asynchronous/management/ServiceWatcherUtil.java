@@ -195,6 +195,9 @@ public class ServiceWatcherUtil {
    * closed as there are higher chances for android system to GC the thread when it is running low
    * on memory
    */
+  @Deprecated(forRemoval = false, since = "3.10")
+  // Keep legacy queue for compatibility while callers migrate.
+  // Use IOOperationQueue.enqueue(context, IOOperation.<Type>(intent)) instead
   public static synchronized void runService(@Nullable final Context context, final Intent intent) {
     switch (pendingIntents.size()) {
       case 0:

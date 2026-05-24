@@ -30,7 +30,8 @@ import androidx.preference.PreferenceManager
 import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
 import com.amaze.filemanager.R
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
+import com.amaze.filemanager.asynchronous.management.IOOperation
+import com.amaze.filemanager.asynchronous.management.IOOperationQueue
 import com.amaze.filemanager.asynchronous.services.DecryptService
 import com.amaze.filemanager.asynchronous.services.EncryptService
 import com.amaze.filemanager.database.CryptHandler
@@ -88,7 +89,7 @@ object EncryptDecryptUtils {
             addEntry(encryptedEntry)
         }
         // start the encryption process
-        ServiceWatcherUtil.runService(c, intent)
+        IOOperationQueue.enqueue(c, IOOperation.Encrypt(intent))
     }
 
     /**
@@ -234,7 +235,7 @@ object EncryptDecryptUtils {
                 val editText =
                     dialog.view.findViewById<AppCompatEditText>(R.id.singleedittext_input)
                 decryptIntent.putExtra(EncryptService.TAG_PASSWORD, editText.text.toString())
-                ServiceWatcherUtil.runService(main.context, decryptIntent)
+                IOOperationQueue.enqueue(main.context, IOOperation.Decrypt(decryptIntent))
                 dialog.dismiss()
             },
             null,
@@ -244,7 +245,7 @@ object EncryptDecryptUtils {
     private fun createCallback(main: MainFragment): DecryptButtonCallbackInterface {
         return object : DecryptButtonCallbackInterface {
             override fun confirm(intent: Intent) {
-                ServiceWatcherUtil.runService(main.context, intent)
+                IOOperationQueue.enqueue(main.context, IOOperation.Decrypt(intent))
             }
 
             override fun failed() {

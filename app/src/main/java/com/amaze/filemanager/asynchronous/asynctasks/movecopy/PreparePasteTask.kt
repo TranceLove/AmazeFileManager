@@ -30,7 +30,8 @@ import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
 import com.amaze.filemanager.R
 import com.amaze.filemanager.asynchronous.asynctasks.fromTask
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
+import com.amaze.filemanager.asynchronous.management.IOOperation
+import com.amaze.filemanager.asynchronous.management.IOOperationQueue
 import com.amaze.filemanager.asynchronous.services.CopyService
 import com.amaze.filemanager.databinding.CopyDialogBinding
 import com.amaze.filemanager.fileoperations.filesystem.CAN_CREATE_FILES
@@ -100,7 +101,7 @@ class PreparePasteTask(strongRefMain: MainActivity) {
         intent.putExtra(CopyService.TAG_COPY_OPEN_MODE, openMode.ordinal)
         intent.putExtra(CopyService.TAG_COPY_MOVE, isMove)
         intent.putExtra(CopyService.TAG_IS_ROOT_EXPLORER, isRootMode)
-        ServiceWatcherUtil.runService(context.get(), intent)
+        IOOperationQueue.enqueue(context.get(), IOOperation.Copy(intent))
     }
 
     /**

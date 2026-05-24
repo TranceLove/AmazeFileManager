@@ -26,7 +26,8 @@ import android.widget.Toast
 import com.amaze.filemanager.R
 import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.asynchronous.asynctasks.Task
-import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
+import com.amaze.filemanager.asynchronous.management.IOOperation
+import com.amaze.filemanager.asynchronous.management.IOOperationQueue
 import com.amaze.filemanager.asynchronous.services.CopyService
 import com.amaze.filemanager.database.CryptHandler
 import com.amaze.filemanager.database.models.explorer.EncryptedEntry
@@ -152,7 +153,7 @@ class MoveFilesTask(
             intent.putExtra(CopyService.TAG_COPY_MOVE, true)
             intent.putExtra(CopyService.TAG_COPY_OPEN_MODE, mode.ordinal)
             intent.putExtra(CopyService.TAG_IS_ROOT_EXPLORER, isRootExplorer)
-            ServiceWatcherUtil.runService(applicationContext, intent)
+            IOOperationQueue.enqueue(applicationContext, IOOperation.Move(intent))
         }
     }
 }
