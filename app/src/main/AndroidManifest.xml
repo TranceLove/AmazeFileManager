@@ -264,7 +264,7 @@
             android:label="Extracting"
             android:foregroundServiceType="dataSync" />
 
-        <service android:name=".asynchronous.services.ZipService"
+        <service android:name=".asynchronous.services.CompressService"
             android:label="Compressing"
             android:foregroundServiceType="dataSync" />
 

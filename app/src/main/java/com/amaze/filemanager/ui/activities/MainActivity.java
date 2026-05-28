@@ -105,6 +105,7 @@ import com.amaze.filemanager.filesystem.HybridFileParcelable;
 import com.amaze.filemanager.filesystem.MakeFileOperation;
 import com.amaze.filemanager.filesystem.PasteHelper;
 import com.amaze.filemanager.filesystem.RootHelper;
+import com.amaze.filemanager.filesystem.compressed.CompressionFormat;
 import com.amaze.filemanager.filesystem.files.FileUtils;
 import com.amaze.filemanager.filesystem.ftp.NetCopyClientConnectionPool;
 import com.amaze.filemanager.filesystem.ftp.NetCopyConnectionInfo;
@@ -112,6 +113,7 @@ import com.amaze.filemanager.filesystem.ssh.SshClientUtils;
 import com.amaze.filemanager.ui.ExtensionsKt;
 import com.amaze.filemanager.ui.activities.superclasses.PermissionsActivity;
 import com.amaze.filemanager.ui.dialogs.AlertDialog;
+import com.amaze.filemanager.ui.dialogs.CompressDialogFragment;
 import com.amaze.filemanager.ui.dialogs.GeneralDialogCreation;
 import com.amaze.filemanager.ui.dialogs.HiddenFilesDialog;
 import com.amaze.filemanager.ui.dialogs.HistoryDialog;
@@ -222,6 +224,7 @@ public class MainActivity extends PermissionsActivity
         CloudConnectionCallbacks,
         LoaderManager.LoaderCallbacks<Cursor>,
         FolderChooserDialog.FolderCallback,
+        CompressDialogFragment.CompressDialogListener,
         PermissionsActivity.OnPermissionGranted {
 
   private static final Logger LOG = LoggerFactory.getLogger(MainActivity.class);
@@ -244,6 +247,7 @@ public class MainActivity extends PermissionsActivity
   public MainActivityHelper mainActivityHelper;
 
   public int operation = -1;
+  public int opCompressFormat = CompressionFormat.ZIP.ordinal();
   public ArrayList<HybridFileParcelable> oparrayList;
   public ArrayList<ArrayList<HybridFileParcelable>> oparrayListList;
 
@@ -266,6 +270,7 @@ public class MainActivity extends PermissionsActivity
   private static final String KEY_OPERATED_ON_PATH = "oppathe1";
   private static final String KEY_OPERATIONS_PATH_LIST = "oparraylist";
   private static final String KEY_OPERATION = "operation";
+  private static final String KEY_OPERATION_COMPRESS_FORMAT = "opcompressformat";
   private static final String KEY_SELECTED_LIST_ITEM = "select_list_item";
 
   private AppBar appbar;
@@ -537,6 +542,8 @@ public class MainActivity extends PermissionsActivity
       oppathe1 = savedInstanceState.getString(KEY_OPERATED_ON_PATH);
       oparrayList = savedInstanceState.getParcelableArrayList(KEY_OPERATIONS_PATH_LIST);
       operation = savedInstanceState.getInt(KEY_OPERATION);
+      opCompressFormat =
+          savedInstanceState.getInt(KEY_OPERATION_COMPRESS_FORMAT, CompressionFormat.ZIP.ordinal());
       int selectedStorage = savedInstanceState.getInt(KEY_DRAWER_SELECTED, 0);
       getDrawer().selectCorrectDrawerItem(selectedStorage);
     }
@@ -1356,6 +1363,7 @@ public class MainActivity extends PermissionsActivity
       outState.putString(KEY_OPERATED_ON_PATH, oppathe1);
       outState.putParcelableArrayList(KEY_OPERATIONS_PATH_LIST, (oparrayList));
       outState.putInt(KEY_OPERATION, operation);
+      outState.putInt(KEY_OPERATION_COMPRESS_FORMAT, opCompressFormat);
     }
   }
 
@@ -1712,7 +1720,10 @@ public class MainActivity extends PermissionsActivity
                 mainActivityHelper.extractFile(new File(oppathe));
                 break;
               case COMPRESS:
-                mainActivityHelper.compressFiles(new File(oppathe), oparrayList);
+                mainActivityHelper.compressFiles(
+                    new File(oppathe),
+                    oparrayList,
+                    CompressionFormat.fromOrdinal(opCompressFormat));
                 break;
               case SAVE_FILE:
                 FileUtil.writeUriToStorage(
@@ -2587,6 +2598,12 @@ public class MainActivity extends PermissionsActivity
   @Override
   public void onFolderChooserDismissed(@NonNull FolderChooserDialog dialog) {
     dialog.dismiss();
+  }
+
+  @Override
+  public void onCompressConfirmed(
+      String outputPath, CompressionFormat format, ArrayList<HybridFileParcelable> files) {
+    mainActivityHelper.compressFiles(new File(outputPath), files, format);
   }
 
   private void executeWithMainFragment(@NonNull Function<MainFragment, Void> lambda) {

@@ -37,6 +37,7 @@ import com.amaze.filemanager.filesystem.HybridFileParcelable
 import com.amaze.filemanager.filesystem.PasteHelper
 import com.amaze.filemanager.filesystem.files.FileUtils
 import com.amaze.filemanager.ui.activities.MainActivity
+import com.amaze.filemanager.ui.dialogs.CompressDialogFragment
 import com.amaze.filemanager.ui.dialogs.GeneralDialogCreation
 import com.amaze.filemanager.ui.selection.SelectionPopupMenu.Companion.invokeSelectionDropdown
 import java.io.File
@@ -374,11 +375,13 @@ class MainActivityActionMode(private val mainActivityReference: WeakReference<Ma
                         copies1.add(checkedItems[i4].generateBaseFile())
                         i4++
                     }
-                    GeneralDialogCreation.showCompressDialog(
-                        mainActivity,
-                        copies1,
-                        mainActivity.currentMainFragment?.mainFragmentViewModel?.currentPath,
-                    )
+                    mainActivity.currentMainFragment?.mainFragmentViewModel?.currentPath?.let {
+                        CompressDialogFragment.show(
+                            mainActivity.supportFragmentManager,
+                            copies1,
+                            it,
+                        )
+                    }
                     mode.finish()
                     true
                 }

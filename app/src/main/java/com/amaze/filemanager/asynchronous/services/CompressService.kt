@@ -30,7 +30,6 @@ import android.content.SharedPreferences
 import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.O
 import android.os.Build.VERSION_CODES.Q
 import android.os.Build.VERSION_CODES.TIRAMISU
 import android.os.IBinder
@@ -44,10 +43,11 @@ import androidx.preference.PreferenceManager
 import com.amaze.filemanager.R
 import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil
-import com.amaze.filemanager.filesystem.FileUtil
 import com.amaze.filemanager.filesystem.HybridFileParcelable
+import com.amaze.filemanager.filesystem.compressed.CompressedHelper
+import com.amaze.filemanager.filesystem.compressed.CompressionFormat
+import com.amaze.filemanager.filesystem.compressed.createcontents.Compressor
 import com.amaze.filemanager.filesystem.files.FileUtils
-import com.amaze.filemanager.filesystem.files.GenericCopyUtil
 import com.amaze.filemanager.ui.activities.MainActivity
 import com.amaze.filemanager.ui.notifications.NotificationConstants
 import com.amaze.filemanager.utils.DatapointParcelable
@@ -62,22 +62,12 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
-import java.io.OutputStream
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.attribute.BasicFileAttributes
-import java.util.zip.ZipEntry
-import java.util.zip.ZipException
-import java.util.zip.ZipOutputStream
 
 @Suppress("TooManyFunctions") // Hack.
-class ZipService : AbstractProgressiveService() {
-    private val log: Logger = LoggerFactory.getLogger(ZipService::class.java)
+class CompressService : AbstractProgressiveService() {
+    private val log: Logger = LoggerFactory.getLogger(CompressService::class.java)
 
     private val mBinder: IBinder = ObtainableServiceBinder(this)
     private val disposables = CompositeDisposable()
@@ -108,6 +98,11 @@ class ZipService : AbstractProgressiveService() {
         startId: Int,
     ): Int {
         val mZipPath = intent.getStringExtra(KEY_COMPRESS_PATH)
+        if (mZipPath.isNullOrEmpty()) {
+            log.warn("missing compression output path")
+            stopSelf()
+            return START_NOT_STICKY
+        }
         val baseFiles: ArrayList<HybridFileParcelable> =
             if (SDK_INT >= TIRAMISU) {
                 intent.getParcelableArrayListExtra(
@@ -118,6 +113,10 @@ class ZipService : AbstractProgressiveService() {
                 intent.getParcelableArrayListExtra(KEY_COMPRESS_FILES)!!
             }
         val zipFile = File(mZipPath)
+        val compressionFormat =
+            CompressionFormat.fromOrdinal(intent.getIntExtra(KEY_COMPRESS_FORMAT, CompressionFormat.ZIP.ordinal))
+                .takeIf { CompressedHelper.isCreatable(it) }
+                ?: CompressionFormat.ZIP
         mNotifyManager = NotificationManagerCompat.from(applicationContext)
         if (!zipFile.exists()) {
             try {
@@ -183,7 +182,7 @@ class ZipService : AbstractProgressiveService() {
         initNotificationViews()
         super.onStartCommand(intent, flags, startId)
         super.progressHalted()
-        val zipTask = CompressTask(this, baseFiles, zipFile.absolutePath)
+        val zipTask = CompressTask(this, baseFiles, zipFile.absolutePath, compressionFormat)
         disposables.add(zipTask.compress())
         // If we get killed, after returning from here, restart
         return START_NOT_STICKY
@@ -215,11 +214,11 @@ class ZipService : AbstractProgressiveService() {
     override fun clearDataPackages() = dataPackages.clear()
 
     inner class CompressTask(
-        private val zipService: ZipService,
+        private val zipService: CompressService,
         private val baseFiles: ArrayList<HybridFileParcelable>,
         private val zipPath: String,
+        private val compressionFormat: CompressionFormat,
     ) {
-        private lateinit var zos: ZipOutputStream
         private lateinit var watcherUtil: ServiceWatcherUtil
 
         /**
@@ -227,26 +226,12 @@ class ZipService : AbstractProgressiveService() {
          */
         fun compress(): Disposable {
             return Completable.create { emitter ->
-                // setting up service watchers and initial data packages
-                // finding total size on background thread (this is necessary condition for SMB!)
-                val totalBytes = FileUtils.getTotalBytes(baseFiles, zipService.applicationContext)
-                progressHandler.sourceSize = baseFiles.size
-                progressHandler.totalSize = totalBytes
-
-                progressHandler.setProgressListener { speed: Long ->
-                    publishResults(speed, false, false)
-                }
-                zipService.addFirstDatapoint(
-                    baseFiles[0].getName(applicationContext),
-                    baseFiles.size,
-                    totalBytes,
-                    false,
-                )
                 execute(
                     emitter,
                     zipService.applicationContext,
                     FileUtils.hybridListToFileArrayList(baseFiles),
                     zipPath,
+                    compressionFormat,
                 )
 
                 emitter.onComplete()
@@ -263,7 +248,7 @@ class ZipService : AbstractProgressiveService() {
                         zipService.sendBroadcast(intent)
                         zipService.stopSelf()
                     },
-                    { log.error(it.message ?: "ZipService.CompressAsyncTask.compress failed") },
+                    { log.error(it.message ?: "CompressService.CompressAsyncTask.compress failed") },
                 )
         }
 
@@ -284,26 +269,52 @@ class ZipService : AbstractProgressiveService() {
             context: Context,
             baseFiles: ArrayList<File>,
             zipPath: String,
+            compressionFormat: CompressionFormat,
         ) {
-            val out: OutputStream?
             val zipDirectory = File(zipPath)
             watcherUtil = ServiceWatcherUtil(progressHandler)
-            watcherUtil.watch(this@ZipService)
+            watcherUtil.watch(this@CompressService)
             try {
-                out = FileUtil.getOutputStream(zipDirectory, context)
-                zos = ZipOutputStream(BufferedOutputStream(out))
-                for ((fileProgress, file) in baseFiles.withIndex()) {
-                    if (emitter.isDisposed) return
-                    progressHandler.fileName = file.name
-                    progressHandler.sourceFilesProcessed = fileProgress + 1
-                    compressFile(file, "")
-                }
+                var processedFiles = 0
+                val compressor =
+                    CompressionFormat.getCompressor(
+                        compressionFormat,
+                        context,
+                        zipPath,
+                        baseFiles,
+                        object : Compressor.OnUpdate {
+                            override fun onStart(
+                                totalBytes: Long,
+                                firstName: String,
+                            ) {
+                                progressHandler.sourceSize = baseFiles.size
+                                progressHandler.totalSize = totalBytes
+                                progressHandler.setProgressListener { speed: Long ->
+                                    publishResults(speed, false, false)
+                                }
+                                zipService.addFirstDatapoint(
+                                    firstName,
+                                    baseFiles.size,
+                                    totalBytes,
+                                    false,
+                                )
+                            }
+
+                            override fun onUpdate(entryPath: String) {
+                                progressHandler.fileName = entryPath
+                                progressHandler.sourceFilesProcessed = ++processedFiles
+                            }
+
+                            override fun onFinish() {}
+
+                            override fun isCancelled(): Boolean = progressHandler.cancelled || emitter.isDisposed
+                        },
+                    )
+                compressor.compress()
             } catch (e: IOException) {
                 log.warn("failed to zip file", e)
             } finally {
                 try {
-                    zos.flush()
-                    zos.close()
                     context.sendBroadcast(
                         Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
                             .setData(Uri.fromFile(zipDirectory)),
@@ -314,59 +325,7 @@ class ZipService : AbstractProgressiveService() {
             }
         }
 
-        @Throws(IOException::class, NullPointerException::class, ZipException::class)
-        private fun compressFile(
-            file: File,
-            path: String,
-        ) {
-            if (progressHandler.cancelled) return
-            if (!file.isDirectory) {
-                zos.putNextEntry(createZipEntry(file, path))
-                val buf = ByteArray(GenericCopyUtil.DEFAULT_BUFFER_SIZE)
-                var len: Int
-                BufferedInputStream(FileInputStream(file)).use { bufferedInputStream ->
-                    while (bufferedInputStream.read(buf).also { len = it } > 0) {
-                        if (!progressHandler.cancelled) {
-                            zos.write(buf, 0, len)
-                            ServiceWatcherUtil.position += len.toLong()
-                        } else {
-                            break
-                        }
-                    }
-                }
-                return
-            }
-            file.listFiles()?.forEach {
-                compressFile(it, "${createZipEntryPrefixWith(path)}${file.name}")
-            }
-        }
     }
-
-    private fun createZipEntryPrefixWith(path: String): String =
-        if (path.isEmpty()) {
-            path
-        } else {
-            "$path/"
-        }
-
-    private fun createZipEntry(
-        file: File,
-        path: String,
-    ): ZipEntry =
-        ZipEntry("${createZipEntryPrefixWith(path)}${file.name}").apply {
-            if (SDK_INT >= O) {
-                val attrs =
-                    Files.readAttributes(
-                        Paths.get(file.absolutePath),
-                        BasicFileAttributes::class.java,
-                    )
-                setCreationTime(attrs.creationTime())
-                    .setLastAccessTime(attrs.lastAccessTime())
-                    .lastModifiedTime = attrs.lastModifiedTime()
-            } else {
-                time = file.lastModified()
-            }
-        }
 
     /*
      * Class used for the client Binder. Because we know this service always runs in the same process
@@ -393,6 +352,8 @@ class ZipService : AbstractProgressiveService() {
     companion object {
         const val KEY_COMPRESS_PATH = "zip_path"
         const val KEY_COMPRESS_FILES = "zip_files"
+        const val KEY_COMPRESS_FORMAT = "compress_format"
         const val KEY_COMPRESS_BROADCAST_CANCEL = "zip_cancel"
     }
 }
+

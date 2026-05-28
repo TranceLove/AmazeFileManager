@@ -636,6 +636,13 @@
     <string name="deselect_all">Deselect All</string>
     <string name="filename">Filename</string>
     <string name="compress_file_suggest_zip_extension">It\'s recommended to use \".zip\" as the file extension.</string>
+    <string name="compress_file_suggest_format_extension">It\'s recommended to use the selected format extension.</string>
+    <string name="compress_files">Compress files</string>
+    <string name="compress_format_zip">ZIP</string>
+    <string name="compress_format_tar_gz">TAR.GZ</string>
+    <string name="compress_format_tar_bz2">TAR.BZ2</string>
+    <string name="compress_format_tar_xz">TAR.XZ</string>
+    <string name="compress_format_7z">7Z</string>
     <string name="about_amaze">Material design file manager for Android</string>
     <string name="license">License</string>
     <string name="libraries">Libraries</string>

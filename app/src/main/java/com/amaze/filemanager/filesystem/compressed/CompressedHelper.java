@@ -196,6 +196,10 @@ public abstract class CompressedHelper {
         || isXz(type);
   }
 
+  public static boolean isCreatable(@NonNull CompressionFormat format) {
+    return format == CompressionFormat.ZIP;
+  }
+
   /**
    * Gets the name of the file without compression extention. For example: "s.tar.gz" to "s" "s.tar"
    * to "s"

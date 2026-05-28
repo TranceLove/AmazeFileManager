@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingLeft="@dimen/md_dialog_frame_margin"
+    android:paddingTop="@dimen/md_dialog_frame_margin"
+    android:paddingRight="@dimen/md_dialog_frame_margin">
+
+    <androidx.appcompat.widget.AppCompatSpinner
+        android:id="@+id/compress_format_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp" />
+
+    <com.amaze.filemanager.ui.views.WarnableTextInputLayout
+        android:id="@+id/compress_filename_warnabletextinputlayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/compress_filename_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="textCapSentences|textMultiLine" />
+    </com.amaze.filemanager.ui.views.WarnableTextInputLayout>
+</LinearLayout>
+

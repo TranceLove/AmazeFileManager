@@ -27,8 +27,8 @@ import android.os.Build.VERSION_CODES.LOLLIPOP
 import android.os.Build.VERSION_CODES.P
 import android.os.Looper.getMainLooper
 import androidx.test.core.app.ApplicationProvider
-import com.amaze.filemanager.asynchronous.services.ZipService.Companion.KEY_COMPRESS_FILES
-import com.amaze.filemanager.asynchronous.services.ZipService.Companion.KEY_COMPRESS_PATH
+import com.amaze.filemanager.asynchronous.services.CompressService.Companion.KEY_COMPRESS_FILES
+import com.amaze.filemanager.asynchronous.services.CompressService.Companion.KEY_COMPRESS_PATH
 import com.amaze.filemanager.filesystem.HybridFileParcelable
 import com.amaze.filemanager.shadows.ShadowMultiDex
 import net.lingala.zip4j.ZipFile
@@ -103,14 +103,14 @@ class ZipServiceTest {
 
         val intent =
             Intent()
-                .setClass(context!!, ZipService::class.java)
+                .setClass(context!!, CompressService::class.java)
                 .putParcelableArrayListExtra(
                     KEY_COMPRESS_FILES,
                     ArrayList(listOf(HybridFileParcelable(files[0].absolutePath))),
                 )
                 .putExtra(KEY_COMPRESS_PATH, zipPath.absolutePath)
 
-        Robolectric.buildService(ZipService::class.java, intent).bind().startCommand(0, 0)
+        Robolectric.buildService(CompressService::class.java, intent).bind().startCommand(0, 0)
 
         shadowOf(getMainLooper()).idle()
 

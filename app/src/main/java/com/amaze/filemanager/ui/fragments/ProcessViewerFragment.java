@@ -28,10 +28,10 @@ import java.util.ArrayList;
 import com.amaze.filemanager.R;
 import com.amaze.filemanager.asynchronous.services.AbstractProgressiveService;
 import com.amaze.filemanager.asynchronous.services.CopyService;
+import com.amaze.filemanager.asynchronous.services.CompressService;
 import com.amaze.filemanager.asynchronous.services.DecryptService;
 import com.amaze.filemanager.asynchronous.services.EncryptService;
 import com.amaze.filemanager.asynchronous.services.ExtractService;
-import com.amaze.filemanager.asynchronous.services.ZipService;
 import com.amaze.filemanager.databinding.ProcessparentBinding;
 import com.amaze.filemanager.filesystem.files.FileUtils;
 import com.amaze.filemanager.ui.activities.MainActivity;
@@ -154,7 +154,7 @@ public class ProcessViewerFragment extends Fragment {
     Intent intent1 = new Intent(getActivity(), ExtractService.class);
     getActivity().bindService(intent1, mExtractConnection, 0);
 
-    Intent intent2 = new Intent(getActivity(), ZipService.class);
+    Intent intent2 = new Intent(getActivity(), CompressService.class);
     getActivity().bindService(intent2, mCompressConnection, 0);
 
     Intent intent3 = new Intent(getActivity(), EncryptService.class);
@@ -312,7 +312,7 @@ public class ProcessViewerFragment extends Fragment {
           binding.progressImage.setImageDrawable(greyZipBoxIcon);
         }
         binding.textViewProgressType.setText(getResources().getString(R.string.compressing));
-        cancelBroadcast(new Intent(ZipService.KEY_COMPRESS_BROADCAST_CANCEL));
+        cancelBroadcast(new Intent(CompressService.KEY_COMPRESS_BROADCAST_CANCEL));
         break;
       case SERVICE_ENCRYPT:
         if (mainActivity.getAppTheme().equals(AppTheme.DARK)

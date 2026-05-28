@@ -54,7 +54,6 @@ import com.amaze.filemanager.database.models.explorer.Sort;
 import com.amaze.filemanager.databinding.DialogSigninWithGoogleBinding;
 import com.amaze.filemanager.fileoperations.exceptions.ShellNotRunningException;
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode;
-import com.amaze.filemanager.filesystem.FileProperties;
 import com.amaze.filemanager.filesystem.HybridFile;
 import com.amaze.filemanager.filesystem.HybridFileParcelable;
 import com.amaze.filemanager.filesystem.RootHelper;
@@ -1122,83 +1121,6 @@ public class GeneralDialogCreation {
     b.show();
   }
 
-  public static void showCompressDialog(
-      @NonNull final MainActivity mainActivity,
-      final HybridFileParcelable baseFile,
-      final String current) {
-    ArrayList<HybridFileParcelable> baseFiles = new ArrayList<>();
-    baseFiles.add(baseFile);
-    showCompressDialog(mainActivity, baseFiles, current);
-  }
-
-  public static void showCompressDialog(
-      @NonNull final MainActivity mainActivity,
-      final ArrayList<HybridFileParcelable> baseFiles,
-      final String current) {
-    int accentColor = mainActivity.getAccent();
-    MaterialDialog.Builder a = new MaterialDialog.Builder(mainActivity);
-
-    View dialogView =
-        mainActivity.getLayoutInflater().inflate(R.layout.dialog_singleedittext, null);
-    AppCompatEditText etFilename = dialogView.findViewById(R.id.singleedittext_input);
-    etFilename.setHint(R.string.enterzipname);
-    etFilename.setText(".zip"); // TODO: Put the file/folder name here
-    etFilename.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-    etFilename.setSingleLine();
-    WarnableTextInputLayout tilFilename =
-        dialogView.findViewById(R.id.singleedittext_warnabletextinputlayout);
-
-    dialogView.post(
-        () -> ExtensionsKt.openKeyboard(etFilename, mainActivity.getApplicationContext()));
-
-    a.customView(dialogView, false)
-        .widgetColor(accentColor)
-        .theme(mainActivity.getAppTheme().getMaterialDialogTheme())
-        .title(mainActivity.getResources().getString(R.string.enterzipname))
-        .positiveText(R.string.create)
-        .positiveColor(accentColor)
-        .onPositive(
-            (materialDialog, dialogAction) -> {
-              String name = current + "/" + etFilename.getText().toString();
-              mainActivity.mainActivityHelper.compressFiles(new File(name), baseFiles);
-            })
-        .negativeText(mainActivity.getResources().getString(R.string.cancel))
-        .negativeColor(accentColor);
-
-    final MaterialDialog materialDialog = a.build();
-
-    new WarnableTextInputValidator(
-        a.getContext(),
-        etFilename,
-        tilFilename,
-        materialDialog.getActionButton(DialogAction.POSITIVE),
-        (text) -> {
-          boolean isValidFilename = FileProperties.isValidFilename(text);
-
-          if (isValidFilename && text.length() > 0 && !text.toLowerCase().endsWith(".zip")) {
-            return new WarnableTextInputValidator.ReturnState(
-                WarnableTextInputValidator.ReturnState.STATE_WARNING,
-                R.string.compress_file_suggest_zip_extension);
-          } else {
-            if (!isValidFilename) {
-              return new WarnableTextInputValidator.ReturnState(
-                  WarnableTextInputValidator.ReturnState.STATE_ERROR, R.string.invalid_name);
-            } else if (text.length() < 1) {
-              return new WarnableTextInputValidator.ReturnState(
-                  WarnableTextInputValidator.ReturnState.STATE_ERROR, R.string.field_empty);
-            }
-          }
-
-          return new WarnableTextInputValidator.ReturnState();
-        });
-
-    materialDialog.show();
-
-    // place cursor at the starting of edit text by posting a runnable to edit text
-    // this is done because in case android has not populated the edit text layouts yet, it'll
-    // reset calls to selection if not posted in message queue
-    etFilename.post(() -> etFilename.setSelection(0));
-  }
 
   public static void showSortDialog(
       final MainFragment m, AppTheme appTheme, final SharedPreferences sharedPref) {

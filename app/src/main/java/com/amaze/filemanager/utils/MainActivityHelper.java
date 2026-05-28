@@ -41,7 +41,7 @@ import com.amaze.filemanager.R;
 import com.amaze.filemanager.application.AppConfig;
 import com.amaze.filemanager.asynchronous.asynctasks.DeleteTask;
 import com.amaze.filemanager.asynchronous.management.ServiceWatcherUtil;
-import com.amaze.filemanager.asynchronous.services.ZipService;
+import com.amaze.filemanager.asynchronous.services.CompressService;
 import com.amaze.filemanager.database.CloudHandler;
 import com.amaze.filemanager.database.CryptHandler;
 import com.amaze.filemanager.database.models.explorer.EncryptedEntry;
@@ -54,6 +54,7 @@ import com.amaze.filemanager.filesystem.HybridFileParcelable;
 import com.amaze.filemanager.filesystem.Operations;
 import com.amaze.filemanager.filesystem.SafRootHolder;
 import com.amaze.filemanager.filesystem.compressed.CompressedHelper;
+import com.amaze.filemanager.filesystem.compressed.CompressionFormat;
 import com.amaze.filemanager.filesystem.compressed.showcontents.Decompressor;
 import com.amaze.filemanager.filesystem.files.CryptUtil;
 import com.amaze.filemanager.filesystem.files.FileUtils;
@@ -491,16 +492,19 @@ public class MainActivityHelper {
    * @param file the new compressed file
    * @param baseFiles list of {@link HybridFileParcelable} to be compressed
    */
-  public void compressFiles(File file, ArrayList<HybridFileParcelable> baseFiles) {
+  public void compressFiles(
+      File file, ArrayList<HybridFileParcelable> baseFiles, CompressionFormat format) {
     int mode = checkFolder(file.getParentFile(), mainActivity);
     if (mode == 2) {
       mainActivity.oppathe = (file.getPath());
       mainActivity.operation = COMPRESS;
       mainActivity.oparrayList = baseFiles;
+      mainActivity.opCompressFormat = format.ordinal();
     } else if (mode == 1) {
-      Intent intent2 = new Intent(mainActivity, ZipService.class);
-      intent2.putExtra(ZipService.KEY_COMPRESS_PATH, file.getPath());
-      intent2.putExtra(ZipService.KEY_COMPRESS_FILES, baseFiles);
+      Intent intent2 = new Intent(mainActivity, CompressService.class);
+      intent2.putExtra(CompressService.KEY_COMPRESS_PATH, file.getPath());
+      intent2.putExtra(CompressService.KEY_COMPRESS_FILES, baseFiles);
+      intent2.putExtra(CompressService.KEY_COMPRESS_FORMAT, format.ordinal());
       ServiceWatcherUtil.runService(mainActivity, intent2);
     } else Toast.makeText(mainActivity, R.string.not_allowed, Toast.LENGTH_SHORT).show();
   }

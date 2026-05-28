@@ -36,6 +36,7 @@ import com.amaze.filemanager.filesystem.files.FileUtils;
 import com.amaze.filemanager.ui.activities.MainActivity;
 import com.amaze.filemanager.ui.dialogs.EncryptAuthenticateDialog;
 import com.amaze.filemanager.ui.dialogs.EncryptWithPresetPasswordSaveAsDialog;
+import com.amaze.filemanager.ui.dialogs.CompressDialogFragment;
 import com.amaze.filemanager.ui.dialogs.GeneralDialogCreation;
 import com.amaze.filemanager.ui.fragments.MainFragment;
 import com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants;
@@ -243,9 +244,11 @@ public class ItemPopupMenu extends PopupMenu implements PopupMenu.OnMenuItemClic
           false);
       return true;
     } else if (item.getItemId() == R.id.compress) {
-      GeneralDialogCreation.showCompressDialog(
-          mainActivity,
-          rowItem.generateBaseFile(),
+      ArrayList<HybridFileParcelable> files = new ArrayList<>();
+      files.add(rowItem.generateBaseFile());
+      CompressDialogFragment.show(
+          mainActivity.getSupportFragmentManager(),
+          files,
           mainActivity.getCurrentMainFragment().getMainFragmentViewModel().getCurrentPath());
       return true;
     } else if (item.getItemId() == R.id.return_select) {
