@@ -25,7 +25,6 @@ import android.content.res.Configuration
 import android.graphics.Rect
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.TIRAMISU
-import androidx.test.core.app.ActivityScenario
 import android.view.View
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
@@ -38,15 +37,12 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
-import androidx.viewpager2.widget.ViewPager2
 import androidx.test.uiautomator.UiDevice
 import androidx.viewpager2.widget.ViewPager2
 import com.amaze.filemanager.R
 import com.amaze.filemanager.test.StoragePermissionHelper
 import com.amaze.filemanager.ui.activities.MainActivity
-import org.awaitility.Awaitility.await
 import org.awaitility.Awaitility.await
 import org.hamcrest.Matcher
 import org.junit.Before
@@ -255,7 +251,6 @@ class TabFragmentTest {
             onView(viewMatcher).perform(swipeRight())
         }
     }
-
 
     private fun awaitTabFragment(scenario: ActivityScenario<MainActivity>): TabFragment {
         var tabFragment: TabFragment? = null
