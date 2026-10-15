@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -22,6 +22,7 @@ package com.amaze.filemanager.database;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.io.File;
 import java.util.List;
@@ -42,6 +43,8 @@ import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.Suppress;
 import androidx.test.platform.app.InstrumentationRegistry;
+
+import io.reactivex.Completable;
 
 @RunWith(AndroidJUnit4.class)
 public class UtilsHandlerTest {
@@ -120,18 +123,19 @@ public class UtilsHandlerTest {
   private void performEncryptUriTest(@NonNull final String origPath) {
     String encryptedPath = NetCopyClientUtils.INSTANCE.encryptFtpPathAsNecessary(origPath);
 
-    utilsHandler.saveToDatabase(
-        new OperationData(
-            UtilsHandler.Operation.SFTP,
-            encryptedPath,
-            "Test",
-            "00:11:22:33:44:55:66:77:88:99:aa:bb:cc:dd:ee:ff",
-            null,
-            null));
+    final Completable operation =
+        utilsHandler.saveToDatabase(
+            new OperationData(
+                UtilsHandler.Operation.SFTP,
+                encryptedPath,
+                "Test",
+                "00:11:22:33:44:55:66:77:88:99:aa:bb:cc:dd:ee:ff",
+                null,
+                null));
+    operation.blockingAwait();
 
-    await().atMost(10, TimeUnit.SECONDS).until(() -> utilsHandler.getSftpList().size() > 0);
-
-    List<String[]> result = utilsHandler.getSftpList();
+    final List<String[]> result = utilsHandler.getSftpList();
+    assertFalse(result.isEmpty());
     assertEquals(1, result.size());
     assertEquals("Test", result.get(0)[0]);
     assertEquals(encryptedPath, result.get(0)[1]);

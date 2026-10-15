@@ -67,51 +67,39 @@ fun Context.getLocaleListFromXml(): LocaleListCompat {
  * For preference drop down convenience.
  */
 fun Context.getLangPreferenceDropdownEntries(): Map<String, Locale> {
-    val localeList = getLocaleListFromXml()
-    val currentLocaleList: List<Locale> =
-        (
-            if (!AppCompatDelegate.getApplicationLocales().isEmpty) {
-                AppCompatDelegate.getApplicationLocales()
-            } else {
-                LocaleListCompat.getDefault()
-            }
-        ).let { appLocales ->
-            ArrayList<Locale>().apply {
-                for (x in 0 until appLocales.size()) {
-                    appLocales.get(x)?.let {
-                        this.add(it)
-                    }
-                }
-            }
+    val appLocales =
+        if (AppCompatDelegate.getApplicationLocales().isEmpty) {
+            LocaleListCompat.getDefault()
+        } else {
+            AppCompatDelegate.getApplicationLocales()
         }
+
+    val currentLocaleList = ArrayList<Locale>()
+
+    for (i in 0 until appLocales.size()) {
+        val appLocale = appLocales.get(i) ?: continue
+        currentLocaleList.add(appLocale)
+    }
+
+    val xmlLocales = getLocaleListFromXml()
     val map = mutableMapOf<String, Locale>()
 
-    for (a in 0 until localeList.size()) {
-        localeList[a].let {
-            it?.run {
-                val displayName: String =
-                    if (currentLocaleList.isEmpty()) {
-                        this.getDisplayName(Locale.getDefault())
-                    } else {
-                        this.getDisplayName(
-                            currentLocaleList.first { locale ->
-                                this.getDisplayName(locale).isNotEmpty()
-                            },
-                        )
+    for (i in 0 until xmlLocales.size()) {
+        val xmlLocale = xmlLocales[i] ?: continue
+        val displayName: String =
+            if (currentLocaleList.isEmpty()) {
+                xmlLocale.getDisplayName(Locale.getDefault())
+            } else {
+                val nameInCurrentLocale =
+                    currentLocaleList.first { locale ->
+                        xmlLocale.getDisplayName(locale).isNotEmpty()
                     }
-                map.put(displayName, this)
-            }
-        }
-    }
-    return map
-}
 
-/**
- * [Context] extension to set app locale fluently.
- *
- * Calls [AppCompatDelegate.setApplicationLocales] under the hood.
- */
-fun Context.setLocale(langTag: String) {
-    val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(langTag)
-    AppCompatDelegate.setApplicationLocales(appLocale)
+                xmlLocale.getDisplayName(nameInCurrentLocale)
+            }
+
+        map[displayName] = xmlLocale
+    }
+
+    return map
 }

@@ -36,13 +36,14 @@ object MediaConnectionUtils {
      * @param hybridFiles files to be scanned
      */
     @JvmStatic
-    fun scanFile(
+    fun scanFiles(
         context: Context,
         hybridFiles: Array<HybridFile>,
     ) {
-        val paths = arrayOfNulls<String>(hybridFiles.size)
-
-        for (i in hybridFiles.indices) paths[i] = hybridFiles[i].path
+        val paths: Array<String> =
+            hybridFiles.map {
+                it.path
+            }.toTypedArray()
 
         MediaScannerConnection.scanFile(
             context,
@@ -70,6 +71,33 @@ object MediaConnectionUtils {
             null,
         ) { path: String, _: Uri? ->
             LOG.info("MediaConnectionUtils#scanFile finished scanning path$path")
+        }
+    }
+
+    /**
+     * Invokes MediaScannerConnection#scanFile for the given file.
+     *
+     * @param context the context
+     * @param path the file path to be scanned
+     * @param mimeType the mime type of the file. Optional.
+     *
+     */
+    @JvmStatic
+    fun scanFileByFileSystemPathAndMimeType(
+        context: Context,
+        path: String,
+        mimeType: String? = null,
+        callback: MediaScannerConnection.OnScanCompletedListener? = null,
+    ) {
+        MediaScannerConnection.scanFile(
+            context,
+            arrayOf(path),
+            mimeType?.let {
+                arrayOf(it)
+            },
+        ) { scannedPath: String, uri: Uri? ->
+            LOG.info("Finished scanning path $scannedPath")
+            callback?.onScanCompleted(scannedPath, uri)
         }
     }
 }

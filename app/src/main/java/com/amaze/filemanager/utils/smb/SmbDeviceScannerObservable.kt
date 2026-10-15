@@ -22,7 +22,6 @@ package com.amaze.filemanager.utils.smb
 
 import androidx.annotation.VisibleForTesting
 import com.amaze.filemanager.utils.ComputerParcelable
-import com.amaze.filemanager.utils.smb.SmbDeviceScannerObservable.DiscoverDeviceStrategy
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.disposables.Disposable
@@ -55,6 +54,7 @@ class SmbDeviceScannerObservable : Observable<ComputerParcelable>() {
         arrayOf(
             WsddDiscoverDeviceStrategy(),
             SameSubnetDiscoverDeviceStrategy(),
+            NsdManagerDiscoverDeviceStrategy(),
         )
         @VisibleForTesting set
 
@@ -86,19 +86,22 @@ class SmbDeviceScannerObservable : Observable<ComputerParcelable>() {
      */
     override fun subscribeActual(observer: Observer<in ComputerParcelable>) {
         this.observer = observer
+        observer.onSubscribe(Disposables.empty())
         this.disposable =
             merge(
                 discoverDeviceStrategies.map { strategy ->
-                    fromCallable {
+                    create<ComputerParcelable> { emitter ->
                         strategy.discoverDevices { addr ->
-                            observer.onNext(ComputerParcelable(addr.addr, addr.name))
+                            if (!emitter.isDisposed) {
+                                emitter.onNext(addr)
+                            }
                         }
+                        emitter.setCancellable { strategy.onCancel() }
                     }.subscribeOn(Schedulers.io())
                 },
-            ).observeOn(Schedulers.computation()).doOnComplete {
-                discoverDeviceStrategies.forEach { strategy ->
-                    strategy.onCancel()
-                }
-            }.subscribe()
+            ).observeOn(Schedulers.computation()).subscribe(
+                { computer -> observer.onNext(computer) },
+                { error -> observer.onError(error) },
+            )
     }
 }

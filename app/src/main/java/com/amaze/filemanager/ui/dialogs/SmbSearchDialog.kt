@@ -23,7 +23,6 @@ package com.amaze.filemanager.ui.dialogs
 import android.app.Activity
 import android.app.Dialog
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -31,6 +30,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.graphics.toColorInt
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -93,7 +93,7 @@ class SmbSearchDialog : DialogFragment() {
                 mainActivity.showSMBDialog("", "", false)
             }
         }
-        builder.positiveText(R.string.use_custom_ip)
+        builder.positiveText(R.string.smb_manual_enter_host)
         builder.positiveColor(accentColor)
         viewModel.valHolder.postValue(ComputerParcelable("-1", "-1"))
         listViewAdapter = ListViewAdapter(requireActivity())
@@ -142,11 +142,8 @@ class SmbSearchDialog : DialogFragment() {
         context: Context,
     ) : RecyclerView.Adapter<ViewHolder>() {
         private val items: MutableList<ComputerParcelable> = ArrayList()
-        private val mInflater: LayoutInflater
-
-        init {
-            mInflater = context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        }
+        private val inflater: LayoutInflater =
+            context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
         /**
          * Called by [ComputerParcelableViewModel], add found computer to list view
@@ -194,12 +191,12 @@ class SmbSearchDialog : DialogFragment() {
             val view: View
             return when (viewType) {
                 VIEW_PROGRESSBAR -> {
-                    view = mInflater.inflate(R.layout.smb_progress_row, parent, false)
+                    view = inflater.inflate(R.layout.smb_progress_row, parent, false)
                     ViewHolder(view)
                 }
                 else -> {
                     view =
-                        mInflater.inflate(R.layout.smb_computers_row, parent, false)
+                        inflater.inflate(R.layout.smb_computers_row, parent, false)
                     ElementViewHolder(view)
                 }
             }
@@ -229,7 +226,7 @@ class SmbSearchDialog : DialogFragment() {
                 holder.txtTitle.text = name
                 holder.image.setImageResource(R.drawable.ic_settings_remote_white_48dp)
                 if (utilsProvider.appTheme == AppTheme.LIGHT) {
-                    holder.image.setColorFilter(Color.parseColor("#666666"))
+                    holder.image.setColorFilter("#666666".toColorInt())
                 }
                 holder.txtDesc.text = addr
             }

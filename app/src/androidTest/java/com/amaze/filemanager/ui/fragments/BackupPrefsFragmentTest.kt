@@ -28,6 +28,8 @@ import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.TIRAMISU
 import android.os.Environment
+import android.os.Environment
+import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.preference.PreferenceManager
 import androidx.test.core.app.ActivityScenario
@@ -36,9 +38,12 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.amaze.filemanager.R
+import com.amaze.filemanager.matcher.ActionMenuIconMatcher.withActionIconDrawable
 import com.amaze.filemanager.test.StoragePermissionHelper
+import com.amaze.filemanager.ui.activities.MainActivity
 import com.amaze.filemanager.ui.activities.PreferencesActivity
 import com.amaze.filemanager.ui.fragments.preferencefragments.BackupPrefsFragment
 import com.google.gson.GsonBuilder
@@ -87,6 +92,17 @@ class BackupPrefsFragmentTest {
     fun testPreferencesExportImport() {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
+        // Get the device's home path
+        val activityScenario = ActivityScenario.launch(MainActivity::class.java)
+        activityScenario.moveToState(Lifecycle.State.RESUMED)
+
+        lateinit var storagePath: String
+        activityScenario.onActivity { mainActivity ->
+            storagePath = mainActivity.getStorageDirectories()[0].path
+        }
+
+        Log.i(BackupPrefsFragmentTest::class.java.simpleName, "File $storagePath")
+
         val exportFile = File("$storagePath${File.separator}$fileName")
         exportFile.delete() // delete if already exists
 
@@ -114,7 +130,6 @@ class BackupPrefsFragmentTest {
         context: Context,
         exportFile: File,
     ) {
-        val backupPrefsFragment = BackupPrefsFragment()
         val activityScenario = ActivityScenario.launch(PreferencesActivity::class.java)
 
         // Espresso requires an activity to be RESUMED to dispatch view actions/clicks.

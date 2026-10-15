@@ -301,7 +301,6 @@
     <string name="translate_summary">Käännä Amaze omalle kielelle</string>
     <string name="paypal_copy_message">PayPal-tunnus kopioitu leikepöydälle</string>
     <string name="searching_devices">Etsitään laitteita</string>
-    <string name="use_custom_ip">Käytä mukautettu IP-osoitetta</string>
     <string name="bookmark_lost">Kirjanmerkkiä ei löydy, luodaan uudestaan&#8230;</string>
 
     <string name="share_limit">Ei voi jakaa yli 100 tiedostoa</string>

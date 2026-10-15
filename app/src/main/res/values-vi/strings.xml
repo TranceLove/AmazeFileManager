@@ -316,7 +316,6 @@
     <string name="translate_summary">Dịch Amaze sang ngôn ngữ của bạn</string>
     <string name="paypal_copy_message">Đã chép ID Paypal vào clipboard</string>
     <string name="searching_devices">Đang tìm kiếm thiết bị</string>
-    <string name="use_custom_ip">Dùng IP tuỳ chỉnh</string>
     <string name="bookmark_lost">Không phát hiện dấu trang, đang tạo lại&#8230;</string>
 
     <string name="share_limit">Không thể chia sẻ hơn 100 tập tin</string>

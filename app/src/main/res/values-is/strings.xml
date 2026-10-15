@@ -313,7 +313,6 @@
     <string name="translate_summary">Þýða Amaze á tungumálið þitt</string>
     <string name="paypal_copy_message">Paypal auðkenni afritað á klippispjald</string>
     <string name="searching_devices">Leita að tækjum...</string>
-    <string name="use_custom_ip">Nota sérsniðið IP-vistfang</string>
     <string name="bookmark_lost">Bókamerki fannst ekki, útbý aftur&#8230;</string>
 
     <string name="share_limit">Get ekki deilt fleiri en 100 skrám</string>

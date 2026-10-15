@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -29,7 +29,6 @@ import com.amaze.filemanager.utils.SimpleTextWatcher;
 import com.google.android.material.textfield.TextInputLayout;
 
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -37,6 +36,7 @@ import android.text.Editable;
 import android.view.View;
 
 import androidx.appcompat.widget.AppCompatEditText;
+import androidx.fragment.app.DialogFragment;
 import androidx.preference.PreferenceManager;
 
 public class RenameBookmark extends DialogFragment {

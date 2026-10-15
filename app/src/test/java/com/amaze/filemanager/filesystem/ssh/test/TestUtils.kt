@@ -86,7 +86,7 @@ object TestUtils {
                 null,
                 null,
             ),
-        )
+        ).blockingAwait()
         Shadows.shadowOf(Looper.getMainLooper()).idle()
     }
 
@@ -133,7 +133,7 @@ object TestUtils {
                     null,
                     null,
                 ),
-            )
+            ).blockingAwait()
         } else {
             utilsHandler.saveToDatabase(
                 OperationData(
@@ -144,7 +144,7 @@ object TestUtils {
                     "id_rsa",
                     privateKeyContents,
                 ),
-            )
+            ).blockingAwait()
         }
         Shadows.shadowOf(Looper.getMainLooper()).idle()
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -40,6 +40,7 @@ import android.provider.BaseColumns;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -161,6 +162,43 @@ public class MediaStoreHack {
               .build();
       filecursor.close();
       return uri;
+    }
+  }
+
+  public static @Nullable Uri getUriForMusicMediaFrom(
+      @NonNull String path, @NonNull Context context) {
+    Uri retval = getUriForMusicMediaInternal(path, context);
+    return retval;
+  }
+
+  private static @Nullable Uri getUriForMusicMediaInternal(
+      @NonNull String path, @NonNull Context context) {
+    String[] projection = {MediaStore.Audio.Media._ID};
+
+    String selection = MediaStore.Audio.Media.DATA + "=?";
+    String[] selectionArgs = new String[] {path};
+
+    try (Cursor cursor =
+        context
+            .getContentResolver()
+            .query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                null)) {
+      if (cursor != null && cursor.moveToFirst()) {
+        int id = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
+        return MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+            .buildUpon()
+            .appendPath(String.valueOf(id))
+            .build();
+      } else {
+        return null;
+      }
+    } catch (UnsupportedOperationException e) {
+      Log.e(TAG, "Error querying MediaStore", e);
+      return null;
     }
   }
 

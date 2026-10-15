@@ -250,7 +250,7 @@
     <string name="needs_access_summary">Please choose the root directory of \t</string>
     <string name="needs_access_summary1">\tto grant write access to operate </string>
     <string name="smb_connection">SMB Connection</string>
-    <string name="smb_server">Server IP Address</string>
+    <string name="smb_server">SMB Server Hostname</string>
     <string name="server_address">Server IP Address</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
@@ -284,6 +284,7 @@
     <string name="creatingfile">Creating File</string>
     <string name="creatingfolder">Creating Folder</string>
     <string name="renaming">Renaming</string>
+    <string name="no_changes_while_rename">No changes were made as the new name matches the old name.</string>
     <string name="cant_be_empty">%s cannot be empty</string>
     <string name="ip">Address</string>
     <string name="connection_name">Connection name</string>
@@ -327,7 +328,7 @@
     <string name="translate_summary">Translate Amaze in your language</string>
     <string name="paypal_copy_message">PayPal ID copied to clipboard</string>
     <string name="searching_devices">Searching for devices</string>
-    <string name="use_custom_ip">Use custom IP</string>
+    <string name="smb_manual_enter_host">Enter Hostname Manually</string>
     <string name="bookmark_lost">Bookmark not found, recreating&#8230;</string>
 
     <string name="smb_instructions"><![CDATA[
@@ -666,7 +667,7 @@
     ]]></string>
     <string name="encrypt_file_must_end_with_aze">Encrypted files must use \".aze\" as the file extension.</string>
     <string name="encrypt_file_must_end_with_aes">Encrypted files must use \".aes\" as the file extension.</string>
-    <string name="error_aescrypt_decrypt_failed">Cannot decrypt \'%s\': \'%s\'</string>
+    <string name="error_aescrypt_decrypt_failed">Cannot decrypt \'%1$s\': \'%2$s\'</string>
     <string name="cannot_overwrite">Cannot overwrite file.</string>
     <string name="saved_single_file">File saved as \'%s\'.</string>
     <string name="saved_multi_files">%d files saved.</string>
@@ -878,5 +879,6 @@ You only need to do this once, until the next time you select a new location for
     <string name="trash_bin_cleanup_interval_title">Cleanup interval</string>
     <string name="trash_bin_cleanup_interval_summary">Trigger auto-cleanup interval (hours)</string>
     <string name="file_deletion">File Deletion</string>
+    <string name="error_mediastore_query_uri">Error querying content URI of selected media file. Refresh the MediaStore and try again.</string>
 </resources>
 

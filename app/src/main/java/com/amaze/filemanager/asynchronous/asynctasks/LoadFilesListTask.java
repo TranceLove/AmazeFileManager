@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -376,22 +376,37 @@ public class LoadFilesListTask
 
   private List<LayoutElementParcelable> listImages() {
     final String[] projection = {MediaStore.Images.Media.DATA};
-    return listMediaCommon(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, null);
+    final String selection = MediaStore.Files.FileColumns.DATA + " NOT LIKE ?";
+    final String[] selectionArgs = new String[] {AppConfig.getTrashBinBasePath() + "%"};
+    return listMediaCommon(
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs);
   }
 
   private List<LayoutElementParcelable> listVideos() {
     final String[] projection = {MediaStore.Video.Media.DATA};
-    return listMediaCommon(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, projection, null);
+    final String selection = MediaStore.Files.FileColumns.DATA + " NOT LIKE ?";
+    final String[] selectionArgs = new String[] {AppConfig.getTrashBinBasePath() + "%"};
+    return listMediaCommon(
+        MediaStore.Video.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs);
   }
 
   private List<LayoutElementParcelable> listaudio() {
-    String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
+    String selection =
+        MediaStore.Audio.Media.IS_MUSIC
+            + " != 0 AND "
+            + MediaStore.Files.FileColumns.DATA
+            + " NOT LIKE ?";
     String[] projection = {MediaStore.Audio.Media.DATA};
-    return listMediaCommon(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection);
+    String[] selectionArgs = new String[] {AppConfig.getTrashBinBasePath() + "%"};
+    return listMediaCommon(
+        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs);
   }
 
   private @Nullable List<LayoutElementParcelable> listMediaCommon(
-      Uri contentUri, @NonNull String[] projection, @Nullable String selection) {
+      Uri contentUri,
+      @NonNull String[] projection,
+      @Nullable String selection,
+      @Nullable String[] selectionArgs) {
     final Context context = this.context.get();
 
     if (context == null) {
@@ -400,7 +415,7 @@ public class LoadFilesListTask
     }
 
     Cursor cursor =
-        context.getContentResolver().query(contentUri, projection, selection, null, null);
+        context.getContentResolver().query(contentUri, projection, selection, selectionArgs, null);
 
     ArrayList<LayoutElementParcelable> retval = new ArrayList<>();
     if (cursor == null) return retval;
@@ -428,16 +443,22 @@ public class LoadFilesListTask
 
     ArrayList<LayoutElementParcelable> docs = new ArrayList<>();
     final String[] projection = {MediaStore.Files.FileColumns.DATA};
+    final String selection = MediaStore.Files.FileColumns.DATA + " NOT LIKE ?";
+    final String[] selectionArgs = new String[] {AppConfig.getTrashBinBasePath() + "%"};
     Cursor cursor =
         context
             .getContentResolver()
-            .query(MediaStore.Files.getContentUri("external"), projection, null, null, null);
+            .query(
+                MediaStore.Files.getContentUri("external"),
+                projection,
+                selection,
+                selectionArgs,
+                null);
 
     if (cursor == null) return docs;
     else if (cursor.getCount() > 0 && cursor.moveToFirst()) {
       do {
         String path = cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA));
-
         if (path != null
             && (path.endsWith(".pdf")
                 || path.endsWith(".doc")
@@ -484,11 +505,17 @@ public class LoadFilesListTask
 
     ArrayList<LayoutElementParcelable> apks = new ArrayList<>();
     final String[] projection = {MediaStore.Files.FileColumns.DATA};
-
+    final String selection = MediaStore.Files.FileColumns.DATA + " NOT LIKE ?";
+    final String[] selectionArgs = new String[] {AppConfig.getTrashBinBasePath() + "%"};
     Cursor cursor =
         context
             .getContentResolver()
-            .query(MediaStore.Files.getContentUri("external"), projection, null, null, null);
+            .query(
+                MediaStore.Files.getContentUri("external"),
+                projection,
+                selection,
+                selectionArgs,
+                null);
     if (cursor == null) return apks;
     else if (cursor.getCount() > 0 && cursor.moveToFirst()) {
       do {
@@ -547,33 +574,42 @@ public class LoadFilesListTask
     final String[] projection = {
       MediaStore.Files.FileColumns.DATA, MediaStore.Files.FileColumns.DATE_MODIFIED
     };
+    final String selection = MediaStore.Files.FileColumns.DATA + " NOT LIKE ?";
+    final String[] selectionArgs = new String[] {AppConfig.getTrashBinBasePath() + "%"};
     Calendar c = Calendar.getInstance();
     c.set(Calendar.DAY_OF_YEAR, c.get(Calendar.DAY_OF_YEAR) - 2);
     Date d = c.getTime();
     Cursor cursor;
-    if (SDK_INT >= Q) {
-      Bundle queryArgs = new Bundle();
-      queryArgs.putInt(ContentResolver.QUERY_ARG_LIMIT, 20);
-      queryArgs.putStringArray(
-          ContentResolver.QUERY_ARG_SORT_COLUMNS,
-          new String[] {MediaStore.Files.FileColumns.DATE_MODIFIED});
-      queryArgs.putInt(
-          ContentResolver.QUERY_ARG_SORT_DIRECTION,
-          ContentResolver.QUERY_SORT_DIRECTION_DESCENDING);
-      cursor =
-          context
-              .getContentResolver()
-              .query(MediaStore.Files.getContentUri("external"), projection, queryArgs, null);
-    } else {
-      cursor =
-          context
-              .getContentResolver()
-              .query(
-                  MediaStore.Files.getContentUri("external"),
-                  projection,
-                  null,
-                  null,
-                  MediaStore.Files.FileColumns.DATE_MODIFIED + " DESC LIMIT 20");
+    try {
+      if (SDK_INT >= Q) {
+        Bundle queryArgs = new Bundle();
+        queryArgs.putInt(ContentResolver.QUERY_ARG_LIMIT, 20);
+        queryArgs.putStringArray(
+            ContentResolver.QUERY_ARG_SORT_COLUMNS,
+            new String[] {MediaStore.Files.FileColumns.DATE_MODIFIED});
+        queryArgs.putInt(
+            ContentResolver.QUERY_ARG_SORT_DIRECTION,
+            ContentResolver.QUERY_SORT_DIRECTION_DESCENDING);
+        queryArgs.putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection);
+        queryArgs.putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs);
+        cursor =
+            context
+                .getContentResolver()
+                .query(MediaStore.Files.getContentUri("external"), projection, queryArgs, null);
+      } else {
+        cursor =
+            context
+                .getContentResolver()
+                .query(
+                    MediaStore.Files.getContentUri("external"),
+                    projection,
+                    selection,
+                    selectionArgs,
+                    MediaStore.Files.FileColumns.DATE_MODIFIED + " DESC LIMIT 20");
+      }
+    } catch (SecurityException e) {
+      // Storage permission denied; treat as no recent files instead of crashing.
+      return recentFiles;
     }
     if (cursor == null) return recentFiles;
     if (cursor.getCount() > 0 && cursor.moveToFirst()) {

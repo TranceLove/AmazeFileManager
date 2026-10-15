@@ -8,6 +8,11 @@ android {
     namespace "com.amaze.filemanager.fileoperations"
     compileSdkVersion libs.versions.compileSdk.get().toInteger()
     ndkVersion libs.versions.ndk.get()
+    packagingOptions {
+        resources {
+            excludes += ['proguard-project.txt', 'project.properties', 'META-INF/LICENSE.txt', 'META-INF/LICENSE', 'META-INF/NOTICE.txt', 'META-INF/NOTICE', 'META-INF/DEPENDENCIES.txt', 'META-INF/DEPENDENCIES', 'META-INF/versions/9/OSGI-INF/MANIFEST.MF']
+        }
+    }
 
     defaultConfig {
         minSdkVersion libs.versions.minSdk.get().toInteger()

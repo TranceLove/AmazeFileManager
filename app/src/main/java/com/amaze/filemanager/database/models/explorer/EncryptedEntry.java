@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -24,6 +24,7 @@ import com.amaze.filemanager.database.ExplorerDatabase;
 import com.amaze.filemanager.database.models.StringWrapper;
 import com.amaze.filemanager.database.typeconverters.EncryptedStringTypeConverter;
 
+import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -37,9 +38,11 @@ public class EncryptedEntry {
   @ColumnInfo(name = ExplorerDatabase.COLUMN_ENCRYPTED_ID)
   private int _id;
 
+  @NonNull
   @ColumnInfo(name = ExplorerDatabase.COLUMN_ENCRYPTED_PATH)
   private String path;
 
+  @NonNull
   @ColumnInfo(name = ExplorerDatabase.COLUMN_ENCRYPTED_PASSWORD)
   @TypeConverters(EncryptedStringTypeConverter.class)
   private StringWrapper password;

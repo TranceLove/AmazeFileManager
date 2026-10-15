@@ -299,8 +299,7 @@
   <string name="easter_egg_title">Рэжым Студыі</string>
   <string name="paypal_copy_message">PayPal id скапіявана ў буфер абмену</string>
   <string name="searching_devices">Пошук прылад</string>
-  <string name="use_custom_ip">Выкарыстоўваць карыстацкую IP</string>
-  <string name="bookmark_lost">Закладкі не знойдзены, паўторна стварыць&#8230;</string>
+    <string name="bookmark_lost">Закладкі не знойдзены, паўторна стварыць&#8230;</string>
 
   <string name="share_limit">Немагчыма абменьвацца больш за 100 файлаў</string>
   <string name="otg_access">Выберыце каранёвую тэчку OTG прылады</string>

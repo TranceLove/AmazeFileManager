@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -21,7 +21,11 @@
 package com.amaze.filemanager.ui.activities.superclasses;
 
 import static android.os.Build.VERSION.SDK_INT;
+import static android.os.Build.VERSION_CODES.KITKAT;
+import static android.os.Build.VERSION_CODES.KITKAT_WATCH;
 import static android.os.Build.VERSION_CODES.LOLLIPOP;
+import static android.os.Build.VERSION_CODES.M;
+import static android.os.Build.VERSION_CODES.O;
 import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_COLORED_NAVIGATION;
 
 import com.amaze.filemanager.R;
@@ -33,7 +37,6 @@ import com.amaze.filemanager.ui.theme.AppTheme;
 import com.amaze.filemanager.ui.theme.AppThemePreference;
 import com.amaze.filemanager.utils.ContextCompatExtKt;
 import com.amaze.filemanager.utils.PreferenceUtils;
-import com.amaze.filemanager.utils.Utils;
 import com.readystatesoftware.systembartint.SystemBarTintManager;
 
 import android.app.ActivityManager;
@@ -44,7 +47,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.view.View;
@@ -58,6 +60,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.preference.PreferenceManager;
 
 /** Created by arpitkh996 on 03-03-2016. */
@@ -87,6 +94,38 @@ public class ThemedActivity extends PreferenceActivity {
       };
 
   @Override
+  public void setContentView(int layoutResID) {
+    super.setContentView(layoutResID);
+    setupEdgeToEdgeInsets();
+  }
+
+  @Override
+  public void setContentView(View view) {
+    super.setContentView(view);
+    setupEdgeToEdgeInsets();
+  }
+
+  /**
+   * Apply system bar insets as padding on the content view to handle Android 15+ edge-to-edge
+   * enforcement. This ensures content is laid out below the status bar and above the navigation
+   * bar.
+   */
+  private void setupEdgeToEdgeInsets() {
+    if (SDK_INT >= 35) {
+      View contentView = findViewById(android.R.id.content);
+      if (contentView != null) {
+        ViewCompat.setOnApplyWindowInsetsListener(
+            contentView,
+            (v, windowInsets) -> {
+              Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+              v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+              return WindowInsetsCompat.CONSUMED;
+            });
+      }
+    }
+  }
+
+  @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
@@ -108,7 +147,7 @@ public class ThemedActivity extends PreferenceActivity {
       getColorPreference().saveColorPreferences(getPrefs(), ColorPreferenceHelper.randomize(this));
     }
 
-    if (SDK_INT >= 21) {
+    if (SDK_INT >= LOLLIPOP) {
       ActivityManager.TaskDescription taskDescription =
           new ActivityManager.TaskDescription(
               getString(R.string.appbar_name),
@@ -132,8 +171,13 @@ public class ThemedActivity extends PreferenceActivity {
     }
 
     Window window = getWindow();
-    if (SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      if (findViewById(R.id.tab_frame) != null || findViewById(R.id.drawer_layout) == null) {
+    if (SDK_INT >= LOLLIPOP) {
+      boolean useSolidStatusBar =
+          findViewById(R.id.tab_frame) != null
+              || findViewById(R.id.drawer_layout) == null
+              || getAppTheme().equals(AppTheme.LIGHT);
+
+      if (useSolidStatusBar) {
         window.setStatusBarColor(PreferenceUtils.getStatusColor(getPrimary()));
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
       } else {
@@ -141,17 +185,19 @@ public class ThemedActivity extends PreferenceActivity {
       }
       if (getBoolean(PREFERENCE_COLORED_NAVIGATION)) {
         window.setNavigationBarColor(PreferenceUtils.getStatusColor(getPrimary()));
-      } else {
-        if (getAppTheme().equals(AppTheme.LIGHT)) {
-          window.setNavigationBarColor(Utils.getColor(this, android.R.color.white));
-        } else if (getAppTheme().equals(AppTheme.BLACK)) {
-          window.setNavigationBarColor(Utils.getColor(this, android.R.color.black));
-        } else {
-          window.setNavigationBarColor(Utils.getColor(this, R.color.holo_dark_background));
+      }
+
+      // Set light/dark icon appearance for system bars based on theme
+      if (SDK_INT >= M) {
+        WindowInsetsControllerCompat insetsController =
+            WindowCompat.getInsetsController(window, window.getDecorView());
+        boolean isLightTheme = getAppTheme().equals(AppTheme.LIGHT);
+        insetsController.setAppearanceLightStatusBars(isLightTheme);
+        if (SDK_INT >= O) {
+          insetsController.setAppearanceLightNavigationBars(isLightTheme);
         }
       }
-    } else if (SDK_INT == Build.VERSION_CODES.KITKAT_WATCH
-        || SDK_INT == Build.VERSION_CODES.KITKAT) {
+    } else if (SDK_INT == KITKAT_WATCH || SDK_INT == KITKAT) {
       setKitkatStatusBarMargin(parentView);
       setKitkatStatusBarTint();
     }
@@ -212,7 +258,7 @@ public class ThemedActivity extends PreferenceActivity {
 
   void setTheme() {
     AppTheme theme = getAppTheme();
-    if (Build.VERSION.SDK_INT >= 21) {
+    if (SDK_INT >= LOLLIPOP) {
 
       String stringRepresentation = String.format("#%06X", (0xFFFFFF & getAccent()));
 

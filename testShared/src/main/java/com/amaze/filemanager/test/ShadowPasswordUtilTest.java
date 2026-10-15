@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -95,14 +95,16 @@ public class ShadowPasswordUtilTest {
     String fingerprint = "00:11:22:33:44:55:66:77:88:99:aa:bb:cc:dd:ee:ff";
     String url = "ssh://test:test@127.0.0.1:22";
 
-    utilsHandler.saveToDatabase(
-        new OperationData(
-            UtilsHandler.Operation.SFTP,
-            NetCopyClientUtils.INSTANCE.encryptFtpPathAsNecessary(url),
-            "Test",
-            fingerprint,
-            null,
-            null));
+    utilsHandler
+        .saveToDatabase(
+            new OperationData(
+                UtilsHandler.Operation.SFTP,
+                NetCopyClientUtils.INSTANCE.encryptFtpPathAsNecessary(url),
+                "Test",
+                fingerprint,
+                null,
+                null))
+        .blockingAwait();
 
     await()
         .atMost(10, TimeUnit.SECONDS)

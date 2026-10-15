@@ -147,7 +147,7 @@ class PreparePasteTask(strongRefMain: MainActivity) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(contextRef, R.string.same_dir_move_error, Toast.LENGTH_SHORT).show()
                 }
-                MediaConnectionUtils.scanFile(contextRef, filesToCopy.toTypedArray())
+                MediaConnectionUtils.scanFiles(contextRef, filesToCopy.toTypedArray())
                 return@launch
             }
 

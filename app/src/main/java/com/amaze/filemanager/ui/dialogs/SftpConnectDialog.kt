@@ -733,7 +733,7 @@ class SftpConnectDialog : DialogFragment() {
                                 selectedParsedKeyPairName,
                                 getPemContents(),
                             ),
-                        )
+                        ).subscribe()
                         val ma = (activity as MainActivity).currentMainFragment
                         ma?.loadlist(
                             encryptedPath,

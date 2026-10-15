@@ -40,7 +40,7 @@ import com.amaze.filemanager.asynchronous.asynctasks.searchfilesystem.SearchResu
 import com.amaze.filemanager.asynchronous.asynctasks.searchfilesystem.searchParametersFromBoolean
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode
 import com.amaze.filemanager.filesystem.HybridFile
-import com.amaze.filemanager.filesystem.files.MediaConnectionUtils.scanFile
+import com.amaze.filemanager.filesystem.files.MediaConnectionUtils.scanFiles
 import com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_REGEX
 import com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_REGEX_MATCHES
 import com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_SHOW_HIDDENFILES
@@ -235,7 +235,7 @@ class MainActivityViewModel(val applicationContext: Application) :
                                 OpenMode.TRASH_BIN,
                                 originalFilePath,
                             )
-                        scanFile(applicationContext, arrayOf(hybridFile))
+                        scanFiles(applicationContext, arrayOf(hybridFile))
                         val intent = Intent(MainActivity.KEY_INTENT_LOAD_LIST)
                         hybridFile.getParent(applicationContext)?.let {
                             intent.putExtra(MainActivity.KEY_INTENT_LOAD_LIST_FILE, it)
@@ -292,7 +292,7 @@ class MainActivityViewModel(val applicationContext: Application) :
                                 OpenMode.TRASH_BIN,
                                 source,
                             )
-                        scanFile(applicationContext, arrayOf(hybridFile))
+                        scanFiles(applicationContext, arrayOf(hybridFile))
                         val intent = Intent(MainActivity.KEY_INTENT_LOAD_LIST)
                         hybridFile.getParent(applicationContext)?.let {
                             intent.putExtra(MainActivity.KEY_INTENT_LOAD_LIST_FILE, it)

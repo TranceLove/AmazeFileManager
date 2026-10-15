@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -25,6 +25,7 @@ import com.amaze.filemanager.filesystem.files.FileUtils;
 
 import android.content.SharedPreferences;
 
+import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -37,9 +38,11 @@ public class Tab {
   @ColumnInfo(name = ExplorerDatabase.COLUMN_TAB_NO)
   public final int tabNumber;
 
+  @NonNull
   @ColumnInfo(name = ExplorerDatabase.COLUMN_PATH)
   public final String path;
 
+  @NonNull
   @ColumnInfo(name = ExplorerDatabase.COLUMN_HOME)
   public final String home;
 

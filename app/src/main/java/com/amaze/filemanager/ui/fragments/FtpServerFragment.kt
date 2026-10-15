@@ -29,7 +29,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.drawable.ColorDrawable
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
@@ -61,10 +60,14 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
 import androidx.core.text.HtmlCompat.FROM_HTML_MODE_COMPACT
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.PreferenceManager
 import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
@@ -73,6 +76,7 @@ import com.amaze.filemanager.R
 import com.amaze.filemanager.application.AppConfig
 import com.amaze.filemanager.asynchronous.services.ftp.FtpServerSslKeyStoreProvider
 import com.amaze.filemanager.asynchronous.services.ftp.FtpServerSslKeyStoreProvider.FTPS_CERT_ALIAS
+import com.amaze.filemanager.asynchronous.services.ftp.FtpEventBus
 import com.amaze.filemanager.asynchronous.services.ftp.FtpService
 import com.amaze.filemanager.asynchronous.services.ftp.FtpService.Companion.KEY_PREFERENCE_PATH
 import com.amaze.filemanager.asynchronous.services.ftp.FtpService.Companion.KEY_PREFERENCE_ROOT_FILESYSTEM
@@ -97,11 +101,10 @@ import com.amaze.filemanager.utils.X509CertificateUtil.ISSUER
 import com.amaze.filemanager.utils.X509CertificateUtil.SUBJECT
 import com.amaze.filemanager.utils.X509CertificateUtil.VALID_FROM
 import com.amaze.filemanager.utils.X509CertificateUtil.VALID_TO
+import com.amaze.filemanager.utils.registerReceiverCompat
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
-import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
+import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -180,6 +183,14 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
         }
         ftpSslCertificateViewButton.setOnClickListener {
             displaySslCertInfoDialog()
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                FtpEventBus.events.collect { event ->
+                    onFtpReceiveActions(event)
+                }
+            }
         }
         return binding.root
     }
@@ -412,13 +423,12 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
         }
 
     /**
-     * Handles messages sent from [EventBus].
+     * Handles messages sent from [FtpEventBus].
      *
      * @param signal as [FtpReceiverActions]
      */
-    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     @Suppress("StringLiteralDuplication")
-    fun onFtpReceiveActions(signal: FtpReceiverActions) {
+    private fun onFtpReceiveActions(signal: FtpReceiverActions) {
         updateSpans()
         when (signal) {
             FtpReceiverActions.STARTED, FtpReceiverActions.STARTED_FROM_TILE -> {
@@ -473,7 +483,7 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
             mainActivity.prefs
                 .getString(KEY_PREFERENCE_PATH, defaultPathFromPreferences)!!
         if (shouldUseSafFileSystem()) {
-            Uri.parse(directoryUri).run {
+            directoryUri.toUri().run {
                 if (requireContext().checkUriPermission(
                         this,
                         Process.myPid(),
@@ -567,19 +577,17 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
         super.onResume()
         val wifiFilter = IntentFilter()
         wifiFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION)
-        requireContext().registerReceiver(
+        requireContext().registerReceiverCompat(
             mWifiReceiver,
             wifiFilter,
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
-        EventBus.getDefault().register(this)
         updateStatus()
     }
 
     override fun onPause() {
         super.onPause()
         requireContext().unregisterReceiver(mWifiReceiver)
-        EventBus.getDefault().unregister(this)
         dismissSnackbar()
     }
 
@@ -801,10 +809,10 @@ class FtpServerFragment : Fragment(R.layout.fragment_ftp) {
             else -> {
             }
         }
-        val skin_color = mainActivity.currentColorPreference.primaryFirstTab
+        val skinColor = mainActivity.currentColorPreference.primaryFirstTab
         val skinTwoColor = mainActivity.currentColorPreference.primarySecondTab
         mainActivity.updateViews(
-            ColorDrawable(if (MainActivity.currentTab == 1) skinTwoColor else skin_color),
+            if (MainActivity.currentTab == 1) skinTwoColor.toDrawable() else skinColor.toDrawable(),
         )
 
         ftpBtn.setOnKeyListener(

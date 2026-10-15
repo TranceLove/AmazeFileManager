@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -788,7 +788,8 @@ public class Drawer implements NavigationView.OnNavigationItemSelectedListener {
 
       MainFragment mainFragment = mainActivity.getCurrentMainFragment();
       if (mainFragment != null) {
-        mainFragment.loadlist(pendingPath.getPath(), false, OpenMode.UNKNOWN, false);
+        mainFragment.loadlist(
+            pendingPath.getPath(), false, OpenMode.UNKNOWN, hFile.getMode() == OpenMode.CUSTOM);
         // Set if the FAB should be hidden when displaying the pendingPath
         mainFragment.setHideFab(pendingPath.getHideFabInMainFragment());
         resetPendingPath();

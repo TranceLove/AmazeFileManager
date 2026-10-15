@@ -373,7 +373,7 @@ class EncryptAuthenticateDialogTest : AbstractEncryptDialogTests() {
                                 )
                             tilEncryptPasswordConfirm =
                                 findViewById<WarnableTextInputLayout>(
-                                    R.id.til_encrypt_password,
+                                    R.id.til_encrypt_password_confirm,
                                 )
                             checkboxUseAze = findViewById<AppCompatCheckBox>(R.id.checkbox_use_aze)
                             textViewCryptInfo =

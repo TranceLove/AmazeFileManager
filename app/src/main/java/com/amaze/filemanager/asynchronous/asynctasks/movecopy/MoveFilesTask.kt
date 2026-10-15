@@ -107,8 +107,8 @@ class MoveFilesTask(
             for (hybridFileParcelables in files) {
                 sourcesFiles.addAll(hybridFileParcelables)
             }
-            MediaConnectionUtils.scanFile(applicationContext, sourcesFiles.toTypedArray())
-            MediaConnectionUtils.scanFile(applicationContext, targetFiles.toTypedArray())
+            MediaConnectionUtils.scanFiles(applicationContext, sourcesFiles.toTypedArray())
+            MediaConnectionUtils.scanFiles(applicationContext, targetFiles.toTypedArray())
         }
 
         // updating encrypted db entry if any encrypted file was moved

@@ -301,7 +301,6 @@ kommer annars att söka efter förekomster.</string>
   <string name="easter_egg_title">Studioläge</string>
     <string name="paypal_copy_message">Paypal-ID kopierat till utklipp</string>
     <string name="searching_devices">Söker efter enheter</string>
-    <string name="use_custom_ip">Använd anpassat IP</string>
     <string name="bookmark_lost">Bokmärke hittades ej, återskapar&#8230;</string>
 
     <string name="share_limit">Kan inte dela mer än 100 filer</string>

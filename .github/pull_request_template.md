@@ -15,22 +15,32 @@ complete them.
 
 #### Automatic tests
 <!-- remember to do manual testing when making UI changes! -->
-- [ ] Added test cases
+- [ ] Added unit tests for specific individual functions
+- [ ] Added headless tests for new app functionality
+- [ ] Added emulator tests for new UI elements
   
 #### Manual tests
-- [ ] Done  
+- [ ] Done
   
-<!-- If yes, -->
-<!-- 
 - Device:
 - OS:
--->
 
 #### Build tasks success  
 <!-- run these! -->
 Successfully running following tasks on local:
 - [ ] `./gradlew assembledebug`
 - [ ] `./gradlew spotlessCheck`
+
+#### Generative code
+
+- [ ] This PR used generative code tools (GenAI, LLMs, etc.)
+
+    
+- Model:
+- Version:
+- Provider:
+
+
 
 <!-- If there are related PRs please add them here -->
 <!--

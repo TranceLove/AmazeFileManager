@@ -35,6 +35,7 @@ import com.amaze.filemanager.database.models.utilities.SmbEntry
 import com.googlecode.concurrenttrees.radix.ConcurrentRadixTree
 import com.googlecode.concurrenttrees.radix.node.concrete.DefaultCharArrayNodeFactory
 import com.googlecode.concurrenttrees.radix.node.concrete.voidvalue.VoidValue
+import io.reactivex.Completable
 import io.reactivex.schedulers.Schedulers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -70,20 +71,18 @@ class UtilsHandler(
      * Main save method.
      */
     @Suppress("ComplexMethod", "LongMethod")
-    fun saveToDatabase(operationData: OperationData) {
-        when (operationData.type) {
+    fun saveToDatabase(operationData: OperationData): Completable {
+        return when (operationData.type) {
             Operation.HIDDEN ->
                 utilitiesDatabase
                     .hiddenEntryDao()
                     .insert(Hidden(operationData.path))
                     .subscribeOn(Schedulers.io())
-                    .subscribe()
             Operation.HISTORY ->
                 utilitiesDatabase.historyEntryDao().run {
                     deleteByPath(operationData.path)
                         .andThen(insert(History(operationData.path)))
                         .subscribeOn(Schedulers.io())
-                        .subscribe()
                 }
             Operation.LIST ->
                 utilitiesDatabase
@@ -92,25 +91,21 @@ class UtilsHandler(
                         com.amaze.filemanager.database.models.utilities.List(operationData.path),
                     )
                     .subscribeOn(Schedulers.io())
-                    .subscribe()
             Operation.GRID ->
                 utilitiesDatabase
                     .gridEntryDao()
                     .insert(Grid(operationData.path))
                     .subscribeOn(Schedulers.io())
-                    .subscribe()
             Operation.BOOKMARKS ->
                 utilitiesDatabase
                     .bookmarkEntryDao()
                     .insert(Bookmark(operationData.name, operationData.path))
                     .subscribeOn(Schedulers.io())
-                    .subscribe()
             Operation.SMB ->
                 utilitiesDatabase.smbEntryDao().run {
                     deleteByNameAndPath(operationData.name, operationData.path)
                         .andThen(insert(SmbEntry(operationData.name, operationData.path)))
                         .subscribeOn(Schedulers.io())
-                        .subscribe()
                 }
             Operation.SFTP ->
                 utilitiesDatabase
@@ -128,7 +123,6 @@ class UtilsHandler(
                                 ),
                             )
                             .subscribeOn(Schedulers.io())
-                            .subscribe()
                     }
 
             else -> throw IllegalStateException("Unidentified operation!")
@@ -185,7 +179,7 @@ class UtilsHandler(
                 File(sd, Environment.DIRECTORY_PICTURES).absolutePath,
             )
         for (dir in dirs) {
-            saveToDatabase(OperationData(Operation.BOOKMARKS, File(dir).name, dir))
+            saveToDatabase(OperationData(Operation.BOOKMARKS, File(dir).name, dir)).subscribe()
         }
     }
 
@@ -208,7 +202,7 @@ class UtilsHandler(
             .subscribe { entry: SftpEntry ->
                 entry.name = connectionName
                 entry.path = path
-                entry.hostKey = hostKey
+                if (true == hostKey?.isNotEmpty()) entry.hostKey = hostKey
                 if (sshKeyName != null && sshKey != null) {
                     entry.sshKeyName = sshKeyName
                     entry.sshKey = sshKey

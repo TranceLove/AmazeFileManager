@@ -45,7 +45,6 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
 import org.robolectric.shadows.ShadowLocaleManager
 import org.robolectric.shadows.ShadowStorageManager
-import kotlin.random.Random
 
 /**
  * Tests for [UiPrefsFragment].
@@ -98,47 +97,56 @@ class UiPrefsFragmentTest : PreferencesActivityTestBase() {
     fun testChangeLanguage() {
         assertTrue(AppCompatDelegate.getApplicationLocales().isEmpty)
         doPerformTestInternal { activity, prefFragment ->
-            prefFragment.findPreference<Preference>("language")!!.performClick()
-            assertNotNull(ShadowDialog.getLatestDialog())
-            assertTrue(ShadowDialog.getLatestDialog() is MaterialDialog)
+            // (x as Nothing) cast tells the kotlin type checker that fail() never returns
+            val language = prefFragment.findPreference<Preference>("language") ?: (fail() as Nothing)
+            language.performClick()
 
-            (ShadowDialog.getLatestDialog() as MaterialDialog).run {
-                items?.let { items ->
-                    assertEquals(items.size, activity.getLocaleListFromXml().size() + 1)
-                    assertEquals(
-                        getString(R.string.preference_language_system_default),
-                        items[0],
-                    )
-                    assertEquals(0, this.selectedIndex)
-                    val wantTo = Random.nextInt(items.size - 1)
-                    this.selectedIndex = wantTo
-                    this.view.findViewById<RecyclerView>(
+            val dialog = (ShadowDialog.getLatestDialog() as? MaterialDialog) ?: (fail() as Nothing)
+            val items = dialog.items ?: (fail("Fail parsing locale list XML") as Nothing)
+
+            val defaultLanguageIndex = 0
+
+            assertEquals(items.size, activity.getLocaleListFromXml().size() + 1)
+            assertEquals(
+                getString(R.string.preference_language_system_default),
+                items[0],
+            )
+            assertEquals(defaultLanguageIndex, dialog.selectedIndex)
+
+            // Test all languages except default
+            for (languageIndex in ((1..<items.size).toList().shuffled().take(5))) {
+                println("Testing language ${items[languageIndex]} at index $languageIndex")
+                dialog.selectedIndex = languageIndex
+
+                val languageListView =
+                    dialog.view.findViewById<RecyclerView>(
                         com.afollestad.materialdialogs.R.id.md_contentRecyclerView,
-                    ).run {
-                        // Span out the RecyclerView as much as possible so all items are displayed.
-                        // Trick: https://bterczynski.medium.com/robolectric-tips-testing-recyclerviews-d6e79209a4b
-                        measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
-                        layout(0, 0, 10000, 10000)
-                        this.children.toList()[wantTo].performClick()
-                    }
-
-                    assertFalse(AppCompatDelegate.getApplicationLocales().isEmpty)
-                    assertNotNull(AppCompatDelegate.getApplicationLocales()[0])
-                    assertEquals(
-                        wantTo,
-                        // System Default is index 0 (top of list), hence index needs to + 1
-                        activity.getLocaleListFromXml().indexOf(
-                            AppCompatDelegate.getApplicationLocales()[0],
-                        ) + 1,
                     )
-                } ?: fail("Fail parsing locale list XML")
+
+                // Span out the RecyclerView as much as possible so all items are displayed.
+                // Trick: https://bterczynski.medium.com/robolectric-tips-testing-recyclerviews-d6e79209a4b
+                languageListView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+                languageListView.layout(0, 0, 10000, 10000)
+                languageListView.children.toList()[languageIndex].performClick()
+
+                assertFalse(AppCompatDelegate.getApplicationLocales().isEmpty)
+                assertNotNull(AppCompatDelegate.getApplicationLocales()[0])
+                assertEquals(
+                    languageIndex,
+                    // System Default is index 0 (top of list), hence index needs to + 1
+                    activity.getLocaleListFromXml().indexOf(
+                        AppCompatDelegate.getApplicationLocales()[0],
+                    ) + 1,
+                )
             }
         }
     }
 
     private fun doPerformTestInternal(test: (PreferencesActivity, UiPrefsFragment) -> Unit) {
         doTestPreferenceFragment { activity, prefsFragment ->
-            prefsFragment.findPreference<Preference>("ui")!!.performClick()
+            // (x as Nothing) cast tells the kotlin type checker that fail() never returns
+            val ui = prefsFragment.findPreference<Preference>("ui") ?: (fail() as Nothing)
+            ui.performClick()
             activity.supportFragmentManager.executePendingTransactions()
             assertEquals(1, activity.supportFragmentManager.backStackEntryCount)
             activity.supportFragmentManager.fragments.filterIsInstance<UiPrefsFragment>()

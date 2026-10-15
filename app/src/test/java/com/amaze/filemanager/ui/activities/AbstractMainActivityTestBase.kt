@@ -73,7 +73,7 @@ abstract class AbstractMainActivityTestBase {
     @NonNull
     @JvmField
     @RequiresApi(Build.VERSION_CODES.R)
-    val allFilesPermissionRule =
+    val allFilesPermissionRule: GrantPermissionRule =
         GrantPermissionRule.grant(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
 
     /**
@@ -86,6 +86,7 @@ abstract class AbstractMainActivityTestBase {
         RxJavaPlugins.setIoSchedulerHandler { Schedulers.trampoline() }
         RxAndroidPlugins.reset()
         RxAndroidPlugins.setInitMainThreadSchedulerHandler { Schedulers.trampoline() }
+        RxAndroidPlugins.setMainThreadSchedulerHandler { Schedulers.trampoline() }
         ShadowSQLiteConnection.reset()
     }
 
@@ -101,5 +102,7 @@ abstract class AbstractMainActivityTestBase {
                 ),
             ).resetStorageVolumeList()
         }
+        RxAndroidPlugins.reset()
+        RxJavaPlugins.reset()
     }
 }

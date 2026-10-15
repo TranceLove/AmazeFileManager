@@ -302,7 +302,6 @@
     <string name="easter_egg_title">Студијски режим</string>
     <string name="paypal_copy_message">Пејпел ИД копиран на клипборд</string>
     <string name="searching_devices">Тражим уређаје</string>
-    <string name="use_custom_ip">Користите прилагођену ИП</string>
     <string name="bookmark_lost">Обележивач није нађен, поново правим&#8230;</string>
 
     <string name="share_limit">Не могу да делим више од 100 фајлова</string>

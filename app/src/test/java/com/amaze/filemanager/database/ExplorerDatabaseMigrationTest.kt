@@ -82,6 +82,7 @@ class ExplorerDatabaseMigrationTest {
                     ExplorerDatabase.MIGRATION_8_9,
                     ExplorerDatabase.MIGRATION_9_10,
                     ExplorerDatabase.MIGRATION_10_11,
+                    ExplorerDatabase.MIGRATION_11_12,
                 )
                 .build()
         explorerDatabase.openHelper.writableDatabase
@@ -109,6 +110,7 @@ class ExplorerDatabaseMigrationTest {
                     ExplorerDatabase.MIGRATION_8_9,
                     ExplorerDatabase.MIGRATION_9_10,
                     ExplorerDatabase.MIGRATION_10_11,
+                    ExplorerDatabase.MIGRATION_11_12,
                 )
                 .build()
         explorerDatabase.openHelper.writableDatabase
@@ -135,6 +137,7 @@ class ExplorerDatabaseMigrationTest {
                     ExplorerDatabase.MIGRATION_8_9,
                     ExplorerDatabase.MIGRATION_9_10,
                     ExplorerDatabase.MIGRATION_10_11,
+                    ExplorerDatabase.MIGRATION_11_12,
                 )
                 .build()
         explorerDatabase.openHelper.writableDatabase
@@ -212,6 +215,7 @@ class ExplorerDatabaseMigrationTest {
                     ExplorerDatabase.MIGRATION_8_9,
                     ExplorerDatabase.MIGRATION_9_10,
                     ExplorerDatabase.MIGRATION_10_11,
+                    ExplorerDatabase.MIGRATION_11_12,
                 ).allowMainThreadQueries()
                 .build()
         explorerDatabase.openHelper.writableDatabase
@@ -320,6 +324,7 @@ class ExplorerDatabaseMigrationTest {
                     ExplorerDatabase.MIGRATION_8_9,
                     ExplorerDatabase.MIGRATION_9_10,
                     ExplorerDatabase.MIGRATION_10_11,
+                    ExplorerDatabase.MIGRATION_11_12,
                 )
                 .allowMainThreadQueries()
                 .build()

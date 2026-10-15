@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -1117,7 +1117,7 @@ public class HybridFile {
                           LOG.debug("Closing input stream for {}", getPath());
                           super.close();
                         } catch (Throwable e) {
-                          e.printStackTrace();
+                          LOG.error("Error closing input stream for {}", getPath(), e);
                         } finally {
                           LOG.debug("Closing client for {}", getPath());
                           rf.close();
@@ -1581,7 +1581,7 @@ public class HybridFile {
             if (!source.renameTo(dest)) {
               return false;
             }
-            MediaConnectionUtils.scanFile(context, new HybridFile[] {this});
+            MediaConnectionUtils.scanFiles(context, new HybridFile[] {this});
             return true;
           });
     }

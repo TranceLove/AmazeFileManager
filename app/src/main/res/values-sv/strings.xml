@@ -311,7 +311,6 @@ kommer annars att söka efter förekomster.</string>
     <string name="translate_summary">Översätt Amaze till ditt språk</string>
     <string name="paypal_copy_message">PayPal-UD kopierat till urklipp</string>
     <string name="searching_devices">Söker efter enheter</string>
-    <string name="use_custom_ip">Använd egen IP</string>
     <string name="bookmark_lost">Bokmärke hittades inte, återskapar&#8230;</string>
 
     <string name="share_limit">Kan inte dela fler än 100 filer</string>

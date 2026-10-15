@@ -89,6 +89,7 @@ class UtilitiesDatabaseMigrationTest {
                     UtilitiesDatabase.MIGRATION_3_4,
                     UtilitiesDatabase.MIGRATION_4_5,
                     UtilitiesDatabase.MIGRATION_5_6,
+                    UtilitiesDatabase.MIGRATION_6_7,
                 )
                 .build()
         utilitiesDatabase.openHelper.writableDatabase
@@ -100,7 +101,7 @@ class UtilitiesDatabaseMigrationTest {
      */
     @Test
     @Suppress("ComplexMethod", "LongMethod", "StringLiteralDuplication")
-    fun testMigrationFrom5To6() {
+    fun testMigrationFrom5To7() {
         val db: SupportSQLiteDatabase =
             helper.createDatabase(TEST_DB, 5)
         val password1 =
@@ -141,7 +142,7 @@ class UtilitiesDatabaseMigrationTest {
                 UtilitiesDatabase::class.java,
                 TEST_DB,
             )
-                .addMigrations(UtilitiesDatabase.MIGRATION_5_6)
+                .addMigrations(UtilitiesDatabase.MIGRATION_5_6, UtilitiesDatabase.MIGRATION_6_7)
                 .allowMainThreadQueries()
                 .build()
         utilitiesDatabase.openHelper.writableDatabase

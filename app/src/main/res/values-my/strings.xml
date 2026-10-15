@@ -319,7 +319,6 @@
     <string name="translate_summary">Translate Amaze in your language</string>
     <string name="paypal_copy_message">PayPal ID copied to clipboard</string>
     <string name="searching_devices">Searching for devices</string>
-    <string name="use_custom_ip">Use custom IP</string>
     <string name="bookmark_lost">Bookmark not found, recreating&#8230;</string>
 
     <string name="share_limit">Can\'t share more than 100 files</string>
@@ -586,7 +585,7 @@
     ]]></string>
     <string name="encrypt_file_must_end_with_aze">Encrypted files must use \".aze\" as the file extension.</string>
     <string name="encrypt_file_must_end_with_aes">Encrypted files must use \".aes\" as the file extension.</string>
-    <string name="error_aescrypt_decrypt_failed">Cannot decrypt \'%s\': \'%s\'</string>
+    <string name="error_aescrypt_decrypt_failed">Cannot decrypt \'%1$s\': \'%2$s\'</string>
     <string name="cannot_overwrite">Cannot overwrite file.</string>
     <string name="saved_single_file">File saved as \'%s\'.</string>
     <string name="saved_multi_files">%d files saved.</string>

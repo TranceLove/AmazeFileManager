@@ -12,7 +12,7 @@ jobs:
     if: github.event.comment.body == 'Build test apk' && (github.actor == 'VishalNehra' || github.actor == 'TranceLove' || github.actor == 'EmmanuelMess' || github.actor == 'VishnuSanal')
     steps:
       - name: Acknowledge the request with thumbs up reaction
-        uses: peter-evans/create-or-update-comment@v2
+        uses: peter-evans/create-or-update-comment@v5
         with:
           comment-id: ${{ github.event.comment.id }}
           reactions: '+1'

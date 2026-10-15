@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -26,6 +26,7 @@ import com.amaze.filemanager.database.typeconverters.EncryptedStringTypeConverte
 import com.amaze.filemanager.database.typeconverters.OpenModeTypeConverter;
 import com.amaze.filemanager.fileoperations.filesystem.OpenMode;
 
+import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -43,6 +44,7 @@ public class CloudEntry {
   @TypeConverters(OpenModeTypeConverter.class)
   private OpenMode serviceType;
 
+  @NonNull
   @ColumnInfo(name = ExplorerDatabase.COLUMN_CLOUD_PERSIST)
   @TypeConverters(EncryptedStringTypeConverter.class)
   private StringWrapper persistData;

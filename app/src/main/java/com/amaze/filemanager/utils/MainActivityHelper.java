@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -338,9 +338,6 @@ public class MainActivityHelper {
       final boolean isDirectory,
       final Activity context,
       boolean rootmode) {
-    final Toast toast =
-        Toast.makeText(context, context.getString(R.string.renaming), Toast.LENGTH_SHORT);
-    toast.show();
     HybridFile oldFile = new HybridFile(mode, oldPath);
     HybridFile newFile;
     if (Utils.isNullOrEmpty(newName)) {
@@ -348,6 +345,15 @@ public class MainActivityHelper {
     } else {
       newFile = new HybridFile(mode, newPath, newName, isDirectory);
     }
+    if (oldFile.getSimpleName().equals(newFile.getSimpleName())) {
+      Toast.makeText(
+              context, context.getString(R.string.no_changes_while_rename), Toast.LENGTH_SHORT)
+          .show();
+      return;
+    }
+    final Toast toast =
+        Toast.makeText(context, context.getString(R.string.renaming), Toast.LENGTH_SHORT);
+    toast.show();
     Operations.rename(
         oldFile,
         newFile,

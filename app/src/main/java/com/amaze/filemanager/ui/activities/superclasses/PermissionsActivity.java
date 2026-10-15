@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -51,6 +51,7 @@ public class PermissionsActivity extends ThemedActivity
     implements ActivityCompat.OnRequestPermissionsResultCallback {
 
   private static final String TAG = PermissionsActivity.class.getSimpleName();
+  private MaterialDialog allFilesAccessDialog;
 
   public static final int PERMISSION_LENGTH = 4;
   public static final int STORAGE_PERMISSION = 0,
@@ -240,27 +241,42 @@ public class PermissionsActivity extends ThemedActivity
    * @param onPermissionGranted permission granted callback
    */
   public void requestAllFilesAccess(@NonNull final OnPermissionGranted onPermissionGranted) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-      final boolean hasHtml = true;
-      final MaterialDialog materialDialog =
-          GeneralDialogCreation.showBasicDialog(
-              this,
-              R.string.grant_all_files_permission,
-              R.string.grantper,
-              R.string.grant,
-              R.string.cancel,
-              hasHtml);
-      materialDialog.getActionButton(DialogAction.NEGATIVE).setOnClickListener(v -> finish());
-      materialDialog
-          .getActionButton(DialogAction.POSITIVE)
-          .setOnClickListener(
-              v -> {
-                requestAllFilesAccessPermission(onPermissionGranted);
-                materialDialog.dismiss();
-              });
-      materialDialog.setCancelable(false);
-      materialDialog.show();
+    if (SDK_INT < Build.VERSION_CODES.R) {
+      return;
     }
+
+    if (Environment.isExternalStorageManager()) {
+      return;
+    }
+
+    if (allFilesAccessDialog != null && allFilesAccessDialog.isShowing()) {
+      return;
+    }
+
+    final boolean hasHtml = true;
+    final MaterialDialog materialDialog =
+        GeneralDialogCreation.showBasicDialog(
+            this,
+            R.string.grant_all_files_permission,
+            R.string.grantper,
+            R.string.grant,
+            R.string.cancel,
+            hasHtml);
+
+    allFilesAccessDialog = materialDialog;
+
+    materialDialog.setOnDismissListener(dialog -> allFilesAccessDialog = null);
+    materialDialog.getActionButton(DialogAction.NEGATIVE).setOnClickListener(v -> finish());
+
+    materialDialog
+        .getActionButton(DialogAction.POSITIVE)
+        .setOnClickListener(
+            v -> {
+              requestAllFilesAccessPermission(onPermissionGranted);
+              materialDialog.dismiss();
+            });
+    materialDialog.setCancelable(false);
+    materialDialog.show();
   }
 
   @RequiresApi(api = Build.VERSION_CODES.R)

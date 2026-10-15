@@ -305,7 +305,6 @@
     <string name="translate_summary">Preložiť Amaze do vašho jazyka</string>
     <string name="paypal_copy_message">Paypal id bol skopírovaný do schránky</string>
     <string name="searching_devices">Vyhľadávajú sa zariadenia...</string>
-    <string name="use_custom_ip">Použiť inú IP</string>
     <string name="bookmark_lost">Záložka sa nenašla, obnovovanie&#8230;</string>
 
     <string name="share_limit">Nemôžete zdieľať viac ako 100 súborov</string>

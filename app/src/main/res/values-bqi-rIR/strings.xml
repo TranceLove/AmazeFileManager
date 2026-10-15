@@ -1,0 +1,621 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    Copyright (C) 2014-2017 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>
+
+    This file is part of Amaze File Manager.
+
+    Amaze File Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    -->
+
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingTranslation"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_name">دؽوۉداری فایل ٱمیز</string>
+    <string name="drawer_open">گۊشیڌن نومگه کشاری</string>
+    <string name="drawer_close">بستن نومگه کشاری</string>
+    <string name="icon">آیکون</string>
+    <string name="apps">دیوۉداری برنومه یل</string>
+    <string name="ftp">سرور FTP / جا گورو کردن فایل</string>
+    <string name="setting">سامووا</string>
+    <string name="select">مۉردن پسند کوݩ</string>
+    <string name="press_again">سی ب در زیڌن، دو کرت بزݩ ری دویمه وورگشتن</string>
+    <string name="open">گۊشیڌن</string>
+    <string name="backup">لادراری گرؽڌن</string>
+    <string name="uninstall">لقو پۊرنیڌن</string>
+    <string name="play">فۊرۊشگا گۊگل پلی</string>
+    <string name="properties">دووسمندیا</string>
+    <string name="copyingapks">لف گیری فایل APK ز %d و %s</string>
+    <string name="delbook">پاک کردن نشووک</string>
+    <string name="add_to_bookmarks">ٱووردن و نشووکا</string>
+    <string name="enterpath">تور ت دیاری کوݩ</string>
+    <string name="cancel">رڌ کردن</string>
+    <string name="create">وورکل بۊ</string>
+    <string name="loading">هونی بار ونی بۊ&amp;#8230;</string>
+    <string name="file_empty">فایل پتی هڌ</string>
+    <string name="error">ختا</string>
+    <string name="search_results">نتیجه یل پیتینیڌن سی %s</string>
+    <string name="rename">آلشت نوم</string>
+    <string name="save">زفت کردن</string>
+    <string name="bookmarks_added">نشۉوکا ٱووڌن</string>
+    <string name="fileexist">ی فایل وا هیم نوم ز پؽش تر بیڌس</string>
+    <string name="name">نوم</string>
+    <string name="date">ویرگار</string>
+    <string name="location">جاگه</string>
+    <string name="size_capitalized">هندا</string>
+    <string name="size">هندا دوبلگه</string>
+    <string name="enterzipname">نوم فایل زیپن بزݩ</string>
+    <string name="no_app_found">هیچ برنومه ای سی گۊشیڌن ای فایل نجۊرست</string>
+    <string name="copying">هونی لف گیری ابۊ</string>
+    <string name="moving">هونی جا گورو ابۊ</string>
+    <string name="file">فایل</string>
+    <string name="folder">دوبلگه</string>
+    <string name="newfolder">دوبلگه نۊ</string>
+    <string name="entername">نومن بزݩ</string>
+    <string name="extracting">هونی ادرارس</string>
+    <string name="stopping">هونی واڌارنس</string>
+    <string name="open_parent">دوبلگه روئی ن بوگوش</string>
+    <string name="open_with">گۊشیڌن وا</string>
+    <string name="share">یک رسۊوی</string>
+    <string name="about">زبار</string>
+    <string name="extract">دراووردن</string>
+    <string name="compress">تپنیڌن</string>
+    <string name="yes">هری</string>
+    <string name="no">ن</string>
+    <string name="dialog_delete_category_directories">دوبلگه یل</string>
+    <string name="dialog_delete_category_files">فایلا</string>
+    <string name="dialog_delete_disclaimer">وا پاک کردن مۉردا لمی، هونۉݩ سی همیشه ز دسگا ایسا پاک ابۊن وو دی نترین وورگنینسۉݩ.</string>
+    <string name="dialog_delete_temporarily_disclaimer">اخۊی مۉردا لمی ن پاک کۊنی؟</string>
+    <string name="dialog_restore_disclaimer">اخۊی مۉردا لمی ن وورگنی؟</string>
+    <string name="dialog_delete_title">اخۊی یونۉݩ سی همیشه پاک بۊن؟</string>
+    <string name="deleting">هونی پاک ابۊ</string>
+    <string name="question_set_path_as_home">اخۊی تور هیملانی ن، سی تور هووه ای بلگه ساموو کۊنی؟</string>
+    <string name="directorysort">هالت کتن کردن دوبلگه</string>
+    <string name="sort_by">کتن و ری</string>
+    <string name="sort_by_colon">کتن و ری:</string>
+    <string name="sort_only_this">تینا ای دوبلگه</string>
+    <string name="theme">تم</string>
+    <string name="random">پۊسته تساڌۊفی</string>
+    <string name="random_summary">رنگ ٱولیه تساڌۊفی ن، من وارو ٱووڌن ساموو کوݩ</string>
+    <string name="colorize">رنگ کردن آیکونا</string>
+    <string name="colorize_summary">رنگ آیکونا ن ساموو اده، رنگ پسند بیڌه، آیکون دوبلگه ن آلشت نؽڌه.</string>
+    <string name="home">هووه</string>
+    <string name="paste">جا وندن</string>
+    <string name="history">ویرگار</string>
+    <string name="copy">لف گیری</string>
+    <string name="root_mode">پیتینیگر رۊت</string>
+    <string name="root_mode_summary">تینا سی دوبلگه رۊت بیڌه، ٱر زس اتمینوو داری، امتهووس کوݩ.</string>
+    <string name="root_failure">دسرسی رۊت ن نڌاره</string>
+    <string name="select_all">پسند پوی</string>
+    <string name="delete">پاک کردن</string>
+    <string name="set_as_home">ساموو و عونوان هووه</string>
+    <string name="operation_not_supported">ز ای کار لادراری نؽبۊ</string>
+
+    <!-- New -->
+    <!-- Array -->
+
+    <!-- UI -->
+    <!-- Theme -->
+    <string name="light">متریال رۊشن</string>
+    <string name="dark">متریال تاریک</string>
+    <string name="daytime">زمۉݩ رۊز</string>
+    <string name="black">شه (سی OLED)</string>
+    <string name="system">پؽش فرز سیستوم (گۊش گر سیستوم بۊ)</string>
+    <!--Skin-->
+    <!--DirectorySortMode-->
+    <string name="foldersOnTop">دوبلگه یل وارو بۊن</string>
+    <string name="filesOnTop">فایلا وارو بۊن</string>
+    <string name="none_on_top">هیشکویکسوو وارو نبۊ</string>
+    <!--SortBy-->
+    <string name="sort_name">نوم</string>
+    <string name="lastModified">آلشت دیندایی</string>
+    <string name="sort_size">هندا</string>
+    <string name="sort_relevance">ارتبات</string>
+    <!--ListMode-->
+    <!--Folder-->
+    <string name="pick_a_file">ی فایل ن پسند کوݩ</string>
+    <string name="pick_files">ی فایل یا چن فایل ن پسند کوݩ</string>
+    <string name="process_viewer">نشۉگر فعالیتا</string>
+    <string name="in_safe">جاگه کم</string>
+    <string name="no_file_overwrite">هیچ فایلؽ جا نوسته</string>
+    <string name="skip">رڌ کردن</string>
+    <string name="overwrite">جا وندن</string>
+    <string name="not_allowed">موجاز نؽ</string>
+    <string name="searching">پیتینیڌن %s</string>
+    <string name="done">ٱنجوم وابی</string>
+    <string name="set">ساموو</string>
+    <string name="enablerootmde">فعال کردن هالت رۊت</string>
+    <string name="goback">وورگرت</string>
+    <string name="newfile">فایل نۊ</string>
+    <string name="no_files">فایلؽ نؽ</string>
+    <string name="used">جاگه و کار گرؽڌه بیڌه</string>
+    <string name="used_by_others">و دس دیرۉ و کار گرؽڌه وابیڌه</string>
+    <string name="free">جاگه پتی</string>
+    <string name="listview">نما نومگه</string>
+    <string name="gridview">نما شبکه ای</string>
+    <string name="permission">جوازا</string>
+    <string name="hide">بؽڌار بۊ</string>
+    <string name="exit">و در رئڌن</string>
+    <string name="doforall">سی پوی مۉردا ٱنجوم بۊ</string>
+    <string name="gridcolumnno">تعداد سۊتۊنا من نما شبکه ای</string>
+    <string name="set_random">برنومنه بووند وو ز نۊ بوگوش تا آلشتکاریا ٱنجوم بۊن</string>
+    <string name="authors">هؽل کونۉݩ</string>
+    <string name="changelog">گوزارش آلشتکاریا</string>
+    <string name="ok">خا</string>
+    <string name="ui">رابت</string>
+    <string name="general">پوی وولاتی</string>
+    <string name="thumb_summary">نشۉݩ داڌن شؽواتا کۊچیر وو برنومه یل وو شؽواتا</string>
+    <string name="thumb">نشۉݩ داڌن شؽواتا کۊچیر</string>
+    <string name="hidden">نشۉݩ داڌن فایلا وو دوبلگه یل بؽڌاری</string>
+    <string name="lastModifiedSummary">ویرگار وو زمۉݩ آلشت دیندایی ن نشۉݩ بڌه</string>
+    <string name="lastModifiedPref">نشۉݩ داڌن آلشتکاری دیندایی</string>
+    <string name="size_pref_summary">هندا فایلا وو تعداد مۉردا من دوبلگه یل ن نشۉݩ بڌه</string>
+    <string name="size_pref">نشۉݩ داڌن هندا یل</string>
+    <string name="miscellaneous">موتفرقه</string>
+    <string name="root_pref_summary">نشۉݩ داڌن موجوزا فایلا وو دوبلگه یل</string>
+    <string name="root_pref">سیل کردن جوازا</string>
+    <string name="about_amaze_file_manager_label">زبار دؽوۉداری فایل ٱمیز</string>
+    <string name="version">نوسخه</string>
+    <string name="rate">امتیاز داڌن و برنومه</string>
+    <string name="feedback">فشناڌن منشڌ</string>
+    <string name="hiddenfiles">فایلا بؽڌاری</string>
+    <string name="type">نوع</string>
+    <string name="root_directory">رۊت</string>
+    <string name="add_shortcut">ٱووردن ره نهنگ</string>
+    <string name="unsaved_changes">آلشتکاریا زفت نوابین</string>
+    <string name="unsaved_changes_description">ایسا آلشتکاریا زفت نوابیڌه دارین، اخۊین هونۉݩ ن پؽش ز و در زیڌن ز برنومه زفت کۊنین؟</string>
+    <string name="saving">هونی زفت ابۊ</string>
+    <string name="package_installer">پۊرنی کون کتن</string>
+    <string name="view">نیشتن</string>
+    <string name="install">پۊرنیڌن</string>
+    <string name="archive">بایگۊوی</string>
+    <string name="archive_text">یو ی بایگۊوی هڌ، ایسا دلتۉݩ اخو چ کاری ٱنجوم دین؟</string>
+    <string name="package_installer_text">یو ی پۊرنی کوݩ کتن هڌ، ایسا دلتۉݩ اخو چ کاری ٱنجوم دین؟</string>
+    <string name="xda_title">ایکس دی ای</string>
+    <string name="circular_images">ز آیکونا دایره ای سی شؽواتا وو فیلما استفاڌه کۊنین</string>
+    <string name="circular_icons">و کار گرؽڌن آیکونا دایره یی</string>
+    <string name="follow_battery_saver_title">ودین کردن سرفه جۊیی من قوبه</string>
+    <string name="back_title">وورگرت</string>
+    <string name="back_summary">دویمه وورگشتنن وارو نومگه ن فعال اکونه</string>
+    <string name="details">جۊزیات</string>
+    <string name="translators">ولرنی کارۉݩ</string>
+    <string name="german_translation_title">آلمانی</string>
+    <string name="italian_translation_title">ایتالیایی</string>
+    <string name="french_translation_title">فرانسوی</string>
+    <string name="russian_translation_title">رۊسی</string>
+    <string name="spanish_translation_title">اسپانیایی</string>
+    <string name="basque_translation_title">باسکایی</string>
+    <string name="chinese_translation_title">چینی</string>
+    <string name="serbian_translation_title">سربی</string>
+    <string name="turkish_translation_title">تۊرکی</string>
+    <string name="ukrainian_translation_title">اوکراینی</string>
+    <string name="portuguese_translation_title">پورتقالی</string>
+    <string name="polish_translation_title">لهستۊوی</string>
+    <string name="korean_translation_title">کوره یی</string>
+    <string name="greek_translation_title">یۊنانی</string>
+    <string name="dutch_translation_title">هولندی</string>
+    <string name="romanian_translation_title">رومانیایی</string>
+    <string name="vietnamese_translation_title">ویتنامی</string>
+    <string name="japanese_translation_title">ژاپۊنی</string>
+    <string name="tamil_translation_title">تامیلی</string>
+
+    <string name="zip_viewer">نیشتگر فایل تپنیڌه</string>
+    <string name="warning">بپا</string>
+    <string name="donate">لادراری مالی</string>
+    <string name="archive_extract_folder">دوبلگه دراووردن بایگۊوی</string>
+    <string name="open_as">گۊشیڌن وا</string>
+    <string name="text">هؽل</string>
+    <string name="audio">دونگ</string>
+    <string name="video">فیلم</string>
+    <string name="other">دیر</string>
+    <string name="image">شؽوات</string>
+    <string name="contributors">موشارکت کرده یل</string>
+    <string name="save_paths">ویر ونی تورل</string>
+    <string name="save_path_summary">نشۉݩ داڌن دوبلگه گۊشیڌه بیڌه دیندایی، دیندا گۊشیڌن برنومه</string>
+    <string name="select_intent">پسند</string>
+    <string name="database">دیتابیس</string>
+    <string name="colored_navigation">نوار پیمایش رنگی</string>
+    <string name="colored_navigvation_sum">یو ک سیستوم نومگه کشاری وا پۊسته رنگی بۊ یا نه</string>
+
+    <string name="color_title">رنگ</string>
+    <string name="color_summary">رنگ اجزا رابت منتوری ن پسند کۊنین</string>
+    <string name="primary_color_title">رنگ ٱولیه (بلگه سمت چپ)</string>
+    <string name="primary_color_summary">ساموو داڌن رنگ و رابت منتوری گپ سی بلگه سمت چپ</string>
+    <string name="accent_color_title">تاکیڌ رنگ</string>
+    <string name="accent_color_summary">ساموو داڌن رنگ و دویمه شور وو رابت منتوری کۊچیر دیری</string>
+    <string name="icon_color_title">رنگ آیکوݩ</string>
+    <string name="icon_color_summary">ساموو رنگ سی آیکونا</string>
+    <string name="choose_color">پسند رنگ</string>
+    <string name="files">فایلا</string>
+    <string name="textreader">هؽل خۉݩ</string>
+    <string name="databasereader">خونده گر پایگا داده</string>
+    <string name="show_dividers">نشۉݩ داڌن درایور</string>
+    <string name="needs_access">نیازمند دسرسی و هؽل کردن</string>
+    <string name="smb_connection">منپیز SMB</string>
+    <string name="server_address">آدرسا آی پی سرور</string>
+    <string name="username">نوم منتوری</string>
+    <string name="password">رزم</string>
+    <string name="anonymous">ناشناس</string>
+    <string name="bluetooth">بۊلۊتۊس</string>
+    <string name="folders">دوبلگه یل</string>
+    <string name="folderfilecount">%1$d دوبلگه یل وو %2$d فایلا</string>
+    <string name="videos">فیلما</string>
+    <string name="apks">برنومه یل</string>
+    <string name="documents">سندا</string>
+    <string name="images">شؽواتا</string>
+    <string name="clear">روفتن</string>
+    <string name="md5">MD5</string>
+    <string name="total">جمع پوی:</string>
+    <string name="calculating">هونی براوورد اکونه</string>
+    <string name="sort">کتن کردن</string>
+    <string name="ascending">ری و رو</string>
+    <string name="descending">ری و لم</string>
+    <string name="default_string">پؽش فرز</string>
+    <string name="doit">ٱنجوم داڌن</string>
+    <string name="want_help"><u>لنگ هیاری هڌی؟</u></string>
+    <string name="quick">دسرسی زل</string>
+    <string name="recent">فایلا هیم دمۊوی</string>
+    <string name="edit">آلشت</string>
+    <string name="find">جوستن من بلگه</string>
+    <string name="grant">هشتن</string>
+    <string name="grantper">هشتن موجوز</string>
+    <string name="grantfailed">موجوز نداڌ</string>
+    <string name="operation_unsuccesful">عملیات نامووفق</string>
+    <string name="creatingfile">فایل هونی وورکل ابۊ</string>
+    <string name="creatingfolder">دوبلگه هونی وورکل ابۊ</string>
+    <string name="renaming">نوم هونی آلشت ابۊ</string>
+    <string name="cant_be_empty">%s نتره پتی بۊ</string>
+    <string name="ip">آدرس</string>
+    <string name="connection_name">نوم منپیز</string>
+    <string name="no_device_found">دسگاهؽ نجوست</string>
+    <string name="path">جاگه</string>
+    <string name="rename_bookmark">آلشت نشووک</string>
+    <string name="cut">جا گورو</string>
+    <string name="search">پیتینیڌن</string>
+    <string name="invalid_name">نوم زبال نؽ</string>
+    <string name="search_hint">سی پیتینیڌن هؽل کوݩ &amp;#8230;</string>
+    <string name="advanced_search">پیتینیڌن پؽش رئڌه</string>
+    <string name="regular_expression">شره معمۊلی</string>
+    <string name="regular_expression_summary">پیتینیڌن وا شره ساڌه</string>
+    <string name="match_content">هموهنگ کردن موئتوا</string>
+    <string name="start_ftp">ناهاڌن پا</string>
+    <string name="stop_ftp">واڌاشتن</string>
+    <string name="ftp_status_running">هونی ره اۊفته</string>
+    <string name="ftp_status_not_running">من ره ونی نؽ</string>
+    <string name="ftp_no_wifi">موتمعن بۊ ک، و وای فای منپیز هڌ</string>
+    <string name="domain">دامنه</string>
+    <string name="smb_share">یک رسۊوی تور</string>
+    <string name="invalid">%s تاییڌ نوابیڌه</string>
+    <string name="ftp_notif_starting">سرور اف تی بی هونی انه پا کار</string>
+    <string name="ftp_notif_starting_title">سرور FTP / جا گورو کردن فایل</string>
+    <string name="ftp_notif_title">سرور اف تی پی ٱمیز هونی ر اۊفته</string>
+    <string name="ftp_notif_text">من %s</string>
+    <string name="ftp_notif_stop_server">واڌاشتن</string>
+    <string name="ftp_port_edit_menu_title">پورت FTP</string>
+    <string name="ftp_port_change_success">پورت FTP و خۊوی آلشت وابی</string>
+    <string name="ftp_port_change_error_invalid">نومره پورت ناموئتبر پسند وابیڌه</string>
+    <string name="primary_two_title">رنگ ٱولیه (بلگه سمت راست)</string>
+    <string name="primary_two_summary">ساموو داڌن رنگ و رابت منتوری گپ سی بلگه سمت راست</string>
+    <string name="support_development">لادراری هؽل کونۉݩ برنومه</string>
+    <string name="report_bugs_title">گوزارش موشکلا</string>
+    <string name="source_title">کود بونچک</string>
+    <string name="source_summary">کود بونچک ایمانه منه گیت هاب بنیرین</string>
+    <string name="report_bugs_summary">گوزارش موشکلا یا درخاست ویژیی نۊ</string>
+    <string name="translate_title">ولرنیڌن</string>
+    <string name="translate_summary">دؽوۉداری فایل ٱمیز ن، و زۉݩ خوتۉݩ ولرن</string>
+    <string name="paypal_copy_message">آیدی پی پال، من ویرگه لف گیری بۊ</string>
+    <string name="searching_devices">پیتینیڌن سی دسگایل</string>
+    <string name="bookmark_lost">نشووکن نجوست، هونی دووارته وورکل ابۊ&amp;#8230;</string>
+
+    <string name="share_limit">بیشتر ز 100 فایلن نؽبۊ یک رسۊوی کرد</string>
+    <string name="information">دووسمندیا</string>
+    <!-- reference to file accessed date -->
+    <string name="accessed">دسرسی گرؽڌ</string>
+    <!-- reference to file modified date -->
+    <string name="modified">آلشتکاری وابی</string>
+
+    <string name="title">عونوان</string>
+    <string name="artist">هونزمند</string>
+    <string name="album">آلبوم</string>
+    <string name="year">سال</string>
+    <string name="duration">موڌت</string>
+    <string name="comment">منشڌ</string>
+    <!-- reference to audio/video file -->
+    <string name="container">زرف</string>
+    <string name="codec">کودک</string>
+    <string name="channels">تورگه یل</string>
+    <string name="sample_rate">نرخ نمووه</string>
+    <string name="bitrate">بیت ریت</string>
+    <string name="frame_rate">فریم ریت</string>
+    <string name="image_type">نوع شؽوات</string>
+    <string name="width">پئنا</string>
+    <string name="height">درازا</string>
+    <string name="date_modified">ویرگار آلشتکاری</string>
+    <string name="software">برنومه</string>
+    <string name="creator">وورکل کوݩ</string>
+    <string name="camera_brand">نوم تجاری شؽواتگر</string>
+    <string name="camera_model">مودل شؽواتگر</string>
+    <string name="date_taken">ویرگار گرؽڌن</string>
+    <string name="exposure_time">زموو نۊر داڌن</string>
+    <string name="aperture_value">هندا دیافراگم</string>
+    <string name="focal_length">فاسله کانۊوی</string>
+    <string name="subject">سرتال</string>
+    <string name="author">هؽل کوݩ</string>
+    <string name="keywords">کیلیت واژه یل</string>
+    <string name="created">وورکل وابی</string>
+    <string name="format">فورمت</string>
+    <string name="pages">نومره بلگه یل</string>
+    <!-- reference to a document file -->
+    <string name="optimized">بؽڌر وابیڌه</string>
+    <string name="security">ٱمنیت</string>
+    <string name="paper_size">هندا بلگه</string>
+
+    <string name="copied">لف گیری وابی</string>
+    <string name="moved">جا گورو وابی</string>
+    <string name="copy_complete">لف گیری کامل وابی</string>
+    <string name="waiting_title">مندیر هڌ</string>
+    <string name="waiting_content">مندیر سی ٱنجوم وابیڌن عملیات</string>
+    <string name="extract_complete">دراووردن کامل وابی</string>
+    <string name="compression_complete">تپنیڌن کامل وابی</string>
+    <string name="compressing">هونی اتپنس</string>
+    <string name="cancelled">رڌ وابی</string>
+    <!-- reference to - 'Written #bytes out of #bytes' in process viewer -->
+    <string name="written">هؽل وابیڌه</string>
+    <string name="out_of">در ز</string>
+    <!-- reference to - 'Processing file # of #' in process viewer -->
+    <string name="of">ز</string>
+    <string name="current_speed">ترات هیم سکویی</string>
+    <string name="error_file_not_found">ختا: فایلن نجوست</string>
+    <string name="error_io">ختا I/O</string>
+    <string name="error_file_too_large">ختا: فایل قلوه گپ هڌ</string>
+    <string name="medium_text">هؽل موتوست</string>
+    <string name="permission_read">خوندن</string>
+    <string name="permission_write">هؽل کردن</string>
+    <string name="permission_execute">ر ونین</string>
+    <string name="permission_owner">ساهاو</string>
+    <string name="permission_group">جرگه</string>
+    <string name="permission_other">دیر</string>
+    <string name="clipboard_path_copy">تور منه ویرگه لف گیری وابی</string>
+    <string name="service_timer">زموو گوڌشتن</string>
+    <string name="please_wait">مندیر بۊ</string>
+
+    <string name="cloud_connection">منپیز ٱوری</string>
+    <string name="cloud_connection_new">منپیز ٱوری نۊ</string>
+    <string name="cloud_dropbox">دراپ باکس</string>
+    <string name="cloud_drive">گۊگل داریو&amp;#8482;</string>
+    <string name="cloud_onedrive">وان درایو</string>
+    <string name="cloud_box">جئوه</string>
+    <string name="cloud_get">پلاگین Cloud ن بیگیرین</string>
+    <!-- Reference to 'email address can't be empty' or 'Invalid e-mail address' -->
+
+    <string name="no_applications">هیچ برنومه ای نؽ</string>
+    <string name="ftp_path">تور یک رسۊوی بیڌه</string>
+    <string name="ftp_path_hint">ی تور و دوبلگه رۊت سی یک رسۊوی</string>
+    <string name="change">آلشت</string>
+    <string name="unknown_error">وۊی، موشکلی پؽش ٱووڌ!</string>
+
+    <string name="ftp_path_change_success">تور FTP وا مووفقیت آلشت وابی</string>
+    <string name="ftp_path_change_error_invalid">تور زبال نؽ</string>
+    <string name="ftp_status_no_connection">بؽ منپیز</string>
+    <string name="ftp_status_secure_connection">منپیز ٱمن</string>
+    <string name="ftp_status_title">وزعیت</string>
+    <string name="ftp_port">درگه</string>
+    <string name="ftp_login">و من بیاین</string>
+    <string name="field_empty">فیلد نتره پتی بۊ</string>
+    <string name="ftp_timeout">مجال بؽ کاری</string>
+    <string name="ftp_seconds">سانیه یل</string>
+    <string name="intellihide_toolbar_title">نوار ٱوزار Intellihide</string>
+    <string name="intellihide_toolbar_summary">بؽڌار کردن خوتکار نوار ٱوزار مجال پیمایش</string>
+    <string name="hash_sha256">SHA-256</string>
+    <!-- references 'name/size/location/hash' copied to clipboard -->
+    <string name="properties_copied_clipboard">منه ویرگه لف گیری وابی</string>
+    <string name="contributors_1_summary">ولرنیڌن</string>
+    <string name="contributors_2_summary">آیکون وو بنرا</string>
+    <string name="contributors_3_summary">موتور تم</string>
+    <string name="contributors_4_summary">سا پوشت FAB</string>
+    <string name="contributors_5_summary">آلشت رنگ مجال کشیڌن دوبلگه یل</string>
+    <string name="contributors_6_summary">سرور FTP / جا گورو کردن فایل</string>
+    <string name="crypt_encrypting">هونی رزم انه ریس</string>
+    <string name="crypt_decrypting">هونی رزمسه اگوشه</string>
+    <!-- references to 'Some files weren't successfully %s -->
+    <string name="crypt_encrypted">رزم ناهاڌه بیڌه</string>
+    <string name="crypt_decrypted">رزم گۊشیڌه بیڌه</string>
+    <string name="crypt_encrypt">ناهاڌن رزم</string>
+    <string name="crypt_decrypt">گۊشیڌن رزم</string>
+    <string name="crypt_pref_master_password_title">رزم ٱسلی</string>
+    <string name="crypt_pref_fingerprint_title">جا کلک</string>
+    <string name="crypt_fingerprint_not_enrolled">هیچ جا کلکی زفت نوابیڌه</string>
+    <string name="warning_never_show">ز نۊ و ویروم مون</string>
+    <string name="warning_confirm">فئمیم!</string>
+    <string name="crypt_decryption_fail">گۊشیڌن رزم ٱنجوم نوابی</string>
+    <string name="crypt_decryption_fail_password">رزم اشتوا هڌ</string>
+    <string name="crypt_fingerprint_authenticate">سی رئڌن وا پؽش، دستتۉݩ ن بنین ری سنسور</string>
+    <string name="authenticate_password">رزمته بزݩ</string>
+
+    <string name="sidebar_preferences">نوار کلی</string>
+    <string name="sidebar_quick_access_title">دسرسی زل نوار کلی</string>
+    <string name="show_quick_access_pref_title">نشۉݩ داڌن دسرسیا زل</string>
+    <string name="show_quick_access_pref">دسرسیا زل</string>
+    <string name="directory">دوبلگه</string>
+
+    <string name="sidebar_bookmarks_title">نشووکا نوار کلی</string>
+    <string name="show_bookmarks_pref_title">نشۉݩ داڌن نشووکا</string>
+    <string name="show_bookmarks_pref">نشووکا</string>
+    <string name="create_bookmark">وورکل نشووک</string>
+    <string name="edit_bookmark">آلشت نشووک</string>
+    <string name="question_delete_bookmark">نشووک پاک بۊ؟</string>
+
+    <string name="cloud_remove">اخۊی منپیز ٱوری ن پاک کۊنی؟</string>
+    <string name="cloud_fail_authenticate">ائراز هۊویت نامووفق بی</string>
+    <string name="cloud_share_copied">لینگ قابل و یک رسۊوی منه ویرگه لف گیری وابی</string>
+    <string name="copy_low_memory">ویرگه هونی تموم ابۊ. یتی ز ویرگه RAM ن برۊفن</string>
+    <string name="monofont">فونت Monospace</string>
+    <string name="showHeaders">نشۉݩ داڌن سر بلگه یل</string>
+	
+	<!--FROM HERE ON STRINGS ARE EXCLUSIVELY USED IN plurals.xml-->
+	<string name="no_items">هیچ مۉردی نؽ</string>
+	<string name="item">مۉرد</string>
+	<string name="items">مۉردا</string>
+	
+	<string name="byte_singular">بایت</string>
+	<string name="bytes">بایتا</string>
+    <!-- end of plurals -->
+
+    <string name="no_name">فایل وا ی نوم داشته بۊ</string>
+    <string name="add_item">ازاف کردن مۉرد</string>
+    <string name="failed_smb_decrypt_path">منپیز SMB بار ونی نوابی</string>
+    <string name="failed_cloud_new_connection">منپیز Cloud نۊ ازاف نوابی</string>
+    <string name="failed_cloud_api_key">تاییڌ اعتبار پلاگین Cloud ٱنجوم نوابی</string>
+
+    <string name="local_inet_addr_error">ختا منه گرؽڌن آدرس شبکه مهلی</string>
+    <string name="intent_save_as">زفت و عونوان&amp;#8230;</string>
+    <string name="go">راو</string>
+    <string name="advanced">پؽش رئڌه</string>
+    <string name="typeable_paths_title">پچا سفارشی</string>
+    <string name="send_email_to">فشناڌن ی ایمیل و</string>
+
+    <string name="text_editor">سامووا آلشتگری هؽل</string>
+    <string name="preference_newstack_title">گۊشیڌن فایلا و عونوان کار نۊ</string>
+    <string name="developers">هؽل کونۉݩ برنومه</string>
+    <string name="channel_name_normal">وارسۊویا ٱمیز</string>
+    <string name="channel_description_normal">وارسۊویا دؽوۉداری فایل ٱمیز</string>
+    <string name="channel_name_ftp">سرور FTP ٱمیز</string>
+    <string name="channel_description_ftp">وارسۊویا سرور FTP دؽوۉداری فایل ٱمیز</string>
+
+    <string name="update">ورۊ کردن</string>
+	<string name="ftp_connection">منپیز FTP</string>
+    <string name="scp_port">درگه</string>
+    <string name="ssh_host_key_verification_prompt_title">هاستن تاییڌ کۊنین</string>
+    <string name="ssh_select_pem_button">کیلیت سیخومی SSH</string>
+    <string name="password_unchanged">(بؽ آلشت)</string>
+    <string name="ssh_connect_failed">نتره و %1$s:%2$d: %3$s منپیز بۊ</string>
+    <string name="select_color_config">رنگ پیکربندی ن پسند کۊنین</string>
+    <string name="customize">سفارشی کردن</string>
+    <string name="custom">سفارشی</string>
+    <string name="preselected_configs_title">سامووا ز پؽش پسند بیڌه</string>
+    <string name="orange">نارنجی</string>
+    <string name="blue">کوۊ</string>
+    <string name="green">ساوز</string>
+    <string name="password_no_match">رزم ی جۊر نؽ</string>
+    <string name="deselect_all">لقو پسند کردن پوی</string>
+    <string name="filename">نوم فایل</string>
+    <string name="about_amaze">دیوؤداری فایل تراهی متریال سی ٱندروید</string>
+    <string name="license">موجوز</string>
+    <string name="libraries">کتاو هووه یل</string>
+    <string name="password_repeat">تکرار رزم</string>
+    <string name="ssh_key_invalid_passphrase">کیلیت رزم زبال نؽ</string>
+    <string name="extracted">دراوورده وابی</string>
+    <string name="compressed">تپنیڌه وابی</string>
+    <string name="no_obtainable_info">هیچ دووسمندی زبار ای فایل نؽ</string>
+    <string name="file_read_only">فایل نگوشست، تینا تره خونده بۊ.</string>
+    <string name="got_it">فئمیم!</string>
+    <string name="encrypt_file_save_as">زفت فایل رزم ناهاڌه بیڌه و عونوان&amp;#8230;</string>
+    <string name="time_remaining">زموو باقی منده</string>
+    <string name="unknown">نشناخته</string>
+    <string name="archive_password_prompt">رزم آرشیوی ک اخۊین بزنین</string>
+    <string name="close">بستن</string>
+    <string name="bookmark_exists">نشووک ن هڌ</string>
+    <string name="failed_install_apk">پۊرنیڌن ٱنجوم نوابی</string>
+
+    <!-- from https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/strings.xml -->
+    <!-- Storage description for internal shared storage. [CHAR LIMIT=NONE] -->
+    <string name="storage_internal">ویرگه منی</string>
+    <!-- Storage description for a generic SD card. [CHAR LIMIT=NONE] -->
+    <string name="storage_sd_card">ویرگه دری</string>
+    <string name="choose_folder">ای دوبلگه ن پسند کوݩ</string>
+    <string name="ftp_server_open_settings">سامووا ن بوگوش</string>
+    <string name="move">جا گورو</string>
+    <string name="select_save_location">ی جاگه ن سی زفت کردن پسند کوݩ</string>
+    <string name="scp_default_path">تور پؽش فرز (اختیاری)</string>
+
+    <!-- error activity -->
+    <string name="sorry_string">وابخشی، ای تفاق نواست اۊفته.</string>
+    <string name="error_report_button_text">ای ختا ن وا ایمیل گوزارش بڌه.</string>
+    <string name="error_report_button_telegram">ای ختا ن وا تلگرام گوزارش بڌه.</string>
+    <string name="copy_for_github">گوزارش قالوو بندی بیڌه ن لف گیری کۊنین</string>
+    <string name="error_report_open_issue_button_text">منه گیتهاب گوزارش بڌه</string>
+    <string name="error_snackbar_message">وابخشی ، تفاقی اشتوا پؽش ٱووڌ.</string>
+    <string name="error_snackbar_action">گوزارش</string>
+    <string name="what_device_headline">دووسمندیا:</string>
+    <string name="what_happened_headline">چ تفاقی وست:</string>
+    <string name="your_comment">منشڌ ایسا (و زۉݩ اینگیلیسی):</string>
+    <string name="error_details_headline">جۊزیات:</string>
+    <string name="app_ui_crash">برنومه / رابت منتوری خراو ابۊ</string>
+    <string name="error_report_title">گوزارش ختا</string>
+    <string name="crash_report_copied">گوزارش خراوی منه ویرگه لف گیری وابی</string>
+    <string name="cannot_delete_file">پاک کردن فایل مومکن نؽ</string>
+    <string name="cannot_delete_file_with_reason">پاک کردن فایل مومکن نؽ - %s</string>
+    <string name="cannot_rename_file">آلشت نوم فایل مومکن نؽ %s - %s</string>
+    <string name="cannot_read_directory">خوندن تور مومکن نؽ %s - %s </string>
+    <string name="just_once">تینا سی ی کرت</string>
+    <string name="always">همیشه</string>
+    <string name="choose_different_app">پسند ی برنومه پؽش فرز دی</string>
+    <string name="clear_open_file">روفتن کش</string>
+    <string name="ftp_readonly">دسرسی تینا خۊندنی</string>
+    <string name="legacy_listing_title">سی رۊت، ز نومگه قڌیمی استفاڌه کوݩ</string>
+    <string name="error_permission_denied">موجوز رڌ وابی</string>
+    <string name="error_archive_password_incorrect">رزم آرشیو اشتوا هڌ</string>
+    <string name="disable">قیر فعال کردن</string>
+    <string name="choose_operation">عملیاتن سی ٱنجوم داڌن پسند کوݩ</string>
+    <string name="remember">سی ی کرت دی ویرت بۊ</string>
+    <string name="ftp_prompt_accept_first_start_saf_access_title">داڌن دسرسی SAF سی سرور FTP</string>
+    <string name="android_data_prompt_saf_access_title">دسرسی داڌن و SAF</string>
+    <string name="ftp_preference_saf_filesystem_title">ز فایل سیستوم قڌیمی استفاڌه کوݩ</string>
+    <string name="show_system_apps">نشۉݩ داڌن برنومه یل سیستوم</string>
+    <string name="system_apps">برنومه یل سیستومی</string>
+    <string name="select_inverse">پسند چواسه</string>
+    <string name="select_by_type">و ری نوع پسند کوݩ</string>
+    <string name="select_by_date">پسند و ری ویرگار</string>
+    <string name="select_similar">جۊر یکن پسند کوݩ</string>
+    <string name="select_fill">پور کردنن پسند کوݩ</string>
+    <string name="user_apps">برنومه یل منتور</string>
+    <string name="appearance">شؽوات</string>
+    <string name="behavior">رفتار</string>
+    <string name="pref_export">و در کشیڌن</string>
+    <string name="pref_export_summary">و در کشیڌن سامووا</string>
+    <string name="pref_import">و من ٱووردن</string>
+    <string name="pref_import_summary">و من ٱووردن سامووا</string>
+
+    <string name="recent_desc">فایلایی ک هیم دمۊویا وورکل یا آلشتکاری وابین</string>
+    <string name="error_cannot_find_way_open">رهی سی گۊشیڌن فایل نجۊرست</string>
+    <string name="download">دانلود</string>
+    <string name="wifip2p">Wi-Fi P2P</string>
+    <string name="image_viewer">نیشتگر شؽوات ٱمیز</string>
+    <string name="video_player">پشک کون ویدیۉ ٱمیز</string>
+    <string name="amaze_audio_player">پشک کون آرنگ ٱمیز</string>
+    <string name="pdf_viewer">نیشتگر سند ٱمیز</string>
+    <string name="docx_viewer">نیشتگر سند ٱمیز</string>
+    <string name="share_logs">یک رسۊوی گوزارش</string>
+    <string name="open_with_amaze">گۊشیڌن وا ٱمیز</string>
+    <string name="confirmation">تاییدیا</string>
+    <string name="preference_delete_confirmation">تاییڌ سی پاک کردن</string>
+    <string name="protocol_ftps">FTP ٱمن</string>
+    <string name="unavailable">من دسرس نؽ</string>
+
+    <string name="exporting_failed">و در کشیڌن ٱنجوم نوابی: فایل لادراری، نتره ک هؽل کونه</string>
+    <string name="importing_failed">و من ٱووردن ٱنجوم نوابی: فایل لادراری، نتره ک خونده بۊ</string>
+    <string name="importing_completed">و من ٱووردن ٱنجوم وابی</string>
+    <string name="invalid_backup_file">فایل لادراری زبال نؽ</string>
+    <string name="import_failed_for">و من ٱووردن ٱنجوم نوابی سی:</string>
+    <string name="results">نتیجه یل</string>
+    <string name="preference_language_title">زۉݩ برنومه</string>
+    <string name="preference_language_dialog_title">پسند زۉݩ</string>
+    <string name="preference_language_system_default">پؽش فرز سیستوم</string>
+    <string name="trash_bin">دلاشقالی</string>
+    <string name="restore">وورگندن</string>
+    <string name="restore_files">وورگندن فایلا</string>
+    <string name="restoring">هونی اوورگنه...</string>
+    <string name="trash_bin_cleanup_interval_title">فاسله روفتن</string>
+    </resources>
+

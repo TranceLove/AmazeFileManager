@@ -302,8 +302,7 @@
   <string name="easter_egg_title">Mode Studio</string>
   <string name="paypal_copy_message">Id Paypal copié dans le presse-papiers</string>
   <string name="searching_devices">Recherche d\'appareils</string>
-  <string name="use_custom_ip">Utiliser une adresse IP modifiée</string>
-  <string name="bookmark_lost">Favori non trouvé, recréation&#8230;</string>
+    <string name="bookmark_lost">Favori non trouvé, recréation&#8230;</string>
 
   <string name="share_limit">Impossible de partage plus de 100 fichiers</string>
   <string name="otg_access">Sélectionnez le root du périphérique OTG</string>

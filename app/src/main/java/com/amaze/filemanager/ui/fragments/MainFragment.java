@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -58,6 +58,7 @@ import com.amaze.filemanager.filesystem.CustomFileObserver;
 import com.amaze.filemanager.filesystem.FileProperties;
 import com.amaze.filemanager.filesystem.HybridFile;
 import com.amaze.filemanager.filesystem.HybridFileParcelable;
+import com.amaze.filemanager.filesystem.MediaStoreHack;
 import com.amaze.filemanager.filesystem.SafRootHolder;
 import com.amaze.filemanager.filesystem.files.CryptUtil;
 import com.amaze.filemanager.filesystem.files.EncryptDecryptUtils;
@@ -136,6 +137,7 @@ import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 import kotlin.collections.ArraysKt;
 import kotlin.collections.CollectionsKt;
+import kotlin.text.StringsKt;
 
 public class MainFragment extends Fragment
     implements BottomBarButtonPath,
@@ -576,10 +578,29 @@ public class MainFragment extends Fragment
         HybridFileParcelable resultBaseFile = result.getKey();
 
         if (requireMainActivity().mRingtonePickerIntent) {
-          intent.setDataAndType(
-              resultUri,
-              MimeTypes.getMimeType(resultBaseFile.getPath(), resultBaseFile.isDirectory()));
-          intent.putExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI, resultUri);
+          // Query MediaStore to get the proper content URI for the selected audio file
+          Uri mediaFileUri =
+              MediaStoreHack.getUriForMusicMediaFrom(resultBaseFile.getPath(), requireContext());
+          if (mediaFileUri != null) {
+            String filename = resultBaseFile.getName();
+            Uri properUri =
+                mediaFileUri
+                    .buildUpon()
+                    .appendQueryParameter("canonical", "1")
+                    .appendQueryParameter(
+                        "title", StringsKt.substringBeforeLast(filename, ".", filename))
+                    .build();
+            // Set the proper content URI as result
+            String mimeType = MimeTypes.getMimeType(resultBaseFile.getPath(), false);
+            intent.setDataAndType(properUri, mimeType);
+            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI, properUri);
+          } else {
+            Toast.makeText(requireContext(), R.string.error_mediastore_query_uri, Toast.LENGTH_LONG)
+                .show();
+            requireActivity().setResult(FragmentActivity.RESULT_CANCELED);
+            requireActivity().finish();
+            return;
+          }
         } else {
           LOG.debug("pickup file");
           intent.setDataAndType(resultUri, MimeTypes.getExtension(resultBaseFile.getPath()));
@@ -1042,13 +1063,14 @@ public class MainFragment extends Fragment
               AppCompatEditText textfield =
                   dialog.getCustomView().findViewById(R.id.singleedittext_input);
               String name1 = textfield.getText().toString().trim();
+              String targetParent = f.getParent(requireContext());
 
               getMainActivity()
                   .mainActivityHelper
                   .rename(
-                      mainFragmentViewModel.getOpenMode(),
+                      f.getMode(),
                       f.getPath(),
-                      mainFragmentViewModel.getCurrentPath(),
+                      targetParent,
                       name1,
                       f.isDirectory(),
                       getActivity(),
@@ -1063,6 +1085,10 @@ public class MainFragment extends Fragment
               } else if (text.length() < 1) {
                 return new WarnableTextInputValidator.ReturnState(
                     WarnableTextInputValidator.ReturnState.STATE_ERROR, R.string.field_empty);
+              } else if (text.equals(f.getName(getMainActivity()))) {
+                return new WarnableTextInputValidator.ReturnState(
+                    WarnableTextInputValidator.ReturnState.STATE_WARNING,
+                    R.string.no_changes_while_rename);
               }
 
               return new WarnableTextInputValidator.ReturnState();
@@ -1242,7 +1268,7 @@ public class MainFragment extends Fragment
         mainFragmentViewModel.getCurrentPath(),
         true,
         mainFragmentViewModel.getOpenMode(),
-        forceReload);
+        forceReload || mainFragmentViewModel.getOpenMode() == OpenMode.CUSTOM);
   }
 
   @Override
@@ -1374,7 +1400,7 @@ public class MainFragment extends Fragment
           LOG.warn("failure when hiding file", e);
         }
       }
-      MediaConnectionUtils.scanFile(
+      MediaConnectionUtils.scanFiles(
           requireMainActivity(), new HybridFile[] {new HybridFile(OpenMode.FILE, path)});
     }
   }

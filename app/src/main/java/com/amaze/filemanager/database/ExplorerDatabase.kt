@@ -70,7 +70,7 @@ abstract class ExplorerDatabase : RoomDatabase() {
 
     companion object {
         private const val DATABASE_NAME = "explorer.db"
-        const val DATABASE_VERSION = 11
+        const val DATABASE_VERSION = 12
         const val TABLE_TAB = "tab"
         const val TABLE_CLOUD_PERSIST = "cloud"
         const val TABLE_ENCRYPTED = "encrypted"
@@ -317,7 +317,7 @@ abstract class ExplorerDatabase : RoomDatabase() {
             }
 
         internal val MIGRATION_10_11: Migration =
-            object : Migration(10, DATABASE_VERSION) {
+            object : Migration(10, 11) {
                 override fun migrate(database: SupportSQLiteDatabase) {
                     database.execSQL(
                         "UPDATE " +
@@ -327,6 +327,104 @@ abstract class ExplorerDatabase : RoomDatabase() {
                             " = " +
                             COLUMN_CLOUD_SERVICE +
                             "-2",
+                    )
+                }
+            }
+
+        internal val MIGRATION_11_12: Migration =
+            object : Migration(11, DATABASE_VERSION) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL(
+                        "CREATE TABLE " +
+                            TEMP_TABLE_PREFIX +
+                            TABLE_TAB +
+                            "(" +
+                            COLUMN_TAB_NO +
+                            " INTEGER PRIMARY KEY NOT NULL, " +
+                            COLUMN_PATH +
+                            " TEXT NOT NULL, " +
+                            COLUMN_HOME +
+                            " TEXT NOT NULL)",
+                    )
+                    database.execSQL(
+                        "INSERT INTO " +
+                            TEMP_TABLE_PREFIX +
+                            TABLE_TAB +
+                            "(" +
+                            COLUMN_TAB_NO +
+                            "," +
+                            COLUMN_PATH +
+                            "," +
+                            COLUMN_HOME +
+                            ")" +
+                            " SELECT " +
+                            COLUMN_TAB_NO +
+                            "," +
+                            COLUMN_PATH +
+                            "," +
+                            COLUMN_HOME +
+                            " FROM " +
+                            TABLE_TAB,
+                    )
+                    database.execSQL("DROP TABLE $TABLE_TAB")
+                    database.execSQL(
+                        "ALTER TABLE $TEMP_TABLE_PREFIX$TABLE_TAB RENAME TO $TABLE_TAB",
+                    )
+
+                    database.execSQL(
+                        "CREATE TABLE " +
+                            TEMP_TABLE_PREFIX +
+                            TABLE_ENCRYPTED +
+                            "(" +
+                            COLUMN_ENCRYPTED_ID +
+                            " INTEGER PRIMARY KEY NOT NULL," +
+                            COLUMN_ENCRYPTED_PATH +
+                            " TEXT NOT NULL," +
+                            COLUMN_ENCRYPTED_PASSWORD +
+                            " TEXT NOT NULL)",
+                    )
+                    database.execSQL(
+                        "INSERT INTO " +
+                            TEMP_TABLE_PREFIX +
+                            TABLE_ENCRYPTED +
+                            " SELECT * FROM " +
+                            TABLE_ENCRYPTED,
+                    )
+                    database.execSQL("DROP TABLE $TABLE_ENCRYPTED")
+                    database.execSQL(
+                        "ALTER TABLE " +
+                            TEMP_TABLE_PREFIX +
+                            TABLE_ENCRYPTED +
+                            " RENAME TO " +
+                            TABLE_ENCRYPTED,
+                    )
+
+                    database.execSQL(
+                        "CREATE TABLE " +
+                            TEMP_TABLE_PREFIX +
+                            TABLE_CLOUD_PERSIST +
+                            "(" +
+                            COLUMN_CLOUD_ID +
+                            " INTEGER PRIMARY KEY NOT NULL," +
+                            COLUMN_CLOUD_SERVICE +
+                            " INTEGER," +
+                            COLUMN_CLOUD_PERSIST +
+                            " TEXT NOT NULL)",
+                    )
+                    database.execSQL(
+                        "INSERT INTO " +
+                            TEMP_TABLE_PREFIX +
+                            TABLE_CLOUD_PERSIST +
+                            " SELECT * FROM " +
+                            TABLE_CLOUD_PERSIST,
+                    )
+                    database.execSQL("DROP TABLE $TABLE_CLOUD_PERSIST")
+                    database.execSQL(
+                        "ALTER TABLE " +
+                            TEMP_TABLE_PREFIX +
+                            TABLE_CLOUD_PERSIST +
+                            " RENAME TO " +
+                            TABLE_CLOUD_PERSIST,
                     )
                 }
             }
@@ -354,6 +452,7 @@ abstract class ExplorerDatabase : RoomDatabase() {
                 .addMigrations(MIGRATION_8_9)
                 .addMigrations(MIGRATION_9_10)
                 .addMigrations(MIGRATION_10_11)
+                .addMigrations(MIGRATION_11_12)
                 .allowMainThreadQueries()
                 .build()
         }

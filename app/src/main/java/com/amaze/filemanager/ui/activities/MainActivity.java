@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
+ * Copyright (C) 2014-2026 Arpit Khurana <arpitkh96@gmail.com>, Vishal Nehra <vishalmeham2@gmail.com>,
  * Emmanuel Messulam<emmanuelbendavid@gmail.com>, Raymond Lai <airwave209gt at gmail.com> and Contributors.
  *
  * This file is part of Amaze File Manager.
@@ -23,7 +23,6 @@ package com.amaze.filemanager.ui.activities;
 import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR1;
 import static android.os.Build.VERSION_CODES.KITKAT;
-import static android.os.Build.VERSION_CODES.KITKAT_WATCH;
 import static android.os.Build.VERSION_CODES.LOLLIPOP;
 import static android.os.Build.VERSION_CODES.M;
 import static android.os.Build.VERSION_CODES.N;
@@ -55,7 +54,6 @@ import static com.amaze.filemanager.ui.dialogs.SftpConnectDialog.ARG_PROTOCOL;
 import static com.amaze.filemanager.ui.dialogs.SftpConnectDialog.ARG_USERNAME;
 import static com.amaze.filemanager.ui.fragments.FtpServerFragment.REQUEST_CODE_SAF_FTP;
 import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_BOOKMARKS_ADDED;
-import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_COLORED_NAVIGATION;
 import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_NEED_TO_SET_HOME;
 import static com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants.PREFERENCE_VIEW;
 
@@ -132,7 +130,6 @@ import com.amaze.filemanager.ui.fragments.TabFragment;
 import com.amaze.filemanager.ui.fragments.data.MainFragmentViewModel;
 import com.amaze.filemanager.ui.fragments.preferencefragments.PreferencesConstants;
 import com.amaze.filemanager.ui.strings.StorageNamingHelper;
-import com.amaze.filemanager.ui.theme.AppTheme;
 import com.amaze.filemanager.ui.views.CustomZoomFocusChange;
 import com.amaze.filemanager.ui.views.appbar.AppBar;
 import com.amaze.filemanager.ui.views.drawer.Drawer;
@@ -155,7 +152,6 @@ import com.leinardi.android.speeddial.FabWithLabelView;
 import com.leinardi.android.speeddial.SpeedDialActionItem;
 import com.leinardi.android.speeddial.SpeedDialOverlayLayout;
 import com.leinardi.android.speeddial.SpeedDialView;
-import com.readystatesoftware.systembartint.SystemBarTintManager;
 import com.topjohnwu.superuser.Shell;
 
 import android.annotation.SuppressLint;
@@ -253,6 +249,8 @@ public class MainActivity extends PermissionsActivity
   // oparrayList)
   public String oppathe, oppathe1;
   public ArrayList<String> oppatheList;
+
+  private boolean hadStoragePermission;
 
   // This holds the Uris to be written at initFabToSave()
   private List<Uri> urisToBeSaved;
@@ -411,7 +409,15 @@ public class MainActivity extends PermissionsActivity
       getPrefs().edit().putBoolean(PREFERENCE_BOOKMARKS_ADDED, true).commit();
     }
 
-    checkForExternalPermission();
+    String actionIntent = intent != null ? intent.getAction() : null;
+
+    if (isFilePickerIntent(actionIntent)
+        || RingtoneManager.ACTION_RINGTONE_PICKER.equals(actionIntent)
+        || Intent.ACTION_VIEW.equals(actionIntent)
+        || Intent.ACTION_SEND.equals(actionIntent)
+        || Intent.ACTION_SEND_MULTIPLE.equals(actionIntent)) {
+      checkForExternalPermission();
+    }
 
     Completable.fromRunnable(
             () -> {
@@ -580,6 +586,30 @@ public class MainActivity extends PermissionsActivity
     }
   }
 
+  /** Ensures storage permission is granted before allowing filesystem browsing. */
+  private boolean ensureStoragePermission() {
+    if (SDK_INT < M) {
+      return true;
+    }
+
+    if (checkStoragePermission()) {
+      return true;
+    }
+
+    if (SDK_INT >= Build.VERSION_CODES.R) {
+      requestAllFilesAccess(this);
+    } else {
+      requestStoragePermission(this, true);
+    }
+
+    return false;
+  }
+
+  private static boolean isFilePickerIntent(@Nullable String actionIntent) {
+    return Intent.ACTION_GET_CONTENT.equals(actionIntent)
+        || Intent.ACTION_OPEN_DOCUMENT.equals(actionIntent);
+  }
+
   /** Checks for the action to take when Amaze receives an intent from external source */
   private void checkForExternalIntent(Intent intent) {
     final String actionIntent = intent.getAction();
@@ -589,7 +619,7 @@ public class MainActivity extends PermissionsActivity
 
     final String type = intent.getType();
 
-    if (actionIntent.equals(Intent.ACTION_GET_CONTENT)) {
+    if (isFilePickerIntent(actionIntent)) {
       // file picker intent
       mReturnIntent = true;
       String text =
@@ -1355,6 +1385,15 @@ public class MainActivity extends PermissionsActivity
       materialDialog = null;
     }
 
+    boolean hasPermissionNow = checkStoragePermission();
+
+    if (!hadStoragePermission && hasPermissionNow) {
+      goToMain(null);
+    }
+
+    hadStoragePermission = hasPermissionNow;
+    ensureStoragePermission();
+
     drawer.refreshDrawer();
     drawer.refactorDrawerLockMode();
 
@@ -1762,36 +1801,6 @@ public class MainActivity extends PermissionsActivity
     mainActivity.getSupportActionBar().setBackgroundDrawable(colorDrawable);
 
     drawer.setBackgroundColor(colorDrawable.getColor());
-
-    if (SDK_INT >= LOLLIPOP) {
-      // for lollipop devices, the status bar color
-      mainActivity.getWindow().setStatusBarColor(colorDrawable.getColor());
-      if (getBoolean(PREFERENCE_COLORED_NAVIGATION)) {
-        mainActivity
-            .getWindow()
-            .setNavigationBarColor(PreferenceUtils.getStatusColor(colorDrawable.getColor()));
-      } else {
-        if (getAppTheme().equals(AppTheme.LIGHT)) {
-          mainActivity
-              .getWindow()
-              .setNavigationBarColor(Utils.getColor(this, android.R.color.white));
-        } else if (getAppTheme().equals(AppTheme.BLACK)) {
-          mainActivity
-              .getWindow()
-              .setNavigationBarColor(Utils.getColor(this, android.R.color.black));
-        } else {
-          mainActivity
-              .getWindow()
-              .setNavigationBarColor(Utils.getColor(this, R.color.holo_dark_background));
-        }
-      }
-    } else if (SDK_INT == KITKAT_WATCH || SDK_INT == KITKAT) {
-
-      // for kitkat devices, the status bar color
-      SystemBarTintManager tintManager = new SystemBarTintManager(this);
-      tintManager.setStatusBarTintEnabled(true);
-      tintManager.setStatusBarTintColor(colorDrawable.getColor());
-    }
   }
 
   void initialiseFab() {
@@ -1987,7 +1996,7 @@ public class MainActivity extends PermissionsActivity
   public void renameBookmark(final String title, final String path) {
     if (dataUtils.containsBooks(new String[] {title, path}) != -1) {
       RenameBookmark renameBookmark = RenameBookmark.getInstance(title, path, getAccent());
-      if (renameBookmark != null) renameBookmark.show(getFragmentManager(), "renamedialog");
+      if (renameBookmark != null) renameBookmark.show(getSupportFragmentManager(), "renamedialog");
     }
   }
 
@@ -2169,10 +2178,8 @@ public class MainActivity extends PermissionsActivity
     String[] s = new String[] {name, encryptedPath};
     if (!edit) {
       if ((dataUtils.containsServer(encryptedPath)) == -1) {
-        Completable.fromRunnable(
-                () ->
-                    utilsHandler.saveToDatabase(
-                        new OperationData(UtilsHandler.Operation.SMB, name, encryptedPath)))
+        utilsHandler
+            .saveToDatabase(new OperationData(UtilsHandler.Operation.SMB, name, encryptedPath))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(

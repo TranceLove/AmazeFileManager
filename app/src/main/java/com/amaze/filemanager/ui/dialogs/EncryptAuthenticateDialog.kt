@@ -206,15 +206,20 @@ object EncryptAuthenticateDialog {
         warningTextInputLayout,
         btnOK,
     ) { text: String ->
-        if (text.isNotBlank() &&
-            text == comparingPasswordField.text.toString() &&
-            filenameIsValid(encryptSaveAsEditText.text.toString(), useAzeEncrypt)
-        ) {
-            ReturnState()
-        } else if (text.isBlank()) {
-            ReturnState(STATE_ERROR, R.string.field_empty)
+        if (text.isNotBlank()) {
+            if (comparingPasswordField.text.toString().isBlank() ||
+                text == comparingPasswordField.text.toString()
+            ) {
+                if (filenameIsValid(encryptSaveAsEditText.text.toString(), useAzeEncrypt)) {
+                    ReturnState()
+                } else {
+                    ReturnState(STATE_ERROR, R.string.empty_string)
+                }
+            } else {
+                ReturnState(STATE_ERROR, R.string.password_no_match)
+            }
         } else {
-            ReturnState(STATE_ERROR, R.string.password_no_match)
+            ReturnState(STATE_ERROR, R.string.field_empty)
         }
     }
 

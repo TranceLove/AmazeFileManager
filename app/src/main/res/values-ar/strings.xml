@@ -315,7 +315,6 @@
     <string name="translate_summary">ترجمة العز باللغة الخاصة بك </string>
     <string name="paypal_copy_message">تم نسخ كود PayPal الى المسودة </string>
     <string name="searching_devices">البحث عن أجهزة </string>
-    <string name="use_custom_ip">استخدام IP المهيأ </string>
     <string name="bookmark_lost">لم يتم ايجاد علامة التوقف ، قم باعادة التكوين ... </string>
 
     <string name="share_limit">لا يمكن مشاركة أكثر من 100 ملف </string>
